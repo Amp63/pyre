@@ -3,7 +3,7 @@ A library for the Diamondfire Minecraft server that allows you to create, compil
 
 ## Documentation
 
-This documentation, as well as this whole project, has taken heavy inspiration from [dfprismarine](https://github.com/dfprismarine/dfprismarine.github.io) by EnjoyYourBan
+This documentation, as well as this whole project, has taken heavy inspiration from [dfprismarine](https://github.com/dfprismarine/dfprismarine.github.io)
 
 ## Basics
 
