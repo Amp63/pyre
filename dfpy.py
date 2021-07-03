@@ -94,7 +94,7 @@ class DFTemplate:
         self.commands.append(bracket)
         self.closebracket = btype
     
-    # actual command methods
+    # command methods
     def player_event(self,name):
         cmd = Command(name,data={'id': 'block', 'block': 'event', 'action': name})
         self.commands.append(cmd)
@@ -203,7 +203,7 @@ class Command:
         self.data = data
 
 
-# item data classes
+# df item classes (will add particle, sound, game value later)
 class item:
     def __init__(self,itemID,count=1):
         self.id = itemID
