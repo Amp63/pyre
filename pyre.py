@@ -74,7 +74,7 @@ class DFTemplate:
     # send template to diamondfire
     # test what it sends back when client is offline so that i can write a proper error message
     def sendToDF(self,code,name='None'):
-        data = {"type":"template","source":f"dfpy - {name}","data":f"{{\"name\":\"dfpy Template - {name}\",\"data\":\"{code}\"}}"}
+        data = {"type":"template","source":f"pyre - {name}","data":f"{{\"name\":\"pyre Template - {name}\",\"data\":\"{code}\"}}"}
         s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         s.connect(('127.0.0.1',31372))
         s.send((str(data)+'\n').encode())
