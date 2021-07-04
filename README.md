@@ -41,10 +41,10 @@ ___
 
 ### Setup
 
-To start creating in dfpy, you have to create a DFTemplate object like so:
+To start creating in pyre, you have to create a DFTemplate object like so:
 
 ```py
-from dfpy import *
+from pyre import *
 t = DFTemplate()
 ```
 
@@ -53,7 +53,7 @@ Basically everything stems from this template object.
 This is the basic layout of a file:
 
 ```py
-from dfpy import *
+from pyre import *
 t = DFTemplate()
 # [Event, Function, Process]
 # [Your code here]
@@ -65,7 +65,7 @@ The commented lines represent where you will insert calls to methods in the temp
 Here's a complete program that prints a message to every player when a player joins:
 
 ```py
-from dfpy import *
+from pyre import *
 t = DFTemplate()
 t.player_event('Join')
 t.player_action('SendMessage', '%default has joined!', target='AllPlayers')
@@ -81,7 +81,7 @@ As shown in [setup](#setup), every code line must start with an event, function,
 The following program sends a message to all players and gives a player 10 apples upon joining:
 
 ```py
-from dfpy import *
+from pyre import *
 t = DFTemplate()
 t.player_event('Join')
 t.player_action('SendMessage', '%default has joined!', target='AllPlayers')
@@ -99,7 +99,7 @@ You can either:
 If you choose the first option, the code would look something like this:
 
 ```py
-from dfpy import *
+from pyre import *
 t = DFTemplate()
 t.player_event('Join')
 t.player_action('SendMessage', '%default has joined!', target='AllPlayers')
@@ -111,7 +111,7 @@ t.sendToDF(code, name=templateName)  # Send to minecraft client via codeutils it
 If you choose the second option, you can do this:
 
 ```py
-from dfpy import *
+from pyre import *
 t = DFTemplate()
 t.player_event('Join')
 t.player_action('SendMessage', '%default has joined!', target='AllPlayers')
@@ -190,7 +190,7 @@ Example:
 
 ```py
 # teleport player on join
-from dfpy import *
+from pyre import *
 t = DFTemplate()
 t.player_event('Join')
 t.player_action('Teleport', loc(10, 50, 10))
@@ -220,7 +220,7 @@ Example:
 
 ```py
 # plays 'Grass Place' sound on join
-from dfpy import *
+from pyre import *
 t = DFTemplate()
 t.player_event('Join')
 t.player_action('PlaySound', sound('Grass Place'))
@@ -238,7 +238,7 @@ Example:
 
 ```py
 # plays a white cloud particle effect at 5, 50, 5
-from dfpy import *
+from pyre import *
 t = DFTemplate()
 t.player_event('Join')
 t.player_action('Particle', particle(), loc(5, 50, 5))
@@ -259,7 +259,7 @@ Example:
 
 ```py
 # gives the player infinite saturation 255
-from dfpy import *
+from pyre import *
 t = DFTemplate()
 t.player_event('Join')
 t.player_action('GivePotion', potion('Saturation', amp=254))
@@ -278,7 +278,7 @@ Example:
 
 ```py
 # function that prints player count and cpu
-from dfpy import *
+from pyre import *
 t = DFTemplate()
 t.function('printData')
 t.player_action('SendMessage', gamevalue('Player Count'), gamevalue('CPU Usage'))
@@ -296,7 +296,7 @@ Example:
 
 ```py
 # sets the player's x velocity to 1.0 on join
-from dfpy import *
+from pyre import *
 t = DFTemplate()
 t.player_event('Join')
 t.player_action('SetVelocity', vector(x=1.0, y=0.0, z=0.0))
@@ -310,7 +310,7 @@ A specific syntax must be followed when creating conditionals and loops. Each co
 
 ```py
 # prints 'clicked' when a player right clicks with a stick in their hand
-from dfpy import *
+from pyre import *
 t = DFTemplate()
 t.player_event('RightClick')
 t.if_player('IsHolding', item('stick'))
@@ -325,7 +325,7 @@ As for loops, the bracket syntax is the exact same, and will auto-adjust to repe
 
 ```py
 # prints numbers 1-5
-from dfpy import *
+from pyre import *
 t = DFTemplate()
 t.player_event('Join')
 t.repeat('Multiple', var('i'), 5)
@@ -340,7 +340,7 @@ To create a function or procedure, simple start the code line with a *function* 
 
 ```py
 # function that gives a player 64 golden apples
-from dfpy import *
+from pyre import *
 t = DFTemplate()
 t.function('doStuff')
 t.player_action('GiveItems', item('golden_apple', 64))
@@ -351,7 +351,7 @@ t.player_action('GiveItems', item('golden_apple', 64))
 Calling Functions and procedures is also pretty simple:
 
 ```py
-from dfpy import *
+from pyre import *
 t = DFTemplate()
 t.player_event('Join')
 t.call_function('doStuff')
@@ -365,7 +365,7 @@ Lets say that we have this function that prints out double (numx2) of what was i
 
 ```py
 # prints numbers 1-5
-from dfpy import *
+from pyre import *
 t = DFTemplate()
 t.function('double')
 t.set_var('x', var('numx2'), var('num'), 2)
@@ -376,7 +376,7 @@ To easily pass the required parameter *num*, we can use the **parameters=** keyw
 
 ```py
 # prints numbers 1-5
-from dfpy import *
+from pyre import *
 t = DFTemplate()
 t.player_event('Join')
 t.call_function('double', parameters={'num': 5})
@@ -391,7 +391,7 @@ Similar to [functions with parameters](#functions-with-parameters), *return_()* 
 When you want to return a given value from a function, you can use *return_()* like this:
 
 ```py
-from dfpy import *
+from pyre import *
 t = DFTemplate()
 t.function('return10')
 t.return_(returndata={'retnum': 10})
