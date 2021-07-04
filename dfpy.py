@@ -38,7 +38,7 @@ class DFTemplate:
             if cmd.args:  # tuple isnt empty
                 for arg in cmd.args[0]:
                     app = None
-                    if arg.type in {'txt', 'num', 'item', 'loc', 'var'}:
+                    if arg.type in {'txt', 'num', 'item', 'loc', 'var', 'snd', 'part', 'pot', 'g_val', 'vec'}:
                         app = arg.format(slot)
                         main_dict['blocks'][-1]['args']['items'].append(app)
                 
@@ -295,7 +295,7 @@ class loc:
             "slot": slot
           })
 
-class var():
+class var:
     def __init__(self,name,scope='unsaved'):
         if scope == 'game':
             scope = 'unsaved'
@@ -311,6 +311,118 @@ class var():
               "data": {
                 "name": self.name,
                 "scope": self.scope
+              }
+            },
+            "slot": slot
+          })
+
+class sound:
+    def __init__(self,name,pitch=1.0,vol=2.0):
+        self.name = name
+        self.pitch = pitch
+        self.vol = vol
+        self.type = 'snd'
+
+    def format(self,slot):
+        return dict({
+            "item": {
+              "id": "snd",
+              "data": {
+                "sound": self.name,
+                "pitch": self.pitch,
+                "vol": self.vol
+              }
+            },
+            "slot": slot
+          })
+
+class particle:
+    def __init__(self,name='Cloud',amount=1,horizontal=0.0,vertical=0.0,x=1.0,y=0.0,z=0.0,motionVariation=100):
+        self.name = name
+        self.amount = amount
+        self.horizontal = horizontal
+        self.vertical = vertical
+        self.x = x
+        self.y = y
+        self.z = z
+        self.motionVariation = motionVariation
+        self.type = 'part'
+    
+    def format(self,slot):
+        return dict({
+            "item": {
+              "id": "part",
+              "data": {
+                "particle": self.name,
+                "cluster": {
+                  "amount": self.amount,
+                  "horizontal": self.horizontal,
+                  "vertical": self.vertical
+                },
+                "data": {
+                  "x": self.x,
+                  "y": self.y,
+                  "z": self.z,
+                  "motionVariation": self.motionVariation
+                }
+              }
+            },
+            "slot": slot
+          })
+
+class potion:
+    def __init__(self,name,dur=1000000,amp=0):
+        self.name = name
+        self.dur = dur
+        self.amp = amp
+        self.type = 'pot'
+    
+    def format(self,slot):
+        return dict({
+            "item": {
+              "id": "pot",
+              "data": {
+                "pot": self.name,
+                "dur": self.dur,
+                "amp": self.amp
+              }
+            },
+            "slot": slot
+          })
+
+class gamevalue:
+    def __init__(self,name,target='Default'):
+        self.name = name
+        self.target = target
+        self.type = 'g_val'
+    
+    def format(self,slot):
+        return dict({
+            "item": {
+              "id": "g_val",
+              "data": {
+                "type": self.name,
+                "target": self.target
+              }
+            },
+            "slot": slot
+          })
+
+class vector:
+    def __init__(self,x=0.0,y=0.0,z=0.0):
+        self.x = float(x)
+        self.y = float(y)
+        self.z = float(z)
+        self.type = 'vec'
+    
+    def format(self,slot):
+        return dict({
+            "item": {
+              "id": "vec",
+              "data": {
+                "x": self.x,
+                "y": self.y,
+                "z": self.z
               }
             },
             "slot": slot
