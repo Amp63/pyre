@@ -2,6 +2,7 @@ import base64
 import gzip
 import socket
 import time
+from tags import tagData
 
 class DFTemplate:
     def __init__(self):
@@ -42,6 +43,14 @@ class DFTemplate:
                         main_dict['blocks'][-1]['args']['items'].append(app)
                 
                     slot += 1
+            
+            # set tags
+            if cmd.name in tagData:
+                tags = tagData[cmd.name]
+                items = main_dict['blocks'][-1]['args']['items']
+                if len(items) > 27:
+                    main_dict['blocks'][-1]['args']['items'] = items[:(26-len(tags))]  # trim list
+                main_dict['blocks'][-1]['args']['items'].extend(tags)  # add tags to end
         
 
         print('Template Built Successfully!')
@@ -94,7 +103,7 @@ class DFTemplate:
         self.commands.append(bracket)
         self.closebracket = btype
     
-    # command methods
+    # actual command methods
     def player_event(self,name):
         cmd = Command(name,data={'id': 'block', 'block': 'event', 'action': name})
         self.commands.append(cmd)
@@ -192,6 +201,12 @@ class DFTemplate:
         args = self._convertDataTypes(args)
         cmd = Command(name,args,data={'id': 'block', 'block': 'set_var', 'action': name})
         self.commands.append(cmd)
+    
+    # extra methods
+    def return_(self,returndata={}):
+        for key in returndata:
+            self.set_var('=',var(key,scope='local'), returndata[key])
+        self.control('Return')
 
 
 # command class
@@ -203,7 +218,7 @@ class Command:
         self.data = data
 
 
-# df item classes (will add particle, sound, game value later)
+# item data classes
 class item:
     def __init__(self,itemID,count=1):
         self.id = itemID
