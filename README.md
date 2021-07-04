@@ -164,6 +164,14 @@ t.set_var('=', var('num'), 12)  # sets 'num' to 12
 t.set_var('x', var('doubled'), var('num'), 2)  # sets 'doubled' to 24
 ```
 
+You can set the scope of the variable by using the *scope=* keyword:
+
+```py
+t.set_var('=', var(num1, scope='game'), 12)  # both 'game' or 'unsaved' can be passed for the scope here
+t.set_var('=', var(num1, scope='saved'), 12)
+t.set_var('=', var(num1, scope='local'), 12)
+```
+
 ### Location
 
 Represents a diamondfire location item:
