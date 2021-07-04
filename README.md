@@ -1,8 +1,6 @@
-# dfpy
+# Documentation
 
-## Documentation
-
-This documentation, as well as this whole project, has taken heavy inspiration from [dfprismarine](https://github.com/dfprismarine/dfprismarine.github.io)
+This documentation, as well as this whole project, has taken heavy inspiration from [dfprismarine](https://github.com/dfprismarine/dfprismarine.github.io) by EnjoyYourBan
 
 ## Basics
 
@@ -30,8 +28,9 @@ This documentation, as well as this whole project, has taken heavy inspiration f
 
 ## Extras
 
-- [Command List](#commands)
 - [Calling Functions with Parameters](#functions-with-parameters)
+- [return_() method](#special-return)
+- [Command List](#commands)
 
 ___
 
@@ -277,6 +276,23 @@ t.call_function('double', parameters={'num': 5})
 ```
 
 This basically just sets a local variable for each key in **parameters** before the function is called.
+
+### Special Return
+
+Similar to [functions with parameters](#functions-with-parameters), *return_()* is an extension of the *function()* method.
+
+When you want to return a given value from a function, you can use *return_()* like this:
+
+```py
+from dfpy import *
+t = DFTemplate()
+t.function('return10')
+t.return_(returndata={'retnum': 10})
+t.buildAndSend()
+```
+
+For each value in *returndata*, a local variable will be set for each key and value.
+After all of the variables are set, a *control('Return')* block is automatically added to the end of the line. This allows you to access these local variables after the function returns.
 
 ### Commands
 
