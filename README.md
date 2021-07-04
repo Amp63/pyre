@@ -15,6 +15,11 @@ This documentation, as well as this whole project, has taken heavy inspiration f
 - [Variable](#variable)
 - [Location](#location)
 - [Item](#item)
+- [Sound](#sound)
+- [Particle](#particle)
+- [Potion](#potion)
+- [Game Value](#game-value)
+- [Vector](#vector)
 
 ## Conditionals and Loops
 
@@ -185,7 +190,7 @@ Example:
 
 ```py
 # teleport player on join
-from pydf import *
+from dfpy import *
 t = DFTemplate()
 t.player_event('Join')
 t.player_action('Teleport', loc(10, 50, 10))
@@ -202,6 +207,100 @@ item('stone', count=64)
 ```
 
 Extra nbt (enchants, lore, etc.) is not supported right now.
+
+### Sound
+
+Represents a diamondfire sound item:
+
+```py
+sound('Wood Break', pitch=1.5, vol=2.0)
+```
+
+Example:
+
+```py
+# plays 'Grass Place' sound on join
+from dfpy import *
+t = DFTemplate()
+t.player_event('Join')
+t.player_action('PlaySound', sound('Grass Place'))
+```
+
+### Particle
+
+Represents a diamondfire particle item:
+
+```py
+particle(name='Cloud',amount=10,horizontal=1.0,vertical=0.5,x=1.0,y=0.0,z=0.0,motionVariation=100)
+```
+
+Example:
+
+```py
+# plays a white cloud particle effect at 5, 50, 5
+from dfpy import *
+t = DFTemplate()
+t.player_event('Join')
+t.player_action('Particle', particle(), loc(5, 50, 5))
+```
+
+Currently, the particle object does not support colors.
+
+### Potion
+
+Represents a diamondfire potion item:
+
+```py
+# gives speed 1 for 1 minute
+potion('Speed', dur=1200, amp=0)
+```
+
+Example:
+
+```py
+# gives the player infinite saturation 255
+from dfpy import *
+t = DFTemplate()
+t.player_event('Join')
+t.player_action('GivePotion', potion('Saturation', amp=254))
+```
+
+### Game Value
+
+Represents a diamondfire game value item:
+
+```py
+gamevalue('Player Count')
+gamevalue('Location' target='Selection')
+```
+
+Example:
+
+```py
+# function that prints player count and cpu
+from dfpy import *
+t = DFTemplate()
+t.function('printData')
+t.player_action('SendMessage', gamevalue('Player Count'), gamevalue('CPU Usage'))
+```
+
+### Vector
+
+Represents a diamondfire vector item:
+
+```py
+vector(x=1.1, y=0.0, z=0.5)
+```
+
+Example:
+
+```py
+# sets the player's x velocity to 1.0 on join
+from dfpy import *
+t = DFTemplate()
+t.player_event('Join')
+t.player_action('SetVelocity', vector(x=1.0, y=0.0, z=0.0))
+```
 
 ### Conditionals/Brackets
 
