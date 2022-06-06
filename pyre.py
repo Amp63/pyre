@@ -155,7 +155,7 @@ class DFTemplate:
     
     def if_variable(self,name,*args):
         args = self._convertDataTypes(args)
-        cmd = Command(name,args,data={'id': 'block', 'block': 'if_var', 'action': '='})
+        cmd = Command(name,args,data={'id': 'block', 'block': 'if_var', 'action': name})
         self.commands.append(cmd)
         self._openbracket()
     
