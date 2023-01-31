@@ -69,7 +69,7 @@ from pyre import *
 t = DFTemplate()
 t.player_event('Join')
 t.player_action('SendMessage', '%default has joined!', target='AllPlayers')
-t.buildAndSend()
+t.build_and_send()
 ```
 
 ### Events/Actions
@@ -115,7 +115,7 @@ from pyre import *
 t = DFTemplate()
 t.player_event('Join')
 t.player_action('SendMessage', '%default has joined!', target='AllPlayers')
-t.buildAndSend()  # builds and sends automatically to minecraft
+t.build_and_send()  # builds and sends automatically to minecraft
 ```
 
 ### Variable Items
@@ -395,7 +395,7 @@ from pyre import *
 t = DFTemplate()
 t.function('return10')
 t.return_(returndata={'retnum': 10})
-t.buildAndSend()
+t.build_and_send()
 ```
 
 For each value in *returndata*, a local variable will be set for each key and value.
