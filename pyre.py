@@ -3,6 +3,7 @@ import gzip
 import socket
 import time
 import json
+from difflib import get_close_matches
 from tags import tagData, TAGDATA_KEYS, TAGDATA_EXTRAS_KEYS
 from util import warn, COL_SUCCESS, COL_RESET, COL_ERROR
 
@@ -55,7 +56,11 @@ class DFTemplate:
             elif blockType in TAGDATA_KEYS:
                 tags = tagData[blockType].get(cmd.name)
                 if tags is None:
-                    warn(f'Code block name "{cmd.name}" not recognized. Try spell checking or re-typing without spaces.')
+                    close = get_close_matches(cmd.name, tagData[blockType].keys())
+                    if close:
+                        warn(f'Code block name "{cmd.name}" not recognized. Did you mean "{close[0]}"?')
+                    else:
+                        warn(f'Code block name "{cmd.name}" not recognized. Try spell checking or re-typing without spaces.')
             if tags is not None:
                 items = block['args']['items']
                 if len(items) > 27:
@@ -65,7 +70,6 @@ class DFTemplate:
             mainDict['blocks'].append(block)
 
         print(f'{COL_SUCCESS}Template built successfully.{COL_RESET}')
-        print(mainDict)
 
         templateName = 'Unnamed'
         if not mainDict['blocks'][0]['block'] in TEMPLATE_STARTERS:
@@ -98,7 +102,7 @@ class DFTemplate:
         try:
             s.connect(('127.0.0.1', 31372))
         except ConnectionRefusedError:
-            print(f'{COL_ERROR}Could not connect to recode item API. (Minecraft is closed or something else has gone wrong){COL_RESET}')
+            print(f'{COL_ERROR}Could not connect to recode item API. (Minecraft is not open or something else has gone wrong){COL_RESET}')
             s.close()
             return
         
