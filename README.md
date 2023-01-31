@@ -94,7 +94,7 @@ You basically have 2 different options for building your code line.
 You can either:
 
 1. Save the compressed code to a variable and send it to minecraft later
-2. Build and send directly to your minecraft client (with codeutilities)
+2. Build and send directly to your minecraft client (with recode)
 
 If you choose the first option, the code would look something like this:
 
@@ -105,7 +105,7 @@ t.player_event('Join')
 t.player_action('SendMessage', '%default has joined!', target='AllPlayers')
 code, templateName = t.build()  # NOTE: build() returns a tuple with code at index 0 and a formatted name at index 1.
 
-t.sendToDF(code, name=templateName)  # Send to minecraft client via codeutils item api
+t.sendToDF(code, name=templateName)  # Send to minecraft client via recode item api
 ```
 
 If you choose the second option, you can do this:
