@@ -2,35 +2,38 @@ import base64
 import gzip
 import socket
 import time
-from tags import tagData
+import json
+from tags import tagData, TAGDATA_KEYS, TAGDATA_EXTRAS_KEYS
+from util import warn, COL_SUCCESS, COL_RESET, COL_ERROR
+
+VARIABLE_TYPES = {'txt', 'num', 'item', 'loc', 'var', 'snd', 'part', 'pot', 'g_val', 'vec'}
+TEMPLATE_STARTERS = {'event', 'entity_event', 'func', 'process'}
 
 class DFTemplate:
     def __init__(self):
         self.commands = []
         self.closebracket = None
+        self.definedVars = {}
+
 
     def build(self):
-        main_dict = {'blocks': []}
+        mainDict = {'blocks': []}
         for cmd in self.commands:
-            main_dict['blocks'].append({
-                'args': {
-                    'items': []
-                    }
-                })
+            block = {'args': {'items': []}}
             
             # add keys from cmd.data
             for key in cmd.data.keys():
-                main_dict['blocks'][-1][key] = cmd.data[key]
+                block[key] = cmd.data[key]
 
             # bracket data
             if cmd.data.get('direct') != None:
-                main_dict['blocks'][-1]['direct'] = cmd.data['direct']
-                main_dict['blocks'][-1]['type'] = cmd.data['type']
+                block['direct'] = cmd.data['direct']
+                block['type'] = cmd.data['type']
             
             # add target if necessary
             if cmd.data.get('block') != 'event':
                 if cmd.target != 'Default':
-                    main_dict['blocks'][-1]['target'] = cmd.target
+                    block['target'] = cmd.target
             
 
             # add items into args part of dictionary
@@ -38,180 +41,238 @@ class DFTemplate:
             if cmd.args:  # tuple isnt empty
                 for arg in cmd.args[0]:
                     app = None
-                    if arg.type in {'txt', 'num', 'item', 'loc', 'var', 'snd', 'part', 'pot', 'g_val', 'vec'}:
+                    if arg.type in VARIABLE_TYPES:
                         app = arg.format(slot)
-                        main_dict['blocks'][-1]['args']['items'].append(app)
+                        block['args']['items'].append(app)
                 
                     slot += 1
             
             # set tags
-            if cmd.name in tagData:
-                tags = tagData[cmd.name]
-                items = main_dict['blocks'][-1]['args']['items']
+            blockType = cmd.data.get('block')
+            tags = None
+            if blockType in TAGDATA_EXTRAS_KEYS:
+                tags = tagData['extras'][blockType]
+            elif blockType in TAGDATA_KEYS:
+                tags = tagData[blockType].get(cmd.name)
+                if tags is None:
+                    warn(f'Code block name "{cmd.name}" not recognized. Try spell checking or re-typing without spaces.')
+            if tags is not None:
+                items = block['args']['items']
                 if len(items) > 27:
-                    main_dict['blocks'][-1]['args']['items'] = items[:(26-len(tags))]  # trim list
-                main_dict['blocks'][-1]['args']['items'].extend(tags)  # add tags to end
-        
+                    block['args']['items'] = items[:(26-len(tags))]  # trim list
+                block['args']['items'].extend(tags)  # add tags to end
 
-        print('Template Built Successfully!')
-        print(main_dict)
+            mainDict['blocks'].append(block)
 
-        try:
-            templateName = main_dict['blocks'][0]['block'] + '_' + main_dict['blocks'][0]['action']
-        except KeyError:
-            templateName = main_dict['blocks'][0]['data']
+        print(f'{COL_SUCCESS}Template built successfully.{COL_RESET}')
+
+        templateName = 'Unnamed'
+        if not mainDict['blocks'][0]['block'] in TEMPLATE_STARTERS:
+            warn('Template does not start with an event, function, or process.')
+        else:
+            try:
+                templateName = mainDict['blocks'][0]['block'] + '_' + mainDict['blocks'][0]['action']
+            except KeyError:
+                templateName = mainDict['blocks'][0]['data']
         
-        return self._compress(str(main_dict)), templateName
+        return self._compress(str(mainDict)), templateName
     
-    def buildAndSend(self):
+
+    def build_and_send(self):
         built, templateName = self.build()
-        self.sendToDF(built,name=templateName)
+        self.send_to_df(built, name=templateName)
     
-    def _compress(self, string):
+
+    def _compress(self, string: str):
         comp_string = gzip.compress(string.encode('utf-8'))
         return str(base64.b64encode(comp_string))[2:-1]
     
+
     # send template to diamondfire
-    # test what it sends back when client is offline so that i can write a proper error message
-    def sendToDF(self,code,name='None'):
-        data = {"type":"template","source":f"pyre - {name}","data":f"{{\"name\":\"pyre Template - {name}\",\"data\":\"{code}\"}}"}
+    def send_to_df(self, code: str, name: str='None'):
+        item_name = 'pyre Template - ' + name
+        template_data = f"{{\"name\":\"{item_name}\",\"data\":\"{code}\"}}"
+        data = {"type": "template", "source": f"pyre - {name}","data": template_data}
         s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        s.connect(('127.0.0.1',31372))
-        s.send((str(data)+'\n').encode())
+        try:
+            s.connect(('127.0.0.1', 31372))
+        except ConnectionRefusedError:
+            print(f'{COL_ERROR}Could not connect to recode item API. (Minecraft is closed or something else has gone wrong){COL_RESET}')
+            s.close()
+            return
         
-        received = s.recv(1024)
-        print(received.decode())
+        s.send((str(data) + '\n').encode())
+        received = s.recv(1024).decode()
+        received = json.loads(received)
+        status = received['status']
+        if status == 'success':
+            print(f'{COL_SUCCESS}Template sent to client successfully.{COL_RESET}')
+        else:
+            error = received['error']
+            print(f'{COL_ERROR}Error sending template: {error}{COL_RESET}')
         s.close()
         time.sleep(0.5)
     
-    def _convertDataTypes(self,lst):
+
+    def _convert_data_types(self, lst):
         retList = []
         for element in lst:
             if type(element) in {int, float}:
                 retList.append(num(element))
             elif type(element) == str:
-                retList.append(text(element))
+                if element[0] == '^':
+                    retList.append(self.definedVars[element[1:]])
+                else:
+                    retList.append(text(element))
             else:
                 retList.append(element)
         return tuple(retList)
     
+
     def clear(self):
         self.commands = []
     
-    def _openbracket(self,btype='norm'):
-        bracket = Command('Bracket',data={'id': 'bracket', 'direct': 'open', 'type': btype})
+
+    def _openbracket(self, btype: str='norm'):
+        bracket = Command('Bracket', data={'id': 'bracket', 'direct': 'open', 'type': btype})
         self.commands.append(bracket)
         self.closebracket = btype
     
-    # actual command methods
-    def player_event(self,name):
-        cmd = Command(name,data={'id': 'block', 'block': 'event', 'action': name})
+
+    # command methods
+    def player_event(self, name: str):
+        cmd = Command(name, data={'id': 'block', 'block': 'event', 'action': name})
         self.commands.append(cmd)
     
-    def entity_event(self,name):
-        cmd = Command(name,data={'id': 'block', 'block': 'entity_event', 'action': name})
+
+    def entity_event(self, name: str):
+        cmd = Command(name, data={'id': 'block', 'block': 'entity_event', 'action': name})
         self.commands.append(cmd)
     
-    def function(self,name):
-        cmd = Command('function',data={'id': 'block', 'block': 'func', 'data': name})
+
+    def function(self, name: str):
+        cmd = Command('function', data={'id': 'block', 'block': 'func', 'data': name})
         self.commands.append(cmd)
     
-    def process(self,name):
-        cmd = Command('process',data={'id': 'block', 'block': 'process', 'data': name})
+
+    def process(self, name: str):
+        cmd = Command('process', data={'id': 'block', 'block': 'process', 'data': name})
         self.commands.append(cmd)
     
-    def call_function(self,name,parameters={}):
+
+    def call_function(self, name: str, parameters={}):
         if parameters:
             for key in parameters.keys():
-                self.set_var('=',var(key,scope='local'),parameters[key])
+                self.set_var('=', var(key, scope='local'), parameters[key])
         
-        cmd = Command('call_func',data={'id': 'block', 'block': 'call_func', 'data': name})
+        cmd = Command('call_func', data={'id': 'block', 'block': 'call_func', 'data': name})
         self.commands.append(cmd)
     
-    def start_process(self,name):
-        cmd = Command('start_process',data={'id': 'block', 'block': 'start_process', 'data': name})
+
+    def start_process(self, name: str):
+        cmd = Command('start_process', data={'id': 'block', 'block': 'start_process', 'data': name})
         self.commands.append(cmd)
 
-    def player_action(self,name,*args,target='Default'):
-        args = self._convertDataTypes(args)
-        cmd = Command(name,args,target=target,data={'id': 'block', 'block': 'player_action', 'action': name})
+
+    def player_action(self, name: str, *args, target: str='Default'):
+        args = self._convert_data_types(args)
+        cmd = Command(name, args, target=target, data={'id': 'block', 'block': 'player_action', 'action': name})
         self.commands.append(cmd)
     
-    def game_action(self,name,*args):
-        args = self._convertDataTypes(args)
-        cmd = Command(name,args,data={'id': 'block', 'block': 'game_action', 'action': name})
+
+    def game_action(self, name: str, *args):
+        args = self._convert_data_types(args)
+        cmd = Command(name, args, data={'id': 'block', 'block': 'game_action', 'action': name})
         self.commands.append(cmd)
     
-    def entity_action(self,name,*args):
-        args = self._convertDataTypes(args)
-        cmd = Command(name,args,data={'id': 'block', 'block': 'entity_action', 'action': name})
+
+    def entity_action(self, name: str, *args):
+        args = self._convert_data_types(args)
+        cmd = Command(name, args, data={'id': 'block', 'block': 'entity_action', 'action': name})
         self.commands.append(cmd)
     
-    def if_player(self,name,*args,target='Default'):
-        args = self._convertDataTypes(args)
-        cmd = Command(name,args,target=target,data={'id': 'block', 'block': 'if_player', 'action': name})
-        self.commands.append(cmd)
-        self._openbracket()
-    
-    def if_variable(self,name,*args):
-        args = self._convertDataTypes(args)
-        cmd = Command(name,args,data={'id': 'block', 'block': 'if_var', 'action': name})
+
+    def if_player(self, name: str, *args, target: str='Default'):
+        args = self._convert_data_types(args)
+        cmd = Command(name, args, target=target, data={'id': 'block', 'block': 'if_player', 'action': name})
         self.commands.append(cmd)
         self._openbracket()
     
-    def if_game(self,name,*args):
-        args = self._convertDataTypes(args)
-        cmd = Command(name,args,data={'id': 'block', 'block': 'if_game', 'action': name})
+
+    def if_variable(self, name: str, *args):
+        args = self._convert_data_types(args)
+        cmd = Command(name, args, data={'id': 'block', 'block': 'if_var', 'action': name})
         self.commands.append(cmd)
         self._openbracket()
     
-    def if_entity(self,name,*args):
-        args = self._convertDataTypes(args)
-        cmd = Command(name,args,data={'id': 'block', 'block': 'if_entity', 'action': name})
+
+    def if_game(self, name: str, *args):
+        args = self._convert_data_types(args)
+        cmd = Command(name, args, data={'id': 'block', 'block': 'if_game', 'action': name})
+        self.commands.append(cmd)
+        self._openbracket()
+    
+
+    def if_entity(self, name: str, *args):
+        args = self._convert_data_types(args)
+        cmd = Command(name, args, data={'id': 'block', 'block': 'if_entity', 'action': name})
         self.commands.append(cmd)
         self._openbracket()
 
-    def else_(self,*args):
-        cmd = Command('else',data={'id': 'block', 'block': 'else'})
+
+    def else_(self):
+        cmd = Command('else', data={'id': 'block', 'block': 'else'})
         self.commands.append(cmd)
         self._openbracket()
     
-    def repeat(self,name,*args):
-        args = self._convertDataTypes(args)
-        cmd = Command(name,args,data={'id': 'block', 'block': 'repeat', 'action': name})
+
+    def repeat(self, name: str, *args, subAction: str=None):
+        args = self._convert_data_types(args)
+        cmd = Command(name, args, data={'id': 'block', 'block': 'repeat', 'action': name, 'subAction': subAction})
         self.commands.append(cmd)
         self._openbracket('repeat')
 
-    def bracket(self,*args):
-        args = self._convertDataTypes(args)
-        cmd = Command('Bracket',data={'id': 'bracket', 'direct': 'close', 'type': self.closebracket})  # close bracket
+
+    def bracket(self, *args):
+        args = self._convert_data_types(args)
+        cmd = Command('Bracket', data={'id': 'bracket', 'direct': 'close', 'type': self.closebracket})  # close bracket
         self.commands.append(cmd)
     
-    def control(self,name,*args):
-        args = self._convertDataTypes(args)
-        cmd = Command(name,args,data={'id': 'block', 'block': 'control', 'action': name})
+
+    def control(self, name: str, *args):
+        args = self._convert_data_types(args)
+        cmd = Command(name, args, data={'id': 'block', 'block': 'control', 'action': name})
         self.commands.append(cmd)
     
-    def select_object(self,name,*args):
-        args = self._convertDataTypes(args)
-        cmd = Command(name,args,data={'id': 'block', 'block': 'select_obj', 'action': name})
+
+    def select_object(self, name: str, *args):
+        args = self._convert_data_types(args)
+        cmd = Command(name, args, data={'id': 'block', 'block': 'select_obj', 'action': name})
         self.commands.append(cmd)
     
-    def set_var(self,name,*args):
-        args = self._convertDataTypes(args)
-        cmd = Command(name,args,data={'id': 'block', 'block': 'set_var', 'action': name})
+
+    def set_var(self, name: str, *args):
+        args = self._convert_data_types(args)
+        cmd = Command(name, args, data={'id': 'block', 'block': 'set_var', 'action': name})
         self.commands.append(cmd)
     
+
     # extra methods
-    def return_(self,returndata={}):
+    def return_(self, returndata={}):
         for key in returndata:
-            self.set_var('=',var(key,scope='local'), returndata[key])
+            self.set_var('=', var(key, scope='local'), returndata[key])
         self.control('Return')
+    
+
+    def define_(self, name: str, value=0, scope: str='unsaved', createSetVar: bool=True):
+        if createSetVar:
+            self.set_var('=', var(name, scope=scope), value)
+        self.definedVars[name] = var(name, scope=scope)
 
 
 # command class
 class Command:
-    def __init__(self,name,*args,target='Default',data={}):
+    def __init__(self, name: str, *args, target: str='Default', data={}):
         self.name = name
         self.args = args
         self.target = target
@@ -220,12 +281,12 @@ class Command:
 
 # item data classes
 class item:
-    def __init__(self,itemID,count=1):
+    def __init__(self, itemID: str, count: int=1):
         self.id = itemID
         self.count = count
         self.type = 'item'
     
-    def format(self,slot):
+    def format(self, slot):
         return dict({
             "item": {
               "id": "item",
@@ -236,12 +297,13 @@ class item:
             "slot": slot
           })
 
+
 class text:
-    def __init__(self,string):
-        self.value = string
+    def __init__(self, value: str):
+        self.value = value
         self.type = 'txt'
     
-    def format(self,slot):
+    def format(self, slot: int):
         return dict({
               "item": {
                 "id": "txt",
@@ -252,12 +314,13 @@ class text:
               "slot": slot
             })
 
+
 class num:
-    def __init__(self,num):
+    def __init__(self, num: int|float):
         self.value = num
         self.type = 'num'
     
-    def format(self,slot):
+    def format(self, slot: int):
         return dict({
             "item": {
               "id": "num",
@@ -268,8 +331,9 @@ class num:
             "slot": slot
           })
 
+
 class loc:
-    def __init__(self,x=0,y=0,z=0,pitch=0,yaw=0):
+    def __init__(self, x: float=0, y: float=0, z: float=0, pitch: float=0, yaw: float=0):
         self.x = float(x)
         self.y = float(y)
         self.z = float(z)
@@ -277,7 +341,7 @@ class loc:
         self.yaw = float(yaw)
         self.type = 'loc'
     
-    def format(self,slot):
+    def format(self, slot: int):
         return dict({
             "item": {
               "id": "loc",
@@ -295,8 +359,9 @@ class loc:
             "slot": slot
           })
 
+
 class var:
-    def __init__(self,name,scope='unsaved'):
+    def __init__(self, name: str, scope: str='unsaved'):
         if scope == 'game':
             scope = 'unsaved'
         
@@ -304,7 +369,7 @@ class var:
         self.scope = scope
         self.type = 'var'
 
-    def format(self,slot):
+    def format(self, slot: int):
         return dict({
             "item": {
               "id": "var",
@@ -316,14 +381,15 @@ class var:
             "slot": slot
           })
 
+
 class sound:
-    def __init__(self,name,pitch=1.0,vol=2.0):
+    def __init__(self, name: str, pitch: float=1.0, vol: float=2.0):
         self.name = name
         self.pitch = pitch
         self.vol = vol
         self.type = 'snd'
 
-    def format(self,slot):
+    def format(self, slot: int):
         return dict({
             "item": {
               "id": "snd",
@@ -336,8 +402,10 @@ class sound:
             "slot": slot
           })
 
+
 class particle:
-    def __init__(self,name='Cloud',amount=1,horizontal=0.0,vertical=0.0,x=1.0,y=0.0,z=0.0,motionVariation=100):
+    def __init__(self, name: str='Cloud', amount: int=1, horizontal: float=0.0, vertical: float=0.0, 
+                 x: float=1.0, y: float=0.0, z: float=0.0, motionVariation: float=100):
         self.name = name
         self.amount = amount
         self.horizontal = horizontal
@@ -348,7 +416,7 @@ class particle:
         self.motionVariation = motionVariation
         self.type = 'part'
     
-    def format(self,slot):
+    def format(self, slot: int):
         return dict({
             "item": {
               "id": "part",
@@ -370,14 +438,15 @@ class particle:
             "slot": slot
           })
 
+
 class potion:
-    def __init__(self,name,dur=1000000,amp=0):
+    def __init__(self, name: str, dur: int=1000000, amp: int=0):
         self.name = name
         self.dur = dur
         self.amp = amp
         self.type = 'pot'
     
-    def format(self,slot):
+    def format(self, slot: int):
         return dict({
             "item": {
               "id": "pot",
@@ -390,13 +459,14 @@ class potion:
             "slot": slot
           })
 
+
 class gamevalue:
-    def __init__(self,name,target='Default'):
+    def __init__(self, name: str, target: str='Default'):
         self.name = name
         self.target = target
         self.type = 'g_val'
     
-    def format(self,slot):
+    def format(self, slot: int):
         return dict({
             "item": {
               "id": "g_val",
@@ -408,14 +478,15 @@ class gamevalue:
             "slot": slot
           })
 
+
 class vector:
-    def __init__(self,x=0.0,y=0.0,z=0.0):
+    def __init__(self, x: float=0.0, y: float=0.0, z: float=0.0):
         self.x = float(x)
         self.y = float(y)
         self.z = float(z)
         self.type = 'vec'
     
-    def format(self,slot):
+    def format(self, slot: int):
         return dict({
             "item": {
               "id": "vec",
