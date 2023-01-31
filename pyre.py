@@ -65,6 +65,7 @@ class DFTemplate:
             mainDict['blocks'].append(block)
 
         print(f'{COL_SUCCESS}Template built successfully.{COL_RESET}')
+        print(mainDict)
 
         templateName = 'Unnamed'
         if not mainDict['blocks'][0]['block'] in TEMPLATE_STARTERS:
@@ -228,7 +229,10 @@ class DFTemplate:
 
     def repeat(self, name: str, *args, subAction: str=None):
         args = self._convert_data_types(args)
-        cmd = Command(name, args, data={'id': 'block', 'block': 'repeat', 'action': name, 'subAction': subAction})
+        data = {'id': 'block', 'block': 'repeat', 'action': name}
+        if subAction is not None:
+            data['subAction'] = subAction
+        cmd = Command(name, args, data=data)
         self.commands.append(cmd)
         self._openbracket('repeat')
 
