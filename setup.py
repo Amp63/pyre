@@ -1,4 +1,4 @@
-from distutils.core import setup
+from setuptools import setup, find_packages
 setup(
     name='dfpyre',
     version='0.3.0',
@@ -7,5 +7,5 @@ setup(
     url='https://github.com/Amp63/pyre',
     license='MIT',
     keywords=['diamondfire', 'minecraft'],
-    packages=['dfpyre'],
+    packages=find_packages(),
 )
