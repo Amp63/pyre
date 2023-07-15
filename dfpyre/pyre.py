@@ -1,5 +1,5 @@
 """
-A module for externally creating code templates for the DiamondFire Minecraft server.
+A package for externally creating code templates for the DiamondFire Minecraft server.
 
 By Amp
 7/14/2023
