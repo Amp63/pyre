@@ -20,7 +20,7 @@ COL_RESET = '\x1b[0m'
 COL_SUCCESS = '\x1b[32m'
 COL_ERROR = '\x1b[31m'
 
-CODEBLOCK_DATA_PATH = 'dfpyre/data/data.json'
+CODEBLOCK_DATA_PATH = os.path.join(os.path.dirname(__file__), 'data/data.json')
 
 VARIABLE_TYPES = {'txt', 'num', 'item', 'loc', 'var', 'snd', 'part', 'pot', 'g_val', 'vec'}
 TEMPLATE_STARTERS = {'event', 'entity_event', 'func', 'process'}
