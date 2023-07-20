@@ -85,7 +85,9 @@ PublicBukkitValues:{{\
     try:
         s.connect(('127.0.0.1', 31372))
     except ConnectionRefusedError:
-        print(f'{COL_ERROR}Could not connect to recode item API. (Minecraft is not open or something else has gone wrong){COL_RESET}')
+        print(f"""{COL_ERROR}Could not connect to recode item API. Possible problems:
+    - Minecraft is not open
+    - Recode is not installed (get it here: https://modrinth.com/mod/recode){COL_RESET}""")
         s.close()
         return
     
