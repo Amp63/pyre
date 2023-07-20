@@ -117,7 +117,6 @@ class DFTemplate:
     def __init__(self, name: str=None):
         self.codeBlocks = []
         self.closebracket = None
-        self.definedVars = {}
         self.name = name
 
 
@@ -213,10 +212,7 @@ class DFTemplate:
             if type(element) in {int, float}:
                 retList.append(num(element))
             elif type(element) == str:
-                if element[0] == '^':
-                    retList.append(self.definedVars[element[1:]])
-                else:
-                    retList.append(text(element))
+                retList.append(text(element))
             else:
                 retList.append(element)
         return tuple(retList)
@@ -360,9 +356,3 @@ class DFTemplate:
         for key in returndata:
             self.setVariable('=', var(key, scope='local'), returndata[key])
         self.control('Return')
-    
-
-    def define_(self, name: str, value=0, scope: str='unsaved', createSetVar: bool=True):
-        if createSetVar:
-            self.setVariable('=', var(name, scope=scope), value)
-        self.definedVars[name] = var(name, scope=scope)

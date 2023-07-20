@@ -1,5 +1,16 @@
-# pyre Documentation
+# pyre
 
+A package for external creation of code templates for the DiamondFire Minecraft server (mcdiamondfire.com).
+
+## Features
+- All code block types
+- All code item types
+- Direct sending to DF via recode
+- Automatic type conversion (int to num, str to text)
+- Name checking ("did you mean ___?" for close matches)
+- Default tag values
+
+## Documentation
 ## Basics
 
 - [Setting up a program](#setup)
