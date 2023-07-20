@@ -38,6 +38,8 @@ def _loadCodeblockData():
     else:
         _warn('data.json not found -- Item tags and error checking will not work.')
         return ({}, set(), set())
+    
+    del tagData['meta']
     return (
         tagData,
         set(tagData.keys()),
@@ -112,7 +114,7 @@ class DFTemplate:
     """
     Represents a DiamondFire code template.
     """
-    def __init__(self, name=None):
+    def __init__(self, name: str=None):
         self.codeBlocks = []
         self.closebracket = None
         self.definedVars = {}
