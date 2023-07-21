@@ -222,8 +222,9 @@ class DFTemplate:
         self._setTemplateName(firstBlock)
 
         print(f'{COL_SUCCESS}Template built successfully.{COL_RESET}')
-
-        return _dfEncode(str(templateDict))
+        
+        jsonString = json.dumps(templateDict, separators=(',', ':'))
+        return _dfEncode(jsonString)
     
 
     def buildAndSend(self):
