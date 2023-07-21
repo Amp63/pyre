@@ -2,7 +2,7 @@
 A package for externally creating code templates for the DiamondFire Minecraft server.
 
 By Amp
-7/14/2023
+7/21/2023
 """
 
 import base64
@@ -24,10 +24,27 @@ CODEBLOCK_DATA_PATH = os.path.join(os.path.dirname(__file__), 'data/data.json')
 
 VARIABLE_TYPES = {'txt', 'num', 'item', 'loc', 'var', 'snd', 'part', 'pot', 'g_val', 'vec'}
 TEMPLATE_STARTERS = {'event', 'entity_event', 'func', 'process'}
+TARGET_CODEBLOCKS = {'player_action', 'entity_action', 'if_player', 'if_entity'}
+
+
+class CodeBlock:
+    def __init__(self, name: str, args: Tuple=(), target: str='Selection', data={}):
+        self.name = name
+        self.args = args
+        self.target = target
+        self.data = data
 
 
 def _warn(message):
     print(f'{COL_WARN}! WARNING ! {message}{COL_RESET}')
+
+
+def _warnUnrecognizedName(codeblockType: str, codeblockName: str):
+    close = get_close_matches(codeblockName, TAGDATA[codeblockType].keys())
+    if close:
+        _warn(f'Code block name "{codeblockName}" not recognized. Did you mean "{close[0]}"?')
+    else:
+        _warn(f'Code block name "{codeblockName}" not recognized. Try spell checking or retyping without spaces.')
 
 
 def _loadCodeblockData():
@@ -40,13 +57,15 @@ def _loadCodeblockData():
         return ({}, set(), set())
     
     del tagData['meta']
+
+    allNames = [x for l in [d.keys() for d in tagData.values()] for x in l]  # flatten list
     return (
         tagData,
-        set(tagData.keys()),
-        set(tagData['extras'].keys())
+        set(tagData['extras'].keys()),
+        set(allNames)
     )
 
-TAGDATA, TAGDATA_KEYS, TAGDATA_EXTRAS_KEYS = _loadCodeblockData()
+TAGDATA, TAGDATA_EXTRAS_KEYS, ALL_CODEBLOCK_NAMES = _loadCodeblockData()
 
 def _addInverted(data, inverted):
     """
@@ -58,14 +77,51 @@ def _addInverted(data, inverted):
 
 def _convertDataTypes(args):
     convertedArgs = []
-    for element in args:
-        if type(element) in {int, float}:
-            convertedArgs.append(num(element))
-        elif type(element) == str:
-            convertedArgs.append(text(element))
+    for value in args:
+        if type(value) in {int, float}:
+            convertedArgs.append(num(value))
+        elif type(value) is str:
+            convertedArgs.append(text(value))
         else:
-            convertedArgs.append(element)
+            convertedArgs.append(value)
     return tuple(convertedArgs)
+
+
+def _getCodeblockTags(codeblockType: str, codeblockName: str):
+    """
+    Get tags for the specified codeblock type and name
+    """
+    if codeblockType in TAGDATA_EXTRAS_KEYS:
+        return TAGDATA['extras'][codeblockType]
+    return TAGDATA[codeblockType].get(codeblockName)
+
+
+def _buildBlock(codeblock: CodeBlock):
+    """
+    Builds a properly formatted block from a CodeBlock object.
+    """
+    finalBlock = codeblock.data.copy()
+    codeblockType = codeblock.data.get('block')
+    
+    # add target if necessary ('Selection' is the default when 'target' is blank)
+    if codeblockType in TARGET_CODEBLOCKS and codeblock.target != 'Selection':
+        finalBlock['target'] = codeblock.target
+    
+    # add items into args
+    finalArgs = [arg.format(slot) for slot, arg in enumerate(codeblock.args) if arg.type in VARIABLE_TYPES]
+    
+    # check for unrecognized name, add tags
+    if codeblockType is not None:  # for brackets
+        if codeblock.name not in ALL_CODEBLOCK_NAMES:
+            _warnUnrecognizedName(codeblockType, codeblock.name)
+        else:
+            tags = _getCodeblockTags(codeblockType, codeblock.name)
+            if len(finalArgs) + len(tags) > 27:
+                finalArgs = finalArgs[:(27-len(tags))]  # trim list if over 27 elements
+            finalArgs.extend(tags)  # add tags to end
+    
+    finalBlock['args'] = {'items': finalArgs}
+    return finalBlock
 
 
 def _dfEncode(jsonString: str) -> str:
@@ -73,7 +129,7 @@ def _dfEncode(jsonString: str) -> str:
     Encodes a stringified json.
     """
     encodedString = gzip.compress(jsonString.encode('utf-8'))
-    return str(base64.b64encode(encodedString))[2:-1]
+    return base64.b64encode(encodedString).decode('utf-8')
 
 
 def sendToDf(templateCode: str, name: str='Unnamed Template', author: str='pyre'):
@@ -82,7 +138,7 @@ def sendToDf(templateCode: str, name: str='Unnamed Template', author: str='pyre'
 
     :param str templateCode: The code for the template as a base64 string.
     :param str name: The name of the template.
-    :param str author: The author of this template.
+    :param str author: The author of the template.
     """
     templateData = f"""{{\
 Count:1b,\
@@ -115,11 +171,11 @@ PublicBukkitValues:{{\
     except ConnectionRefusedError:
         print(f"""{COL_ERROR}Could not connect to recode item API. Possible problems:
     - Minecraft is not open
-    - Recode is not installed (get it here: https://modrinth.com/mod/recode){COL_RESET}""")
+    - Recode is not installed (get it here: https://modrinth.com/mod/recode or join the discord here: https://discord.gg/GWxWtcwA2C){COL_RESET}""")
         s.close()
         return
     
-    s.send((str(data) + '\n').encode('utf_8'))
+    s.send((str(data) + '\n').encode('utf-8'))
     received = json.loads(s.recv(1024).decode())
     status = received['status']
     if status == 'success':
@@ -132,14 +188,6 @@ PublicBukkitValues:{{\
     time.sleep(0.5)
 
 
-class CodeBlock:
-    def __init__(self, name: str, *args, target: str='Default', data={}):
-        self.name = name
-        self.args = args
-        self.target = target
-        self.data = data
-
-
 class DFTemplate:
     """
     Represents a DiamondFire code template.
@@ -150,85 +198,40 @@ class DFTemplate:
         self.name = name
 
 
-    def build(self) -> Tuple[str, str]:
+    def _setTemplateName(self, firstBlock):
+        if self.name is not None:
+            return
+        if 'data' in firstBlock:
+            self.name = firstBlock['data']
+        else:
+            self.name = firstBlock['block'] + '_' + firstBlock['action']
+
+
+    def build(self) -> str:
         """
         Build this template.
 
-        :return: Tuple containing compressed template code and template name.
+        :return: String containing encoded template data.
         """
-        templateDict = {'blocks': []}
-        for cmd in self.codeBlocks:
-            block = {'args': {'items': []}}
-            
-            # add keys from cmd.data
-            for key in cmd.data.keys():
-                block[key] = cmd.data[key]
+        templateDictBlocks = [_buildBlock(codeblock) for codeblock in self.codeBlocks]
+        templateDict = {'blocks': templateDictBlocks}
+        firstBlock = templateDictBlocks[0]
+        if firstBlock['block'] not in TEMPLATE_STARTERS:
+            _warn('Template does not start with an event, function, or process.')
 
-            # bracket data
-            if cmd.data.get('direct') is not None:
-                block['direct'] = cmd.data['direct']
-                block['type'] = cmd.data['type']
-            
-            # add target if necessary
-            if cmd.data.get('block') != 'event':
-                if cmd.target != 'Default':
-                    block['target'] = cmd.target
-            
-
-            # add items into args part of dictionary
-            slot = 0
-            if cmd.args:
-                for arg in cmd.args[0]:
-                    app = None
-                    if arg.type in VARIABLE_TYPES:
-                        app = arg.format(slot)
-                        block['args']['items'].append(app)
-                
-                    slot += 1
-            
-            # set tags
-            blockType = cmd.data.get('block')
-            tags = None
-            if blockType in TAGDATA_EXTRAS_KEYS:
-                tags = TAGDATA['extras'][blockType]
-            elif blockType in TAGDATA_KEYS:
-                tags = TAGDATA[blockType].get(cmd.name)
-                if tags is None:
-                    close = get_close_matches(cmd.name, TAGDATA[blockType].keys())
-                    if close:
-                        _warn(f'Code block name "{cmd.name}" not recognized. Did you mean "{close[0]}"?')
-                    else:
-                        _warn(f'Code block name "{cmd.name}" not recognized. Try spell checking or re-typing without spaces.')
-            if tags is not None:
-                items = block['args']['items']
-                if len(items) > 27:
-                    block['args']['items'] = items[:(26-len(tags))]  # trim list
-                block['args']['items'].extend(tags)  # add tags to end
-
-            templateDict['blocks'].append(block)
+        self._setTemplateName(firstBlock)
 
         print(f'{COL_SUCCESS}Template built successfully.{COL_RESET}')
 
-        templateName = 'Unnamed'
-        if templateDict['blocks'][0]['block'] not in TEMPLATE_STARTERS:
-            _warn('Template does not start with an event, function, or process.')
-        elif self.name is not None:
-            templateName = self.name
-        else:
-            try:
-                templateName = templateDict['blocks'][0]['block'] + '_' + templateDict['blocks'][0]['action']
-            except KeyError:
-                templateName = templateDict['blocks'][0]['data']
-        
-        return _dfEncode(str(templateDict)), templateName
+        return _dfEncode(str(templateDict))
     
 
     def buildAndSend(self):
         """
         Builds this template and sends it to DiamondFire automatically.
         """
-        templateCode, templateName = self.build()
-        sendToDf(templateCode, name=templateName)
+        templateCode = self.build()
+        sendToDf(templateCode, name=self.name)
     
 
     def clear(self):
@@ -279,7 +282,7 @@ class DFTemplate:
         self.codeBlocks.append(cmd)
 
 
-    def playerAction(self, name: str, *args, target: str='Default'):
+    def playerAction(self, name: str, *args, target: str='Selection'):
         args = _convertDataTypes(args)
         cmd = CodeBlock(name, args, target=target, data={'id': 'block', 'block': 'player_action', 'action': name})
         self.codeBlocks.append(cmd)
@@ -291,13 +294,13 @@ class DFTemplate:
         self.codeBlocks.append(cmd)
     
 
-    def entityAction(self, name: str, *args):
+    def entityAction(self, name: str, *args, target: str='Selection'):
         args = _convertDataTypes(args)
-        cmd = CodeBlock(name, args, data={'id': 'block', 'block': 'entity_action', 'action': name})
+        cmd = CodeBlock(name, args, target=target, data={'id': 'block', 'block': 'entity_action', 'action': name})
         self.codeBlocks.append(cmd)
     
 
-    def ifPlayer(self, name: str, *args, target: str='Default', inverted: bool=False):
+    def ifPlayer(self, name: str, *args, target: str='Selection', inverted: bool=False):
         args = _convertDataTypes(args)
         data = {'id': 'block', 'block': 'if_player', 'action': name}
         _addInverted(data, inverted)
@@ -324,11 +327,11 @@ class DFTemplate:
         self._openbracket()
     
 
-    def ifEntity(self, name: str, *args, inverted: bool=False):
+    def ifEntity(self, name: str, *args, target: str='Selection', inverted: bool=False):
         args = _convertDataTypes(args)
         data = {'id': 'block', 'block': 'if_entity', 'action': name}
         _addInverted(data, inverted)
-        cmd = CodeBlock(name, args, data=data)
+        cmd = CodeBlock(name, args, target=target, data=data)
         self.codeBlocks.append(cmd)
         self._openbracket()
 
