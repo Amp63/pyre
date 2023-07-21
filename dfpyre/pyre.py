@@ -52,9 +52,9 @@ def _warnUnrecognizedName(codeblockType: str, codeblockName: str):
 def _warnUnrecognizedTarget(target: str):
     close = get_close_matches(target, TARGETS)
     if close:
-        _warn(f'Code block name "{target}" not recognized. Did you mean "{close[0]}"?')
+        _warn(f'Target "{target}" not recognized. Did you mean "{close[0]}"?')
     else:
-        _warn(f'Code block name "{target}" not recognized. Try spell checking or retyping without spaces.')
+        _warn(f'Target "{target}" not recognized. Try spell checking or retyping without spaces.')
 
 
 def _loadCodeblockData():
