@@ -24,11 +24,14 @@ CODEBLOCK_DATA_PATH = os.path.join(os.path.dirname(__file__), 'data/data.json')
 
 VARIABLE_TYPES = {'txt', 'num', 'item', 'loc', 'var', 'snd', 'part', 'pot', 'g_val', 'vec'}
 TEMPLATE_STARTERS = {'event', 'entity_event', 'func', 'process'}
+
+TARGETS = {'Selection', 'Default', 'Killer', 'Damager', 'Shooter', 'Victim', 'AllPlayers', 'Projectile', 'AllEntities', 'AllMobs', 'LastEntity'}
 TARGET_CODEBLOCKS = {'player_action', 'entity_action', 'if_player', 'if_entity'}
+DEFAULT_TARGET = 'Selection'  # ironically not 'Default'
 
 
 class CodeBlock:
-    def __init__(self, name: str, args: Tuple=(), target: str='Selection', data={}):
+    def __init__(self, name: str, args: Tuple=(), target: str=DEFAULT_TARGET, data={}):
         self.name = name
         self.args = args
         self.target = target
@@ -45,6 +48,13 @@ def _warnUnrecognizedName(codeblockType: str, codeblockName: str):
         _warn(f'Code block name "{codeblockName}" not recognized. Did you mean "{close[0]}"?')
     else:
         _warn(f'Code block name "{codeblockName}" not recognized. Try spell checking or retyping without spaces.')
+
+def _warnUnrecognizedTarget(target: str):
+    close = get_close_matches(target, TARGETS)
+    if close:
+        _warn(f'Code block name "{target}" not recognized. Did you mean "{close[0]}"?')
+    else:
+        _warn(f'Code block name "{target}" not recognized. Try spell checking or retyping without spaces.')
 
 
 def _loadCodeblockData():
@@ -104,8 +114,11 @@ def _buildBlock(codeblock: CodeBlock):
     codeblockType = codeblock.data.get('block')
     
     # add target if necessary ('Selection' is the default when 'target' is blank)
-    if codeblockType in TARGET_CODEBLOCKS and codeblock.target != 'Selection':
-        finalBlock['target'] = codeblock.target
+    if codeblockType in TARGET_CODEBLOCKS and codeblock.target != DEFAULT_TARGET:
+        if codeblock.target not in TARGETS:
+            _warnUnrecognizedTarget(codeblock.target)
+        else:
+            finalBlock['target'] = codeblock.target
     
     # add items into args
     finalArgs = [arg.format(slot) for slot, arg in enumerate(codeblock.args) if arg.type in VARIABLE_TYPES]
@@ -222,7 +235,7 @@ class DFTemplate:
         self._setTemplateName(firstBlock)
 
         print(f'{COL_SUCCESS}Template built successfully.{COL_RESET}')
-        
+
         jsonString = json.dumps(templateDict, separators=(',', ':'))
         return _dfEncode(jsonString)
     
@@ -283,7 +296,7 @@ class DFTemplate:
         self.codeBlocks.append(cmd)
 
 
-    def playerAction(self, name: str, *args, target: str='Selection'):
+    def playerAction(self, name: str, *args, target: str=DEFAULT_TARGET):
         args = _convertDataTypes(args)
         cmd = CodeBlock(name, args, target=target, data={'id': 'block', 'block': 'player_action', 'action': name})
         self.codeBlocks.append(cmd)
@@ -295,13 +308,13 @@ class DFTemplate:
         self.codeBlocks.append(cmd)
     
 
-    def entityAction(self, name: str, *args, target: str='Selection'):
+    def entityAction(self, name: str, *args, target: str=DEFAULT_TARGET):
         args = _convertDataTypes(args)
         cmd = CodeBlock(name, args, target=target, data={'id': 'block', 'block': 'entity_action', 'action': name})
         self.codeBlocks.append(cmd)
     
 
-    def ifPlayer(self, name: str, *args, target: str='Selection', inverted: bool=False):
+    def ifPlayer(self, name: str, *args, target: str=DEFAULT_TARGET, inverted: bool=False):
         args = _convertDataTypes(args)
         data = {'id': 'block', 'block': 'if_player', 'action': name}
         _addInverted(data, inverted)
@@ -328,7 +341,7 @@ class DFTemplate:
         self._openbracket()
     
 
-    def ifEntity(self, name: str, *args, target: str='Selection', inverted: bool=False):
+    def ifEntity(self, name: str, *args, target: str=DEFAULT_TARGET, inverted: bool=False):
         args = _convertDataTypes(args)
         data = {'id': 'block', 'block': 'if_entity', 'action': name}
         _addInverted(data, inverted)
