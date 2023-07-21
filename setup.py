@@ -1,8 +1,10 @@
 from setuptools import setup, find_packages
 
+VERSION = '0.3.3'
+
 setup(
     name='dfpyre',
-    version='0.3.3',
+    version=VERSION,
     description='A package for externally creating code templates for the DiamondFire Minecraft server.',
     author='Amp',
     url='https://github.com/Amp63/pyre',
