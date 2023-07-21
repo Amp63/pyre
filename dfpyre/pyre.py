@@ -48,6 +48,34 @@ def _loadCodeblockData():
 
 TAGDATA, TAGDATA_KEYS, TAGDATA_EXTRAS_KEYS = _loadCodeblockData()
 
+def _addInverted(data, inverted):
+    """
+    If inverted is true, add 'inverted': 'NOT' to data.
+    """
+    if inverted:
+        data['inverted'] = 'NOT'
+
+
+def _convertDataTypes(args):
+    convertedArgs = []
+    for element in args:
+        if type(element) in {int, float}:
+            convertedArgs.append(num(element))
+        elif type(element) == str:
+            convertedArgs.append(text(element))
+        else:
+            convertedArgs.append(element)
+    return tuple(convertedArgs)
+
+
+def _dfEncode(jsonString: str) -> str:
+    """
+    Encodes a stringified json.
+    """
+    encodedString = gzip.compress(jsonString.encode('utf-8'))
+    return str(base64.b64encode(encodedString))[2:-1]
+
+
 def sendToDf(templateCode: str, name: str='Unnamed Template', author: str='pyre'):
     """
     Sends a template to DiamondFire via recode item api.
@@ -128,7 +156,7 @@ class DFTemplate:
 
         :return: Tuple containing compressed template code and template name.
         """
-        mainDict = {'blocks': []}
+        templateDict = {'blocks': []}
         for cmd in self.codeBlocks:
             block = {'args': {'items': []}}
             
@@ -149,7 +177,7 @@ class DFTemplate:
 
             # add items into args part of dictionary
             slot = 0
-            if cmd.args:  # tuple isnt empty
+            if cmd.args:
                 for arg in cmd.args[0]:
                     app = None
                     if arg.type in VARIABLE_TYPES:
@@ -177,27 +205,22 @@ class DFTemplate:
                     block['args']['items'] = items[:(26-len(tags))]  # trim list
                 block['args']['items'].extend(tags)  # add tags to end
 
-            mainDict['blocks'].append(block)
+            templateDict['blocks'].append(block)
 
         print(f'{COL_SUCCESS}Template built successfully.{COL_RESET}')
 
         templateName = 'Unnamed'
-        if mainDict['blocks'][0]['block'] not in TEMPLATE_STARTERS:
+        if templateDict['blocks'][0]['block'] not in TEMPLATE_STARTERS:
             _warn('Template does not start with an event, function, or process.')
         elif self.name is not None:
             templateName = self.name
         else:
             try:
-                templateName = mainDict['blocks'][0]['block'] + '_' + mainDict['blocks'][0]['action']
+                templateName = templateDict['blocks'][0]['block'] + '_' + templateDict['blocks'][0]['action']
             except KeyError:
-                templateName = mainDict['blocks'][0]['data']
+                templateName = templateDict['blocks'][0]['data']
         
-        return self._compress(str(mainDict)), templateName
-    
-
-    def _compress(self, jsonString: str) -> str:
-        compressedString = gzip.compress(jsonString.encode('utf-8'))
-        return str(base64.b64encode(compressedString))[2:-1]
+        return _dfEncode(str(templateDict)), templateName
     
 
     def buildAndSend(self):
@@ -206,18 +229,6 @@ class DFTemplate:
         """
         templateCode, templateName = self.build()
         sendToDf(templateCode, name=templateName)
-    
-
-    def _convertDataTypes(self, lst):
-        retList = []
-        for element in lst:
-            if type(element) in {int, float}:
-                retList.append(num(element))
-            elif type(element) == str:
-                retList.append(text(element))
-            else:
-                retList.append(element)
-        return tuple(retList)
     
 
     def clear(self):
@@ -269,47 +280,55 @@ class DFTemplate:
 
 
     def playerAction(self, name: str, *args, target: str='Default'):
-        args = self._convertDataTypes(args)
+        args = _convertDataTypes(args)
         cmd = CodeBlock(name, args, target=target, data={'id': 'block', 'block': 'player_action', 'action': name})
         self.codeBlocks.append(cmd)
     
 
     def gameAction(self, name: str, *args):
-        args = self._convertDataTypes(args)
+        args = _convertDataTypes(args)
         cmd = CodeBlock(name, args, data={'id': 'block', 'block': 'game_action', 'action': name})
         self.codeBlocks.append(cmd)
     
 
     def entityAction(self, name: str, *args):
-        args = self._convertDataTypes(args)
+        args = _convertDataTypes(args)
         cmd = CodeBlock(name, args, data={'id': 'block', 'block': 'entity_action', 'action': name})
         self.codeBlocks.append(cmd)
     
 
-    def ifPlayer(self, name: str, *args, target: str='Default'):
-        args = self._convertDataTypes(args)
-        cmd = CodeBlock(name, args, target=target, data={'id': 'block', 'block': 'if_player', 'action': name})
+    def ifPlayer(self, name: str, *args, target: str='Default', inverted: bool=False):
+        args = _convertDataTypes(args)
+        data = {'id': 'block', 'block': 'if_player', 'action': name}
+        _addInverted(data, inverted)
+        cmd = CodeBlock(name, args, target=target, data=data)
         self.codeBlocks.append(cmd)
         self._openbracket()
     
 
-    def ifVariable(self, name: str, *args):
-        args = self._convertDataTypes(args)
-        cmd = CodeBlock(name, args, data={'id': 'block', 'block': 'if_var', 'action': name})
+    def ifVariable(self, name: str, *args, inverted: bool=False):
+        args = _convertDataTypes(args)
+        data = {'id': 'block', 'block': 'if_var', 'action': name}
+        _addInverted(data, inverted)
+        cmd = CodeBlock(name, args, data=data)
         self.codeBlocks.append(cmd)
         self._openbracket()
     
 
-    def ifGame(self, name: str, *args):
-        args = self._convertDataTypes(args)
-        cmd = CodeBlock(name, args, data={'id': 'block', 'block': 'if_game', 'action': name})
+    def ifGame(self, name: str, *args, inverted: bool=False):
+        args = _convertDataTypes(args)
+        data = {'id': 'block', 'block': 'if_game', 'action': name}
+        _addInverted(data, inverted)
+        cmd = CodeBlock(name, args, data=data)
         self.codeBlocks.append(cmd)
         self._openbracket()
     
 
-    def ifEntity(self, name: str, *args):
-        args = self._convertDataTypes(args)
-        cmd = CodeBlock(name, args, data={'id': 'block', 'block': 'if_entity', 'action': name})
+    def ifEntity(self, name: str, *args, inverted: bool=False):
+        args = _convertDataTypes(args)
+        data = {'id': 'block', 'block': 'if_entity', 'action': name}
+        _addInverted(data, inverted)
+        cmd = CodeBlock(name, args, data=data)
         self.codeBlocks.append(cmd)
         self._openbracket()
 
@@ -321,7 +340,7 @@ class DFTemplate:
     
 
     def repeat(self, name: str, *args, subAction: str=None):
-        args = self._convertDataTypes(args)
+        args = _convertDataTypes(args)
         data = {'id': 'block', 'block': 'repeat', 'action': name}
         if subAction is not None:
             data['subAction'] = subAction
@@ -331,25 +350,25 @@ class DFTemplate:
 
 
     def bracket(self, *args):
-        args = self._convertDataTypes(args)
+        args = _convertDataTypes(args)
         cmd = CodeBlock('Bracket', data={'id': 'bracket', 'direct': 'close', 'type': self.closebracket})
         self.codeBlocks.append(cmd)
     
 
     def control(self, name: str, *args):
-        args = self._convertDataTypes(args)
+        args = _convertDataTypes(args)
         cmd = CodeBlock(name, args, data={'id': 'block', 'block': 'control', 'action': name})
         self.codeBlocks.append(cmd)
     
 
     def selectObject(self, name: str, *args):
-        args = self._convertDataTypes(args)
+        args = _convertDataTypes(args)
         cmd = CodeBlock(name, args, data={'id': 'block', 'block': 'select_obj', 'action': name})
         self.codeBlocks.append(cmd)
     
 
     def setVariable(self, name: str, *args):
-        args = self._convertDataTypes(args)
+        args = _convertDataTypes(args)
         cmd = CodeBlock(name, args, data={'id': 'block', 'block': 'set_var', 'action': name})
         self.codeBlocks.append(cmd)
     
