@@ -97,13 +97,38 @@ def _convertDataTypes(args):
     return tuple(convertedArgs)
 
 
+def _reformatCodeblockTags(tags, codeblockType: str, codeblockName: str):
+    """
+    Turns data.json tag items into DiamondFire formatted tag items
+    """
+    reformattedTags = []
+    for tagItem in tags:
+        newTagItem = {
+            'item': {
+                'id': 'bl_tag',
+                'data': {
+                    'option': tagItem['option'],
+                    'tag': tagItem['tag'],
+                    'action': codeblockName,
+                    'block': codeblockType
+                }
+            },
+            'slot': tagItem['slot']
+        }
+        reformattedTags.append(newTagItem)
+    return reformattedTags
+
+
 def _getCodeblockTags(codeblockType: str, codeblockName: str):
     """
     Get tags for the specified codeblock type and name
     """
+    tags = None
     if codeblockType in TAGDATA_EXTRAS_KEYS:
-        return TAGDATA['extras'][codeblockType]
-    return TAGDATA[codeblockType].get(codeblockName)
+        tags = TAGDATA['extras'][codeblockType]
+    else:
+        tags = TAGDATA[codeblockType].get(codeblockName)
+    return _reformatCodeblockTags(tags, codeblockType, codeblockName)
 
 
 def _buildBlock(codeblock: CodeBlock):
