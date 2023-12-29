@@ -1,6 +1,6 @@
 from setuptools import setup, find_packages
 
-VERSION = '0.3.3'
+VERSION = '0.4.0'
 
 setup(
     name='dfpyre',
@@ -11,5 +11,8 @@ setup(
     license='MIT',
     keywords=['diamondfire', 'minecraft'],
     packages=find_packages(),
-    package_data={'dfpyre': ['data/data.json']}
+    package_data={'dfpyre': ['data/data.json']},
+    install_requires=[
+        'mcitemlib'
+    ]
 )

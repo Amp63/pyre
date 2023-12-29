@@ -2,6 +2,8 @@
 Contains class definitions for code items.
 """
 
+from dfpyre.style import isAmpersandCoded, ampersandToMinimessage
+
 
 class item:
     def __init__(self, itemID: str, count: int=1):
@@ -21,13 +23,13 @@ class item:
           })
 
 
-class text:
+class string:
     def __init__(self, value: str):
         self.value = value
         self.type = 'txt'
     
     def format(self, slot: int):
-        return dict({
+        return {
               "item": {
                 "id": "txt",
                 "data": {
@@ -35,7 +37,26 @@ class text:
                 }
               },
               "slot": slot
-            })
+            }
+
+
+class text:
+    def __init__(self, value: str):
+        if isAmpersandCoded(value):
+            value = ampersandToMinimessage(value)
+        self.value = value
+        self.type = 'comp'
+      
+    def format(self, slot: int):
+      return {
+              "item": {
+                "id": "comp",
+                "data": {
+                  "name": self.value
+                }
+              },
+              "slot": slot
+            }
 
 
 class num:
@@ -44,7 +65,7 @@ class num:
         self.type = 'num'
     
     def format(self, slot: int):
-        return dict({
+        return {
             "item": {
               "id": "num",
               "data": {
@@ -52,7 +73,7 @@ class num:
               }
             },
             "slot": slot
-          })
+          }
 
 
 class loc:
@@ -65,7 +86,7 @@ class loc:
         self.type = 'loc'
     
     def format(self, slot: int):
-        return dict({
+        return {
             "item": {
               "id": "loc",
               "data": {
@@ -80,7 +101,7 @@ class loc:
               }
             },
             "slot": slot
-          })
+          }
 
 
 class var:
@@ -93,7 +114,7 @@ class var:
         self.type = 'var'
 
     def format(self, slot: int):
-        return dict({
+        return {
             "item": {
               "id": "var",
               "data": {
@@ -102,7 +123,7 @@ class var:
               }
             },
             "slot": slot
-          })
+          }
 
 
 class sound:
@@ -113,7 +134,7 @@ class sound:
         self.type = 'snd'
 
     def format(self, slot: int):
-        return dict({
+        return {
             "item": {
               "id": "snd",
               "data": {
@@ -123,7 +144,7 @@ class sound:
               }
             },
             "slot": slot
-          })
+          }
 
 
 class particle:
@@ -140,7 +161,7 @@ class particle:
         self.type = 'part'
     
     def format(self, slot: int):
-        return dict({
+        return {
             "item": {
               "id": "part",
               "data": {
@@ -159,7 +180,7 @@ class particle:
               }
             },
             "slot": slot
-          })
+          }
 
 
 class potion:
@@ -170,7 +191,7 @@ class potion:
         self.type = 'pot'
     
     def format(self, slot: int):
-        return dict({
+        return {
             "item": {
               "id": "pot",
               "data": {
@@ -180,7 +201,7 @@ class potion:
               }
             },
             "slot": slot
-          })
+          }
 
 
 class gamevalue:
@@ -190,7 +211,7 @@ class gamevalue:
         self.type = 'g_val'
     
     def format(self, slot: int):
-        return dict({
+        return {
             "item": {
               "id": "g_val",
               "data": {
@@ -199,7 +220,7 @@ class gamevalue:
               }
             },
             "slot": slot
-          })
+          }
 
 
 class vector:
@@ -210,7 +231,7 @@ class vector:
         self.type = 'vec'
     
     def format(self, slot: int):
-        return dict({
+        return {
             "item": {
               "id": "vec",
               "data": {
@@ -220,4 +241,4 @@ class vector:
               }
             },
             "slot": slot
-          })
+          }
