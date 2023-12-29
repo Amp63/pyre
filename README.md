@@ -2,6 +2,8 @@
 
 A package for external creation of code templates for the DiamondFire Minecraft server (mcdiamondfire.com).
 
+PyPi Link: https://pypi.org/project/dfpyre/
+
 ## Features
 - All code block types
 - All code item types
