@@ -133,7 +133,7 @@ def _getCodeblockTags(codeblockType: str, codeblockName: str):
     return _reformatCodeblockTags(tags, codeblockType, codeblockName)
 
 
-def _buildBlock(codeblock: CodeBlock):
+def _buildBlock(codeblock: CodeBlock, includeTags: bool):
     """
     Builds a properly formatted block from a CodeBlock object.
     """
@@ -154,7 +154,7 @@ def _buildBlock(codeblock: CodeBlock):
     if codeblockType is not None:  # for brackets
         if codeblock.name not in ALL_CODEBLOCK_NAMES:
             _warnUnrecognizedName(codeblockType, codeblock.name)
-        else:
+        elif includeTags:
             tags = _getCodeblockTags(codeblockType, codeblock.name)
             if len(finalArgs) + len(tags) > 27:
                 finalArgs = finalArgs[:(27-len(tags))]  # trim list if over 27 elements
@@ -231,13 +231,13 @@ class DFTemplate:
             self.name = firstBlock['block'] + '_' + firstBlock['action']
 
 
-    def build(self) -> str:
+    def build(self, includeTags: bool=True) -> str:
         """
         Build this template.
 
         :return: String containing encoded template data.
         """
-        templateDictBlocks = [_buildBlock(codeblock) for codeblock in self.codeBlocks]
+        templateDictBlocks = [_buildBlock(codeblock, includeTags) for codeblock in self.codeBlocks]
         templateDict = {'blocks': templateDictBlocks}
         firstBlock = templateDictBlocks[0]
         if firstBlock['block'] not in TEMPLATE_STARTERS:
@@ -251,11 +251,11 @@ class DFTemplate:
         return _dfEncode(jsonString)
     
 
-    def buildAndSend(self):
+    def buildAndSend(self, includeTags: bool=True):
         """
         Builds this template and sends it to DiamondFire automatically.
         """
-        templateCode = self.build()
+        templateCode = self.build(includeTags)
         sendToDf(templateCode, name=self.name)
     
 
