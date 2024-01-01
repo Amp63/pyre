@@ -93,7 +93,7 @@ def _convertDataTypes(args):
         if type(value) in {int, float}:
             convertedArgs.append(num(value))
         elif type(value) is str:
-            convertedArgs.append(string(value))
+            convertedArgs.append(text(value))
         else:
             convertedArgs.append(value)
     return tuple(convertedArgs)
