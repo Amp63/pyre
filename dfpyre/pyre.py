@@ -105,13 +105,14 @@ def _reformatCodeblockTags(tags, codeblockType: str, codeblockName: str):
     """
     reformattedTags = []
     for tagItem in tags:
+        actionValue = codeblockName if 'action' not in tagItem else tagItem['action']
         newTagItem = {
             'item': {
                 'id': 'bl_tag',
                 'data': {
                     'option': tagItem['option'],
                     'tag': tagItem['tag'],
-                    'action': codeblockName,
+                    'action': actionValue,
                     'block': codeblockType
                 }
             },
@@ -152,7 +153,7 @@ def _buildBlock(codeblock: CodeBlock, includeTags: bool):
     
     # check for unrecognized name, add tags
     if codeblockType is not None:  # for brackets
-        if codeblock.name not in ALL_CODEBLOCK_NAMES:
+        if codeblockType not in TAGDATA_EXTRAS_KEYS and codeblock.name not in ALL_CODEBLOCK_NAMES:
             _warnUnrecognizedName(codeblockType, codeblock.name)
         elif includeTags:
             tags = _getCodeblockTags(codeblockType, codeblock.name)
