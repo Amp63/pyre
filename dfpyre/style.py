@@ -1,4 +1,5 @@
-from mcitemlib.style import *
+import re
+from mcitemlib.style import STYLE_CODE_REGEX, FORMAT_CODES, StyledString
 
 def isAmpersandCoded(s: str) -> bool:
     return bool(re.match(STYLE_CODE_REGEX, s))
