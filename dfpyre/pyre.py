@@ -13,6 +13,7 @@ import json
 import os
 from difflib import get_close_matches
 from typing import Tuple
+from enum import Enum
 from mcitemlib.itemlib import Item as NbtItem
 from dfpyre.items import *
 
@@ -26,13 +27,31 @@ CODEBLOCK_DATA_PATH = os.path.join(os.path.dirname(__file__), 'data/data.json')
 VARIABLE_TYPES = {'txt', 'comp', 'num', 'item', 'loc', 'var', 'snd', 'part', 'pot', 'g_val', 'vec'}
 TEMPLATE_STARTERS = {'event', 'entity_event', 'func', 'process'}
 
-TARGETS = {'Selection', 'Default', 'Killer', 'Damager', 'Shooter', 'Victim', 'AllPlayers', 'Projectile', 'AllEntities', 'AllMobs', 'LastEntity'}
+TARGETS = ['Selection', 'Default', 'Killer', 'Damager', 'Shooter', 'Victim', 'AllPlayers', 'Projectile', 'AllEntities', 'AllMobs', 'LastEntity']
 TARGET_CODEBLOCKS = {'player_action', 'entity_action', 'if_player', 'if_entity'}
-DEFAULT_TARGET = 'Selection'  # ironically not 'Default'
+
+
+class Target(Enum):
+    SELECTION = 0
+    DEFAULT = 1
+    KILLER = 2
+    DAMAGER = 3
+    SHOOTER = 4
+    VICTIM = 5
+    ALL_PLAYERS = 6
+    PROJECTILE = 7
+    ALL_ENTITIES = 8
+    ALL_MOBS = 9
+    LAST_ENTITY = 10
+
+    def get_string_value(self):
+        return TARGETS[self.value]
+
+DEFAULT_TARGET = Target.SELECTION
 
 
 class CodeBlock:
-    def __init__(self, name: str, args: Tuple=(), target: str=DEFAULT_TARGET, data={}):
+    def __init__(self, name: str, args: Tuple=(), target: Target=DEFAULT_TARGET, data={}):
         self.name = name
         self.args = args
         self.target = target
@@ -49,14 +68,6 @@ def _warnUnrecognizedName(codeblockType: str, codeblockName: str):
         _warn(f'Code block name "{codeblockName}" not recognized. Did you mean "{close[0]}"?')
     else:
         _warn(f'Code block name "{codeblockName}" not recognized. Try spell checking or retyping without spaces.')
-
-
-def _warnUnrecognizedTarget(target: str):
-    close = get_close_matches(target, TARGETS)
-    if close:
-        _warn(f'Target "{target}" not recognized. Did you mean "{close[0]}"?')
-    else:
-        _warn(f'Target "{target}" not recognized. Try spell checking or retyping without spaces.')
 
 
 def _loadCodeblockData() -> Tuple:
@@ -143,10 +154,7 @@ def _buildBlock(codeblock: CodeBlock, includeTags: bool):
     
     # add target if necessary ('Selection' is the default when 'target' is blank)
     if codeblockType in TARGET_CODEBLOCKS and codeblock.target != DEFAULT_TARGET:
-        if codeblock.target not in TARGETS:
-            _warnUnrecognizedTarget(codeblock.target)
-        else:
-            finalBlock['target'] = codeblock.target
+        finalBlock['target'] = codeblock.target.get_string_value()
     
     # add items into args
     finalArgs = [arg.format(slot) for slot, arg in enumerate(codeblock.args) if arg.type in VARIABLE_TYPES]
@@ -308,7 +316,7 @@ class DFTemplate:
         self.codeBlocks.append(cmd)
 
 
-    def playerAction(self, name: str, *args, target: str=DEFAULT_TARGET):
+    def playerAction(self, name: str, *args, target: Target=DEFAULT_TARGET):
         args = _convertDataTypes(args)
         cmd = CodeBlock(name, args, target=target, data={'id': 'block', 'block': 'player_action', 'action': name})
         self.codeBlocks.append(cmd)
@@ -320,13 +328,13 @@ class DFTemplate:
         self.codeBlocks.append(cmd)
     
 
-    def entityAction(self, name: str, *args, target: str=DEFAULT_TARGET):
+    def entityAction(self, name: str, *args, target: Target=DEFAULT_TARGET):
         args = _convertDataTypes(args)
         cmd = CodeBlock(name, args, target=target, data={'id': 'block', 'block': 'entity_action', 'action': name})
         self.codeBlocks.append(cmd)
     
 
-    def ifPlayer(self, name: str, *args, target: str=DEFAULT_TARGET, inverted: bool=False):
+    def ifPlayer(self, name: str, *args, target: Target=DEFAULT_TARGET, inverted: bool=False):
         args = _convertDataTypes(args)
         data = {'id': 'block', 'block': 'if_player', 'action': name}
         _addInverted(data, inverted)
@@ -353,7 +361,7 @@ class DFTemplate:
         self._openbracket()
     
 
-    def ifEntity(self, name: str, *args, target: str=DEFAULT_TARGET, inverted: bool=False):
+    def ifEntity(self, name: str, *args, target: Target=DEFAULT_TARGET, inverted: bool=False):
         args = _convertDataTypes(args)
         data = {'id': 'block', 'block': 'if_entity', 'action': name}
         _addInverted(data, inverted)
