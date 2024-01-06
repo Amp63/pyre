@@ -243,6 +243,8 @@ class DFTemplate:
     def build(self, includeTags: bool=True) -> str:
         """
         Build this template.
+        
+        :param bool includeTags: If True, include item tags in code blocks. Otherwise omit them.
 
         :return: String containing encoded template data.
         """
@@ -263,6 +265,8 @@ class DFTemplate:
     def buildAndSend(self, includeTags: bool=True):
         """
         Builds this template and sends it to DiamondFire automatically.
+        
+        :param bool includeTags: If True, include item tags in code blocks. Otherwise omit them.
         """
         templateCode = self.build(includeTags)
         sendToDf(templateCode, name=self.name)
