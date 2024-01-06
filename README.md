@@ -44,8 +44,6 @@ PyPi Link: https://pypi.org/project/dfpyre/
 
 ## Extras
 
-- [Calling Functions with Parameters](#functions-with-parameters)
-- [return_() method](#special-return)
 - [Command List](#commands)
 
 ___
@@ -79,7 +77,7 @@ Here's a complete program that prints a message to every player when a player jo
 from dfpyre import *
 t = DFTemplate()
 t.playerEvent('Join')
-t.playerAction('SendMessage', '%default has joined!', target='AllPlayers')
+t.playerAction('SendMessage', '%default has joined!', target=Target.ALL_PLAYERS)
 t.buildAndSend()
 ```
 
@@ -95,7 +93,7 @@ The following program sends a message to all players and gives a player 10 apple
 from dfpyre import *
 t = DFTemplate()
 t.playerEvent('Join')
-t.playerAction('SendMessage', '%default has joined!', target='AllPlayers')
+t.playerAction('SendMessage', '%default has joined!', target=Target.ALL_PLAYERS)
 t.playerAction('GiveItems', item('apple', 10))
 ```
 
@@ -113,10 +111,10 @@ If you choose the first option, the code would look something like this:
 from dfpyre import *
 t = DFTemplate()
 t.playerEvent('Join')
-t.playerAction('SendMessage', '%default has joined!', target='AllPlayers')
-templateCode, templateName = t.build()  # NOTE: build() returns a tuple with code at index 0 and a formatted name at index 1.
+t.playerAction('SendMessage', '%default has joined!', target=Target.ALL_PLAYERS)
+templateCode = t.build()
 
-sendToDf(code, name=templateName)  # Send to minecraft client via recode item api
+sendToDf(code, name='myJoinTemplate')  # Send to minecraft client via recode item api
 ```
 
 If you choose the second option, you can do this:
@@ -125,7 +123,7 @@ If you choose the second option, you can do this:
 from dfpyre import *
 t = DFTemplate()
 t.playerEvent('Join')
-t.playerAction('SendMessage', '%default has joined!', target='AllPlayers')
+t.playerAction('SendMessage', '%default has joined!', target=Target.ALL_PLAYERS)
 t.buildAndSend()  # builds and sends automatically to minecraft
 ```
 
@@ -312,6 +310,25 @@ t.playerEvent('Join')
 t.playerAction('SetVelocity', vector(x=1.0, y=0.0, z=0.0))
 ```
 
+### Parameter
+
+Represents a diamondfire parameter item:
+
+```py
+parameter('text', ParameterType.STRING)
+```
+
+Example:
+
+```py
+# builds a function that says "Hello, [name]" where `name` is the inputted parameter.
+from dfpyre import *
+t = DFTemplate()
+nameParameter = parameter('name', ParameterType.TEXT)
+t.function('SayHi', nameParameter)
+t.playerAction('SendMessage', 'Hello, ', var('name', 'line'))
+```
+
 ### Conditionals/Brackets
 
 A list of conditionals and loops can be found [here](#commands).
@@ -385,50 +402,6 @@ t.playerEvent('Join')
 t.callFunction('doStuff')
 ```
 
-Function parameters can also be inputted easier. Check [here](#functions-with-parameters) for more info.
-
-### Functions with Parameters
-
-Lets say that we have this function that prints out double (numx2) of what was inputted (num):
-
-```py
-# prints numbers 1-5
-from dfpyre import *
-t = DFTemplate()
-t.function('double')
-t.setVariable('x', var('numx2'), var('num'), 2)
-t.playerAction('SendMessage', var('numx2'))
-```
-
-To easily pass the required parameter `num`, we can use the `parameters` keyword like this:
-
-```py
-# prints numbers 1-5
-from dfpyre import *
-t = DFTemplate()
-t.playerEvent('Join')
-t.callFunction('double', parameters={'num': 5})
-```
-
-This basically just sets a local variable for each key in `parameters` before the function is called.
-
-### Special Return
-
-Similar to [functions with parameters](#functions-with-parameters), `return_` is an extension of the `function` method.
-
-When you want to return a given value from a function, you can use `return_` like this:
-
-```py
-from dfpyre import *
-t = DFTemplate()
-t.function('return10')
-t.return_(returndata={'retnum': 10})
-t.buildAndSend()
-```
-
-For each value in `returndata`, a local variable will be set for each entry.
-After all of the variables are set, a `control('Return')` block is automatically added to the end of the line. This allows you to access these local variables after the function returns.
-
 ### Method List
 
 - Events / Function / Process
@@ -457,6 +430,3 @@ After all of the variables are set, a `control('Return')` block is automatically
   - control
   - selectObject
   - setVariable
-
-- Extras
-  - return_
