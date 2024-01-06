@@ -1,0 +1,19 @@
+[tool.poetry]
+name = "dfpyre"
+version = "0.4.4"
+description = "A package for external creation of code templates for the DiamondFire Minecraft server."
+authors = ["Amp"]
+readme = "README.md"
+license = "MIT"
+repository = "https://github.com/Amp63/pyre"
+keywords = ["diamondfire", "minecraft"]
+
+
+[tool.poetry.dependencies]
+python = "^3.12"
+mcitemlib = "^0.1.0"
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
