@@ -408,9 +408,3 @@ class DFTemplate:
         args = _convertDataTypes(args)
         cmd = CodeBlock(name, args, data={'id': 'block', 'block': 'set_var', 'action': name})
         self.codeBlocks.append(cmd)
-    
-
-    def return_(self, returndata={}):
-        for key in returndata:
-            self.setVariable('=', var(key, scope='local'), returndata[key])
-        self.control('Return')
