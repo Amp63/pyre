@@ -303,12 +303,9 @@ class DFTemplate:
         self.codeBlocks.append(cmd)
     
 
-    def callFunction(self, name: str, parameters={}):
-        if parameters:
-            for key in parameters.keys():
-                self.setVariable('=', var(key, scope='local'), parameters[key])
-        
-        cmd = CodeBlock('call_func', data={'id': 'block', 'block': 'call_func', 'data': name})
+    def callFunction(self, name: str, *args):
+        args = _convertDataTypes(args)
+        cmd = CodeBlock('call_func', args, data={'id': 'block', 'block': 'call_func', 'data': name})
         self.codeBlocks.append(cmd)
     
 
