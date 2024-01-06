@@ -24,7 +24,7 @@ COL_ERROR = '\x1b[31m'
 
 CODEBLOCK_DATA_PATH = os.path.join(os.path.dirname(__file__), 'data/data.json')
 
-VARIABLE_TYPES = {'txt', 'comp', 'num', 'item', 'loc', 'var', 'snd', 'part', 'pot', 'g_val', 'vec'}
+VARIABLE_TYPES = {'txt', 'comp', 'num', 'item', 'loc', 'var', 'snd', 'part', 'pot', 'g_val', 'vec', 'pn_el'}
 TEMPLATE_STARTERS = {'event', 'entity_event', 'func', 'process'}
 
 TARGETS = ['Selection', 'Default', 'Killer', 'Damager', 'Shooter', 'Victim', 'AllPlayers', 'Projectile', 'AllEntities', 'AllMobs', 'LastEntity']
@@ -292,8 +292,9 @@ class DFTemplate:
         self.codeBlocks.append(cmd)
     
 
-    def function(self, name: str):
-        cmd = CodeBlock('function', data={'id': 'block', 'block': 'func', 'data': name})
+    def function(self, name: str, *args):
+        args = _convertDataTypes(args)
+        cmd = CodeBlock('function', args, data={'id': 'block', 'block': 'func', 'data': name})
         self.codeBlocks.append(cmd)
     
 
