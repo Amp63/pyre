@@ -13,7 +13,7 @@ import json
 import os
 from difflib import get_close_matches
 import datetime
-from typing import Tuple
+from typing import Tuple, List, Dict
 from enum import Enum
 from mcitemlib.itemlib import Item as NbtItem
 from dfpyre.items import *
@@ -55,7 +55,7 @@ DEFAULT_TARGET = Target.SELECTION
 
 
 class CodeBlock:
-    def __init__(self, name: str, args: Tuple=(), target: Target=DEFAULT_TARGET, data={}):
+    def __init__(self, name: str, args: Tuple=(), target: Target=DEFAULT_TARGET, data: Dict={}):
         self.name = name
         self.args = args
         self.target = target
@@ -245,7 +245,7 @@ class DFTemplate:
     Represents a DiamondFire code template.
     """
     def __init__(self, name: str=None, author: str='pyre'):
-        self.codeBlocks = []
+        self.codeBlocks: List[CodeBlock] = []
         self.closebracket = None
         self.name = name
         self.author = author
@@ -300,7 +300,7 @@ class DFTemplate:
         self.__init__()
     
 
-    def _openbracket(self, btype: str='norm'):
+    def _openbracket(self, btype: Literal['norm', 'repeat']='norm'):
         bracket = CodeBlock('Bracket', data={'id': 'bracket', 'direct': 'open', 'type': btype})
         self.codeBlocks.append(bracket)
         self.closebracket = btype
