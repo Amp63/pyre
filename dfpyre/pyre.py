@@ -243,9 +243,8 @@ class DFTemplate:
     def build(self, includeTags: bool=True) -> str:
         """
         Build this template.
-        
-        :param bool includeTags: If True, include item tags in code blocks. Otherwise omit them.
 
+        :param bool includeTags: If True, include item tags in code blocks. Otherwise omit them.
         :return: String containing encoded template data.
         """
         templateDictBlocks = [_buildBlock(codeblock, includeTags) for codeblock in self.codeBlocks]
