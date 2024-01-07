@@ -44,7 +44,7 @@ PyPi Link: https://pypi.org/project/dfpyre/
 
 ## Extras
 
-- [Command List](#commands)
+- [Method List](#method-list)
 
 ___
 
@@ -422,9 +422,9 @@ t.callFunction('doStuff')
   - ifVariable
   - ifGame
   - ifEntity
-  - else_ (dont forget underscore)
+  - else_ (don't forget underscore)
   - repeat
-  - bracket (more info above)
+  - bracket
 
 - Other
   - control
