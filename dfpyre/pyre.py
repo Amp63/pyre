@@ -30,6 +30,9 @@ TEMPLATE_STARTERS = {'event', 'entity_event', 'func', 'process'}
 TARGETS = ['Selection', 'Default', 'Killer', 'Damager', 'Shooter', 'Victim', 'AllPlayers', 'Projectile', 'AllEntities', 'AllMobs', 'LastEntity']
 TARGET_CODEBLOCKS = {'player_action', 'entity_action', 'if_player', 'if_entity'}
 
+VAR_SHORTHAND_CHAR = '$'
+VAR_SCOPES = {'g': 'unsaved', 's': 'saved', 'l': 'local', 'i': 'line'}
+
 
 class Target(Enum):
     SELECTION = 0
@@ -104,7 +107,11 @@ def _convertDataTypes(args):
         if type(value) in {int, float}:
             convertedArgs.append(num(value))
         elif type(value) is str:
-            convertedArgs.append(text(value))
+            if value[0] == VAR_SHORTHAND_CHAR and value[1] in VAR_SCOPES:
+                varObject = var(value[2:], VAR_SCOPES[value[1]])
+                convertedArgs.append(varObject)
+            else:
+                convertedArgs.append(text(value))
         else:
             convertedArgs.append(value)
     return tuple(convertedArgs)
@@ -236,6 +243,8 @@ class DFTemplate:
             return
         if 'data' in firstBlock:
             self.name = firstBlock['data']
+            if not self.name:
+                self.name = 'Unnamed Template'
         else:
             self.name = firstBlock['block'] + '_' + firstBlock['action']
 
