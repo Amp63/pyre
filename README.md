@@ -4,6 +4,13 @@ A package for external creation of code templates for the DiamondFire Minecraft 
 
 PyPi Link: https://pypi.org/project/dfpyre/
 
+## Installation
+
+Run the following command in a terminal:
+```
+pip install dfpyre
+```
+
 ## Features
 - All code block types
 - All code item types
