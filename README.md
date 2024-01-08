@@ -185,13 +185,30 @@ t.setVariable('=', var('num'), 12)  # sets 'num' to 12
 t.setVariable('x', var('doubled'), var('num'), 2)  # sets 'doubled' to 24
 ```
 
-You can set the scope of the variable by using the `scope` keyword:
+You can set the scope of the variable by using the `scope` argument:
 
 ```py
-t.setVariable('=', var(num1, scope='game'), 12)  # both 'game' or 'unsaved' can be passed for the scope here
+t.setVariable('=', var(num1, scope='unsaved'), 12)  # `unsaved` is the same as a game variable.
 t.setVariable('=', var(num1, scope='saved'), 12)
 t.setVariable('=', var(num1, scope='local'), 12)
 ```
+
+#### Shorthand Variables
+
+You can also use the variable shorthand format like this:
+```py
+# These do the same thing:
+t.setVariable('=', var('lineVar', scope='line'), 5)
+t.setVariable('=', '$ilineVar', 5)
+```
+
+Shorthand vars should be formatted like this: `$[scope id][var name]`
+
+Here's a list of the scope IDs:
+- `g` = Game (unsaved)
+- `s` = Saved
+- `l` = Local
+- `i` = Line
 
 ### Location
 
