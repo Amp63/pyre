@@ -90,7 +90,7 @@ t.buildAndSend()
 
 ### Events/Actions
 
-You can find a list of events and actions [here](#commands)
+You can find a list of events and actions [here](#method-list)
 
 As shown in [setup](#setup), every code line must start with an event, function, or process. After that, you're free to put anything you want.
 
