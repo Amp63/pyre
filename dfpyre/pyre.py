@@ -196,6 +196,11 @@ def sendToDf(templateCode: str, name: str='Unnamed Template', author: str='pyre'
     :param str templateCode: The code for the template as a base64 string.
     :param str name: The name of the template.
     :param str author: The author of the template.
+
+    :return: status code
+        - `0` = Success
+        - `1` = Connection refused
+        - `2` = Other socket error
     """
     now = datetime.datetime.now()
 
@@ -283,14 +288,14 @@ class DFTemplate:
         return _dfEncode(jsonString)
     
 
-    def buildAndSend(self, includeTags: bool=True):
+    def buildAndSend(self, includeTags: bool=True) -> int:
         """
         Builds this template and sends it to DiamondFire automatically.
         
         :param bool includeTags: If True, include item tags in code blocks. Otherwise omit them.
         """
         templateCode = self.build(includeTags)
-        sendToDf(templateCode, name=self.name, author=self.author)
+        return sendToDf(templateCode, name=self.name, author=self.author)
     
 
     def clear(self):
