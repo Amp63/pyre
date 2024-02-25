@@ -2,7 +2,7 @@
 A package for externally creating code templates for the DiamondFire Minecraft server.
 
 By Amp
-12/29/2023
+2/24/2024
 """
 
 import base64
