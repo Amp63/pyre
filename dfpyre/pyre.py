@@ -51,7 +51,7 @@ class Target(Enum):
     ALL_MOBS = 9
     LAST_ENTITY = 10
 
-    def get_string_value(self):
+    def getStringValue(self):
         return TARGETS[self.value]
 
 DEFAULT_TARGET = Target.SELECTION
@@ -165,7 +165,7 @@ def _buildBlock(codeblock: CodeBlock, includeTags: bool):
     
     # add target if necessary ('Selection' is the default when 'target' is blank)
     if codeblockType in TARGET_CODEBLOCKS and codeblock.target != DEFAULT_TARGET:
-        finalBlock['target'] = codeblock.target.get_string_value()
+        finalBlock['target'] = codeblock.target.getStringValue()
     
     # add items into args
     finalArgs = [arg.format(slot) for slot, arg in enumerate(codeblock.args) if arg.type in VARIABLE_TYPES]
