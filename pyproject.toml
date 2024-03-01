@@ -6,7 +6,7 @@ authors = ["Amp"]
 readme = "README.md"
 license = "MIT"
 repository = "https://github.com/Amp63/pyre"
-keywords = ["diamondfire", "minecraft"]
+keywords = ["diamondfire", "minecraft", "template", "item"]
 exclude = ['examples']
 
 
