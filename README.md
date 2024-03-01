@@ -38,6 +38,7 @@ pip install dfpyre
 - [Potion](#potion)
 - [Game Value](#game-value)
 - [Vector](#vector)
+- [Parameter](#parameter)
 
 ## Conditionals and Loops
 
