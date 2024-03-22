@@ -254,7 +254,7 @@ class DFTemplate:
         return _df_encode(json_string)
     
 
-    def build_and_send(self, sendMethod: Literal['recode', 'codeclient']='recode', includeTags: bool=True) -> int:
+    def build_and_send(self, method: Literal['recode', 'codeclient']='recode', includeTags: bool=True) -> int:
         """
         Builds this template and sends it to DiamondFire automatically.
         
@@ -262,7 +262,7 @@ class DFTemplate:
         """
         templateCode = self.build(includeTags)
         templateItem = _get_template_item(templateCode, self.name, self.author)
-        return templateItem.send_to_minecraft(sendMethod)
+        return templateItem.send_to_minecraft(method)
     
 
     def clear(self):
