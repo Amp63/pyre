@@ -5,29 +5,25 @@ Contains class definitions for code items.
 from enum import Enum
 from typing import Literal, Dict
 from dfpyre.style import isAmpersandCoded, ampersandToMinimessage
+from mcitemlib.itemlib import Item as NbtItem
 
 
 def _add_slot(d: Dict, slot: int|None):
     if slot is not None:
         d['slot'] = slot
 
-
-class item:
+class item(NbtItem):
     """
     Represents a Minecraft item.
     """
     type = 'item'
 
-    def __init__(self, itemID: str, count: int=1):
-        self.id = itemID
-        self.count = count
-    
     def format(self, slot: int|None):
         formattedDict = {
             "item": {
               "id": self.type,
               "data": {
-                "item": f"{{DF_NBT:2586,id:\"{self.id}\",Count:{self.count}b}}"
+                "item": self.get_nbt()
               }
             }
           }
