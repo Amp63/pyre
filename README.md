@@ -239,7 +239,7 @@ item('stick', count=5)
 item('stone', 64)
 ```
 
-Extra nbt (enchants, lore, etc.) is not supported right now.
+To add extra data to an item, you can use any methods from the [mcitemlib](https://github.com/Amp63/mcitemlib) library
 
 ### Sound
 
