@@ -84,9 +84,9 @@ Here's a complete program that prints a message to every player when a player jo
 ```py
 from dfpyre import *
 t = DFTemplate()
-t.playerEvent('Join')
-t.playerAction('SendMessage', '%default has joined!', target=Target.ALL_PLAYERS)
-t.buildAndSend()
+t.player_event('Join')
+t.player_action('SendMessage', '%default has joined!', target=Target.ALL_PLAYERS)
+t.build_and_send('codeclient')
 ```
 
 ### Events/Actions
@@ -100,14 +100,14 @@ The following program sends a message to all players and gives a player 10 apple
 ```py
 from dfpyre import *
 t = DFTemplate()
-t.playerEvent('Join')
-t.playerAction('SendMessage', '%default has joined!', target=Target.ALL_PLAYERS)
-t.playerAction('GiveItems', item('apple', 10))
+t.player_event('Join')
+t.player_action('SendMessage', '%default has joined!', target=Target.ALL_PLAYERS)
+t.player_action('GiveItems', item('apple', 10))
 ```
 
 ### Building
 
-You basically have 2 different options for building your code line.
+You have 2 different options for building your code line.
 You can either:
 
 1. Save the compressed template code to a variable and send it to minecraft later
@@ -118,11 +118,9 @@ If you choose the first option, the code would look something like this:
 ```py
 from dfpyre import *
 t = DFTemplate()
-t.playerEvent('Join')
-t.playerAction('SendMessage', '%default has joined!', target=Target.ALL_PLAYERS)
-templateCode = t.build()
-
-sendToDf(code, name='myJoinTemplate')  # Send to minecraft client via recode item api
+t.player_event('Join')
+t.player_action('SendMessage', '%default has joined!', target=Target.ALL_PLAYERS)
+template_code = t.build()  # do whatever you want with this
 ```
 
 If you choose the second option, you can do this:
@@ -130,9 +128,9 @@ If you choose the second option, you can do this:
 ```py
 from dfpyre import *
 t = DFTemplate()
-t.playerEvent('Join')
-t.playerAction('SendMessage', '%default has joined!', target=Target.ALL_PLAYERS)
-t.buildAndSend()  # builds and sends automatically to minecraft
+t.player_event('Join')
+t.player_action('SendMessage', '%default has joined!', target=Target.ALL_PLAYERS)
+t.build_and_send('codeclient')  # builds and sends automatically to minecraft
 ```
 
 ### Variable Items
@@ -149,8 +147,8 @@ If a regular string is passed to a method as a chest parameter, it will automati
 
 ```py
 # These do the same thing:
-t.playerAction('SendMessage', text('%default joined.'))
-t.playerAction('SendMessage', '%default joined.')
+t.player_action('SendMessage', text('%default joined.'))
+t.player_action('SendMessage', '%default joined.')
 ```
 
 ### Number
@@ -166,8 +164,8 @@ If a regular integer or float is passed to a method as a chest parameter, it wil
 
 ```py
 # These do the same thing:
-t.setVariable('=', var('number'), num(10))
-t.setVariable('=', var('number'), 10)
+t.set_variable('=', var('number'), num(10))
+t.set_variable('=', var('number'), 10)
 ```
 
 ### Variable
@@ -179,19 +177,19 @@ var('num')
 var('text1')
 ```
 
-You can set variable values by using the `setVariable` method:
+You can set variable values by using the `set_variable` method:
 
 ```py
-t.setVariable('=', var('num'), 12)  # sets 'num' to 12
-t.setVariable('x', var('doubled'), var('num'), 2)  # sets 'doubled' to 24
+t.set_variable('=', var('num'), 12)  # sets 'num' to 12
+t.set_variable('x', var('doubled'), var('num'), 2)  # sets 'doubled' to 24
 ```
 
 You can set the scope of the variable by using the `scope` argument:
 
 ```py
-t.setVariable('=', var(num1, scope='unsaved'), 12)  # `unsaved` is the same as a game variable.
-t.setVariable('=', var(num1, scope='saved'), 12)
-t.setVariable('=', var(num1, scope='local'), 12)
+t.set_variable('=', var(num1, scope='unsaved'), 12)  # `unsaved` is the same as a game variable.
+t.set_variable('=', var(num1, scope='saved'), 12)
+t.set_variable('=', var(num1, scope='local'), 12)
 ```
 
 #### Shorthand Variables
@@ -199,8 +197,8 @@ t.setVariable('=', var(num1, scope='local'), 12)
 You can also use the variable shorthand format like this:
 ```py
 # These do the same thing:
-t.setVariable('=', var('lineVar', scope='line'), 5)
-t.setVariable('=', '$ilineVar', 5)
+t.set_variable('=', var('lineVar', scope='line'), 5)
+t.set_variable('=', '$ilineVar', 5)
 ```
 
 Shorthand vars should be formatted like this: `$[scope id][var name]`
@@ -216,7 +214,6 @@ Here's a list of the scope IDs:
 Represents a diamondfire location item:
 
 ```py
-# (var= is not required if numbers are in order, but is more readable)
 loc(x=25.5, y=50, z=25.5, pitch=0, yaw=-90)
 ```
 
@@ -226,8 +223,8 @@ Example:
 # teleport player on join
 from dfpyre import *
 t = DFTemplate()
-t.playerEvent('Join')
-t.playerAction('Teleport', loc(10, 50, 10))
+t.player_event('Join')
+t.player_action('Teleport', loc(10, 50, 10))
 ```
 
 ### Item
@@ -255,8 +252,8 @@ Example:
 # plays 'Grass Place' sound on join
 from dfpyre import *
 t = DFTemplate()
-t.playerEvent('Join')
-t.playerAction('PlaySound', sound('Grass Place'))
+t.player_event('Join')
+t.player_action('PlaySound', sound('Grass Place'))
 ```
 
 ### Particle
@@ -273,8 +270,8 @@ Example:
 # plays a white cloud particle effect at 5, 50, 5
 from dfpyre import *
 t = DFTemplate()
-t.playerEvent('Join')
-t.playerAction('Particle', particle('Cloud'), loc(5, 50, 5))
+t.player_event('Join')
+t.player_action('Particle', particle('Cloud'), loc(5, 50, 5))
 ```
 
 Currently, the particle object does not support colors.
@@ -294,8 +291,8 @@ Example:
 # gives the player infinite saturation 255
 from dfpyre import *
 t = DFTemplate()
-t.playerEvent('Join')
-t.playerAction('GivePotion', potion('Saturation', amp=254))
+t.player_event('Join')
+t.player_action('GivePotion', potion('Saturation', amp=254))
 ```
 
 ### Game Value
@@ -314,7 +311,7 @@ Example:
 from dfpyre import *
 t = DFTemplate()
 t.function('printData')
-t.playerAction('SendMessage', gamevalue('Player Count'), gamevalue('CPU Usage'))
+t.player_action('SendMessage', gamevalue('Player Count'), gamevalue('CPU Usage'))
 ```
 
 ### Vector
@@ -331,8 +328,8 @@ Example:
 # sets the player's x velocity to 1.0 on join
 from dfpyre import *
 t = DFTemplate()
-t.playerEvent('Join')
-t.playerAction('SetVelocity', vector(x=1.0, y=0.0, z=0.0))
+t.player_event('Join')
+t.player_action('SetVelocity', vector(x=1.0, y=0.0, z=0.0))
 ```
 
 ### Parameter
@@ -349,9 +346,9 @@ Example:
 # builds a function that says "Hello, [name]" where `name` is the inputted parameter.
 from dfpyre import *
 t = DFTemplate()
-nameParameter = parameter('name', ParameterType.TEXT)
-t.function('SayHi', nameParameter)
-t.playerAction('SendMessage', 'Hello, ', var('name', 'line'))
+name_parameter = parameter('name', ParameterType.TEXT)
+t.function('SayHi', name_parameter)
+t.player_action('SendMessage', 'Hello, ', var('name', 'line'))
 ```
 
 ### Conditionals/Brackets
@@ -364,10 +361,10 @@ A specific syntax must be followed when creating conditionals and loops. Each co
 # prints 'clicked' when a player right clicks with a stick in their hand
 from dfpyre import *
 t = DFTemplate()
-t.playerEvent('RightClick')
-t.ifPlayer('IsHolding', item('stick'))
+t.player_event('RightClick')
+t.if_player('IsHolding', item('stick'))
 t.bracket(
-    t.playerAction('SendMessage', 'clicked')
+    t.player_action('SendMessage', 'clicked')
 )
 ```
 
@@ -378,13 +375,13 @@ To create an `else` statement, use the `else_` method:
 from dfpyre import *
 t = DFTemplate()
 t.function('grounded')
-t.ifPlayer('IsGrounded')
+t.if_player('IsGrounded')
 t.bracket(
-    t.playerAction('ActionBar', 'on the ground')
+    t.player_action('ActionBar', 'on the ground')
 )
 t.else_()
 t.bracket(
-    t.playerAction('ActionBar', 'in the air')
+    t.player_action('ActionBar', 'in the air')
 )
 t.build()
 ```
@@ -397,10 +394,10 @@ As for loops, the bracket syntax is the same and will automatically change to "r
 # prints numbers 1-5
 from dfpyre import *
 t = DFTemplate()
-t.playerEvent('Join')
+t.player_event('Join')
 t.repeat('Multiple', var('i'), 5)
 t.bracket(
-    t.playerAction('SendMessage', var('i'))
+    t.player_action('SendMessage', var('i'))
 )
 ```
 
@@ -413,7 +410,7 @@ To create a function or process, just start the template with a `function` or `p
 from dfpyre import *
 t = DFTemplate()
 t.function('doStuff')
-t.playerAction('GiveItems', item('golden_apple', 64))
+t.player_action('GiveItems', item('golden_apple', 64))
 ```
 
 ### Calling Functions/Processes
@@ -423,35 +420,35 @@ Calling Functions and processes is also simple:
 ```py
 from dfpyre import *
 t = DFTemplate()
-t.playerEvent('Join')
-t.callFunction('doStuff')
+t.player_event('Join')
+t.call_function('doStuff')
 ```
 
 ### Method List
 
 - Events / Function / Process
-  - playerEvent
-  - entityEvent
+  - player_event
+  - entity_event
   - function
   - process
-  - callFunction
-  - startProcess
+  - call_function
+  - start_process
 
 - Actions
-  - playerAction
-  - gameAction
-  - entityAction
+  - player_action
+  - game_action
+  - entity_action
 
 - Conditionals / Loops
-  - ifPlayer
-  - ifVariable
-  - ifGame
-  - ifEntity
-  - else_ (don't forget underscore)
+  - if_player
+  - if_variable
+  - if_game
+  - if_entity
+  - else_
   - repeat
   - bracket
 
 - Other
   - control
-  - selectObject
-  - setVariable
+  - select_object
+  - set_variable
