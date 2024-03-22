@@ -48,7 +48,7 @@ class Target(Enum):
     ALL_MOBS = 9
     LAST_ENTITY = 10
 
-    def getStringValue(self):
+    def get_string_value(self):
         return TARGETS[self.value]
 
 DEFAULT_TARGET = Target.SELECTION
@@ -66,35 +66,35 @@ def _warn(message):
     print(f'{COL_WARN}! WARNING ! {message}{COL_RESET}')
 
 
-def _warnUnrecognizedName(codeblockType: str, codeblockName: str):
-    close = get_close_matches(codeblockName, TAGDATA[codeblockType].keys())
+def _warn_unrecognized_name(codeblock_type: str, codeblock_name: str):
+    close = get_close_matches(codeblock_name, TAGDATA[codeblock_type].keys())
     if close:
-        _warn(f'Code block name "{codeblockName}" not recognized. Did you mean "{close[0]}"?')
+        _warn(f'Code block name "{codeblock_name}" not recognized. Did you mean "{close[0]}"?')
     else:
-        _warn(f'Code block name "{codeblockName}" not recognized. Try spell checking or retyping without spaces.')
+        _warn(f'Code block name "{codeblock_name}" not recognized. Try spell checking or retyping without spaces.')
 
 
-def _loadCodeblockData() -> Tuple:
-    tagData = {}
+def _load_codeblock_data() -> Tuple:
+    tag_data = {}
     if os.path.exists(CODEBLOCK_DATA_PATH):
         with open(CODEBLOCK_DATA_PATH, 'r') as f:
-            tagData = json.load(f)
+            tag_data = json.load(f)
     else:
         _warn('data.json not found -- Item tags and error checking will not work.')
         return ({}, set(), set())
     
-    del tagData['meta']
+    del tag_data['meta']
 
-    allNames = [x for l in [d.keys() for d in tagData.values()] for x in l]  # flatten list
+    all_names = [x for l in [d.keys() for d in tag_data.values()] for x in l]  # flatten list
     return (
-        tagData,
-        set(tagData['extras'].keys()),
-        set(allNames)
+        tag_data,
+        set(tag_data['extras'].keys()),
+        set(all_names)
     )
 
-TAGDATA, TAGDATA_EXTRAS_KEYS, ALL_CODEBLOCK_NAMES = _loadCodeblockData()
+TAGDATA, TAGDATA_EXTRAS_KEYS, ALL_CODEBLOCK_NAMES = _load_codeblock_data()
 
-def _addInverted(data, inverted):
+def _add_inverted(data, inverted):
     """
     If inverted is true, add 'inverted': 'NOT' to data.
     """
@@ -102,86 +102,86 @@ def _addInverted(data, inverted):
         data['inverted'] = 'NOT'
 
 
-def _convertDataTypes(args):
-    convertedArgs = []
+def _convert_data_types(args):
+    converted_args = []
     for value in args:
         if type(value) in {int, float}:
-            convertedArgs.append(num(value))
+            converted_args.append(num(value))
         elif type(value) is str:
             if value[0] == VAR_SHORTHAND_CHAR and value[1] in VAR_SCOPES:
-                varObject = var(value[2:], VAR_SCOPES[value[1]])
-                convertedArgs.append(varObject)
+                var_object = var(value[2:], VAR_SCOPES[value[1]])
+                converted_args.append(var_object)
             else:
-                convertedArgs.append(text(value))
+                converted_args.append(text(value))
         else:
-            convertedArgs.append(value)
-    return tuple(convertedArgs)
+            converted_args.append(value)
+    return tuple(converted_args)
 
 
-def _reformatCodeblockTags(tags, codeblockType: str, codeblockName: str):
+def _reformat_codeblock_tags(tags, codeblock_type: str, codeblock_name: str):
     """
     Turns data.json tag items into DiamondFire formatted tag items
     """
-    reformattedTags = []
-    for tagItem in tags:
-        actionValue = codeblockName if 'action' not in tagItem else tagItem['action']
-        newTagItem = {
+    reformatted_tags = []
+    for tag_item in tags:
+        action_value = codeblock_name if 'action' not in tag_item else tag_item['action']
+        new_tag_item = {
             'item': {
                 'id': 'bl_tag',
                 'data': {
-                    'option': tagItem['option'],
-                    'tag': tagItem['tag'],
-                    'action': actionValue,
-                    'block': codeblockType
+                    'option': tag_item['option'],
+                    'tag': tag_item['tag'],
+                    'action': action_value,
+                    'block': codeblock_type
                 }
             },
-            'slot': tagItem['slot']
+            'slot': tag_item['slot']
         }
-        reformattedTags.append(newTagItem)
-    return reformattedTags
+        reformatted_tags.append(new_tag_item)
+    return reformatted_tags
 
 
-def _getCodeblockTags(codeblockType: str, codeblockName: str):
+def _get_codeblock_tags(codeblock_type: str, codeblock_name: str):
     """
     Get tags for the specified codeblock type and name
     """
     tags = None
-    if codeblockType in TAGDATA_EXTRAS_KEYS:
-        tags = TAGDATA['extras'][codeblockType]
+    if codeblock_type in TAGDATA_EXTRAS_KEYS:
+        tags = TAGDATA['extras'][codeblock_type]
     else:
-        tags = TAGDATA[codeblockType].get(codeblockName)
-    return _reformatCodeblockTags(tags, codeblockType, codeblockName)
+        tags = TAGDATA[codeblock_type].get(codeblock_name)
+    return _reformat_codeblock_tags(tags, codeblock_type, codeblock_name)
 
 
-def _buildBlock(codeblock: CodeBlock, includeTags: bool):
+def _build_block(codeblock: CodeBlock, include_tags: bool):
     """
     Builds a properly formatted block from a CodeBlock object.
     """
-    finalBlock = codeblock.data.copy()
-    codeblockType = codeblock.data.get('block')
+    final_block = codeblock.data.copy()
+    codeblock_type = codeblock.data.get('block')
     
     # add target if necessary ('Selection' is the default when 'target' is blank)
-    if codeblockType in TARGET_CODEBLOCKS and codeblock.target != DEFAULT_TARGET:
-        finalBlock['target'] = codeblock.target.getStringValue()
+    if codeblock_type in TARGET_CODEBLOCKS and codeblock.target != DEFAULT_TARGET:
+        final_block['target'] = codeblock.target.get_string_value()
     
     # add items into args
-    finalArgs = [arg.format(slot) for slot, arg in enumerate(codeblock.args) if arg.type in VARIABLE_TYPES]
+    final_args = [arg.format(slot) for slot, arg in enumerate(codeblock.args) if arg.type in VARIABLE_TYPES]
     
     # check for unrecognized name, add tags
-    if codeblockType is not None:  # for brackets
-        if codeblockType not in TAGDATA_EXTRAS_KEYS and codeblock.name not in ALL_CODEBLOCK_NAMES:
-            _warnUnrecognizedName(codeblockType, codeblock.name)
-        elif includeTags:
-            tags = _getCodeblockTags(codeblockType, codeblock.name)
-            if len(finalArgs) + len(tags) > 27:
-                finalArgs = finalArgs[:(27-len(tags))]  # trim list if over 27 elements
-            finalArgs.extend(tags)  # add tags to end
+    if codeblock_type is not None:  # for brackets
+        if codeblock_type not in TAGDATA_EXTRAS_KEYS and codeblock.name not in ALL_CODEBLOCK_NAMES:
+            _warn_unrecognized_name(codeblock_type, codeblock.name)
+        elif include_tags:
+            tags = _get_codeblock_tags(codeblock_type, codeblock.name)
+            if len(final_args) + len(tags) > 27:
+                final_args = final_args[:(27-len(tags))]  # trim list if over 27 elements
+            final_args.extend(tags)  # add tags to end
     
-    finalBlock['args'] = {'items': finalArgs}
-    return finalBlock
+    final_block['args'] = {'items': final_args}
+    return final_block
 
 
-def _dfEncode(jsonString: str) -> str:
+def _df_encode(jsonString: str) -> str:
     """
     Encodes a stringified json.
     """
@@ -189,12 +189,12 @@ def _dfEncode(jsonString: str) -> str:
     return base64.b64encode(encodedString).decode('utf-8')
 
 
-def getTemplateItem(templateCode: str, name: str, author: str) -> NbtItem:
+def _get_template_item(template_code: str, name: str, author: str) -> NbtItem:
     now = datetime.datetime.now()
 
-    templateItem = NbtItem('yellow_shulker_box')
-    templateItem.set_name(f'&x&f&f&5&c&0&0>> &x&f&f&c&7&0&0{name}')
-    templateItem.set_lore([
+    template_item = NbtItem('yellow_shulker_box')
+    template_item.set_name(f'&x&f&f&5&c&0&0>> &x&f&f&c&7&0&0{name}')
+    template_item.set_lore([
         f'&8Author: {author}',
         f'&8Date: {now.strftime("%Y-%m-%d")}',
         '',
@@ -202,13 +202,13 @@ def getTemplateItem(templateCode: str, name: str, author: str) -> NbtItem:
         '&7https://github.com/Amp63/pyre'
     ])
     
-    pbvTag = {
-        'hypercube:codetemplatedata': f'{{"author":"{author}","name":"{name}","version": 1,"code":"{templateCode}"}}',
+    pbv_tag = {
+        'hypercube:codetemplatedata': f'{{"author":"{author}","name":"{name}","version": 1,"code":"{template_code}"}}',
         'hypercube:pyre_creation_timestamp': now.timestamp()
     }
-    templateItem.set_tag('PublicBukkitValues', pbvTag, raw=True)
+    template_item.set_tag('PublicBukkitValues', pbv_tag, raw=True)
 
-    return templateItem
+    return template_item
 
 
 class DFTemplate:
@@ -216,52 +216,52 @@ class DFTemplate:
     Represents a DiamondFire code template.
     """
     def __init__(self, name: str=None, author: str='pyre'):
-        self.codeBlocks: List[CodeBlock] = []
+        self.codeblocks: List[CodeBlock] = []
         self.closebracket = None
         self.name = name
         self.author = author
 
 
-    def _setTemplateName(self, firstBlock):
+    def _set_template_name(self, first_block):
         if self.name is not None:
             return
-        if 'data' in firstBlock:
-            self.name = firstBlock['data']
+        if 'data' in first_block:
+            self.name = first_block['data']
             if not self.name:
                 self.name = 'Unnamed Template'
         else:
-            self.name = firstBlock['block'] + '_' + firstBlock['action']
+            self.name = first_block['block'] + '_' + first_block['action']
 
 
-    def build(self, includeTags: bool=True) -> str:
+    def build(self, include_tags: bool=True) -> str:
         """
         Build this template.
 
         :param bool includeTags: If True, include item tags in code blocks. Otherwise omit them.
         :return: String containing encoded template data.
         """
-        templateDictBlocks = [_buildBlock(codeblock, includeTags) for codeblock in self.codeBlocks]
-        templateDict = {'blocks': templateDictBlocks}
-        firstBlock = templateDictBlocks[0]
-        if firstBlock['block'] not in TEMPLATE_STARTERS:
+        template_dict_blocks = [_build_block(codeblock, include_tags) for codeblock in self.codeblocks]
+        template_dict = {'blocks': template_dict_blocks}
+        first_block = template_dict_blocks[0]
+        if first_block['block'] not in TEMPLATE_STARTERS:
             _warn('Template does not start with an event, function, or process.')
 
-        self._setTemplateName(firstBlock)
+        self._set_template_name(first_block)
 
         print(f'{COL_SUCCESS}Template built successfully.{COL_RESET}')
 
-        jsonString = json.dumps(templateDict, separators=(',', ':'))
-        return _dfEncode(jsonString)
+        json_string = json.dumps(template_dict, separators=(',', ':'))
+        return _df_encode(json_string)
     
 
-    def buildAndSend(self, sendMethod: Literal['recode', 'codeclient']='recode', includeTags: bool=True) -> int:
+    def build_and_send(self, sendMethod: Literal['recode', 'codeclient']='recode', includeTags: bool=True) -> int:
         """
         Builds this template and sends it to DiamondFire automatically.
         
         :param bool includeTags: If True, include item tags in code blocks. Otherwise omit them.
         """
         templateCode = self.build(includeTags)
-        templateItem = getTemplateItem(templateCode, self.name, self.author)
+        templateItem = _get_template_item(templateCode, self.name, self.author)
         return templateItem.send_to_minecraft(sendMethod)
     
 
@@ -274,132 +274,132 @@ class DFTemplate:
 
     def _openbracket(self, btype: Literal['norm', 'repeat']='norm'):
         bracket = CodeBlock('Bracket', data={'id': 'bracket', 'direct': 'open', 'type': btype})
-        self.codeBlocks.append(bracket)
+        self.codeblocks.append(bracket)
         self.closebracket = btype
     
 
     # command methods
-    def playerEvent(self, name: str):
+    def player_event(self, name: str):
         cmd = CodeBlock(name, data={'id': 'block', 'block': 'event', 'action': name})
-        self.codeBlocks.append(cmd)
+        self.codeblocks.append(cmd)
     
 
-    def entityEvent(self, name: str):
+    def entity_event(self, name: str):
         cmd = CodeBlock(name, data={'id': 'block', 'block': 'entity_event', 'action': name})
-        self.codeBlocks.append(cmd)
+        self.codeblocks.append(cmd)
     
 
     def function(self, name: str, *args):
-        args = _convertDataTypes(args)
+        args = _convert_data_types(args)
         cmd = CodeBlock('function', args, data={'id': 'block', 'block': 'func', 'data': name})
-        self.codeBlocks.append(cmd)
+        self.codeblocks.append(cmd)
     
 
     def process(self, name: str):
         cmd = CodeBlock('process', data={'id': 'block', 'block': 'process', 'data': name})
-        self.codeBlocks.append(cmd)
+        self.codeblocks.append(cmd)
     
 
-    def callFunction(self, name: str, *args):
-        args = _convertDataTypes(args)
+    def call_function(self, name: str, *args):
+        args = _convert_data_types(args)
         cmd = CodeBlock('call_func', args, data={'id': 'block', 'block': 'call_func', 'data': name})
-        self.codeBlocks.append(cmd)
+        self.codeblocks.append(cmd)
     
 
-    def startProcess(self, name: str):
+    def start_process(self, name: str):
         cmd = CodeBlock('start_process', data={'id': 'block', 'block': 'start_process', 'data': name})
-        self.codeBlocks.append(cmd)
+        self.codeblocks.append(cmd)
 
 
-    def playerAction(self, name: str, *args, target: Target=DEFAULT_TARGET):
-        args = _convertDataTypes(args)
+    def player_action(self, name: str, *args, target: Target=DEFAULT_TARGET):
+        args = _convert_data_types(args)
         cmd = CodeBlock(name, args, target=target, data={'id': 'block', 'block': 'player_action', 'action': name})
-        self.codeBlocks.append(cmd)
+        self.codeblocks.append(cmd)
     
 
-    def gameAction(self, name: str, *args):
-        args = _convertDataTypes(args)
+    def game_action(self, name: str, *args):
+        args = _convert_data_types(args)
         cmd = CodeBlock(name, args, data={'id': 'block', 'block': 'game_action', 'action': name})
-        self.codeBlocks.append(cmd)
+        self.codeblocks.append(cmd)
     
 
-    def entityAction(self, name: str, *args, target: Target=DEFAULT_TARGET):
-        args = _convertDataTypes(args)
+    def entity_action(self, name: str, *args, target: Target=DEFAULT_TARGET):
+        args = _convert_data_types(args)
         cmd = CodeBlock(name, args, target=target, data={'id': 'block', 'block': 'entity_action', 'action': name})
-        self.codeBlocks.append(cmd)
+        self.codeblocks.append(cmd)
     
 
-    def ifPlayer(self, name: str, *args, target: Target=DEFAULT_TARGET, inverted: bool=False):
-        args = _convertDataTypes(args)
+    def if_player(self, name: str, *args, target: Target=DEFAULT_TARGET, inverted: bool=False):
+        args = _convert_data_types(args)
         data = {'id': 'block', 'block': 'if_player', 'action': name}
-        _addInverted(data, inverted)
+        _add_inverted(data, inverted)
         cmd = CodeBlock(name, args, target=target, data=data)
-        self.codeBlocks.append(cmd)
+        self.codeblocks.append(cmd)
         self._openbracket()
     
 
-    def ifVariable(self, name: str, *args, inverted: bool=False):
-        args = _convertDataTypes(args)
+    def if_variable(self, name: str, *args, inverted: bool=False):
+        args = _convert_data_types(args)
         data = {'id': 'block', 'block': 'if_var', 'action': name}
-        _addInverted(data, inverted)
+        _add_inverted(data, inverted)
         cmd = CodeBlock(name, args, data=data)
-        self.codeBlocks.append(cmd)
+        self.codeblocks.append(cmd)
         self._openbracket()
     
 
-    def ifGame(self, name: str, *args, inverted: bool=False):
-        args = _convertDataTypes(args)
+    def if_game(self, name: str, *args, inverted: bool=False):
+        args = _convert_data_types(args)
         data = {'id': 'block', 'block': 'if_game', 'action': name}
-        _addInverted(data, inverted)
+        _add_inverted(data, inverted)
         cmd = CodeBlock(name, args, data=data)
-        self.codeBlocks.append(cmd)
+        self.codeblocks.append(cmd)
         self._openbracket()
     
 
-    def ifEntity(self, name: str, *args, target: Target=DEFAULT_TARGET, inverted: bool=False):
-        args = _convertDataTypes(args)
+    def if_entity(self, name: str, *args, target: Target=DEFAULT_TARGET, inverted: bool=False):
+        args = _convert_data_types(args)
         data = {'id': 'block', 'block': 'if_entity', 'action': name}
-        _addInverted(data, inverted)
+        _add_inverted(data, inverted)
         cmd = CodeBlock(name, args, target=target, data=data)
-        self.codeBlocks.append(cmd)
+        self.codeblocks.append(cmd)
         self._openbracket()
 
 
     def else_(self):
         cmd = CodeBlock('else', data={'id': 'block', 'block': 'else'})
-        self.codeBlocks.append(cmd)
+        self.codeblocks.append(cmd)
         self._openbracket()
     
 
-    def repeat(self, name: str, *args, subAction: str=None):
-        args = _convertDataTypes(args)
+    def repeat(self, name: str, *args, sub_action: str=None):
+        args = _convert_data_types(args)
         data = {'id': 'block', 'block': 'repeat', 'action': name}
-        if subAction is not None:
-            data['subAction'] = subAction
+        if sub_action is not None:
+            data['subAction'] = sub_action
         cmd = CodeBlock(name, args, data=data)
-        self.codeBlocks.append(cmd)
+        self.codeblocks.append(cmd)
         self._openbracket('repeat')
 
 
     def bracket(self, *args):
-        args = _convertDataTypes(args)
+        args = _convert_data_types(args)
         cmd = CodeBlock('Bracket', data={'id': 'bracket', 'direct': 'close', 'type': self.closebracket})
-        self.codeBlocks.append(cmd)
+        self.codeblocks.append(cmd)
     
 
     def control(self, name: str, *args):
-        args = _convertDataTypes(args)
+        args = _convert_data_types(args)
         cmd = CodeBlock(name, args, data={'id': 'block', 'block': 'control', 'action': name})
-        self.codeBlocks.append(cmd)
+        self.codeblocks.append(cmd)
     
 
-    def selectObject(self, name: str, *args):
-        args = _convertDataTypes(args)
+    def select_object(self, name: str, *args):
+        args = _convert_data_types(args)
         cmd = CodeBlock(name, args, data={'id': 'block', 'block': 'select_obj', 'action': name})
-        self.codeBlocks.append(cmd)
+        self.codeblocks.append(cmd)
     
 
-    def setVariable(self, name: str, *args):
-        args = _convertDataTypes(args)
+    def set_variable(self, name: str, *args):
+        args = _convert_data_types(args)
         cmd = CodeBlock(name, args, data={'id': 'block', 'block': 'set_var', 'action': name})
-        self.codeBlocks.append(cmd)
+        self.codeblocks.append(cmd)

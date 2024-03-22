@@ -1,6 +1,6 @@
 from dfpyre import *
 
 t = DFTemplate()
-t.playerEvent('Join')
-t.playerAction('SendMessage', 'Hello %default!')
-t.buildAndSend()
+t.player_event('Join')
+t.player_action('SendMessage', 'Hello %default!')
+t.build_and_send()

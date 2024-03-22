@@ -1,14 +1,14 @@
 from dfpyre import *
 
 t = DFTemplate()
-t.playerEvent('Join')
-playerCount = gamevalue('Player Count')
-t.ifVariable('>', playerCount, 10)
+t.player_event('Join')
+player_count = gamevalue('Player Count')
+t.if_variable('>', player_count, 10)
 t.bracket(
-    t.playerAction('SendMessage', 'There are more than 10 players online.')
+    t.player_action('SendMessage', 'There are more than 10 players online.')
 )
 t.else_()
 t.bracket(
-    t.playerAction('SendMessage', 'There are less than 10 players online.')
+    t.player_action('SendMessage', 'There are less than 10 players online.')
 )
-t.buildAndSend()
+t.build_and_send()

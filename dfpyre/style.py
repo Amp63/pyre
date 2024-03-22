@@ -1,22 +1,22 @@
 import re
 from mcitemlib.style import STYLE_CODE_REGEX, FORMAT_CODES, StyledString
 
-def isAmpersandCoded(s: str) -> bool:
+def is_ampersand_coded(s: str) -> bool:
     return bool(re.match(STYLE_CODE_REGEX, s))
 
 
-def ampersandToMinimessage(ampersand_code: str) -> str:
+def ampersand_to_minimessage(ampersand_code: str) -> str:
     ampersand_code = ampersand_code.replace('&r', '<reset>')  # bad but should work most of the time
-    styledString = StyledString.from_codes(ampersand_code)
-    formattedStringList = []
-    for substring in styledString.substrings:
-        formattedSubstringList = []
-        for styleType, value in substring.data.items():
-            if styleType in FORMAT_CODES.values() and value:
-                formattedSubstringList.append(f'<{styleType}>')
-            if styleType == 'color':
-                formattedSubstringList.append(f'<{value}>')
+    styled_string = StyledString.from_codes(ampersand_code)
+    formatted_string_list = []
+    for substring in styled_string.substrings:
+        formatted_substring_list = []
+        for style_type, value in substring.data.items():
+            if style_type in FORMAT_CODES.values() and value:
+                formatted_substring_list.append(f'<{style_type}>')
+            if style_type == 'color':
+                formatted_substring_list.append(f'<{value}>')
         
-        formattedSubstringList.append(substring.data['text'])
-        formattedStringList.append(''.join(formattedSubstringList))
-    return ''.join(formattedStringList)
+        formatted_substring_list.append(substring.data['text'])
+        formatted_string_list.append(''.join(formatted_substring_list))
+    return ''.join(formatted_string_list)
