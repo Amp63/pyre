@@ -19,14 +19,7 @@ class item(NbtItem):
     type = 'item'
 
     def format(self, slot: int|None):
-        formattedDict = {
-            "item": {
-              "id": self.type,
-              "data": {
-                "item": self.get_nbt()
-              }
-            }
-          }
+        formattedDict = {"item": {"id": self.type, "data": {"item": self.get_nbt()}}}
         _add_slot(formattedDict, slot)
         return formattedDict
 
@@ -41,14 +34,7 @@ class string:
         self.value = value
     
     def format(self, slot: int|None):
-        formattedDict = {
-              "item": {
-                "id": self.type,
-                "data": {
-                  "name": self.value
-                }
-              }
-            }
+        formattedDict = {"item": {"id": self.type, "data": {"name": self.value}}}
         _add_slot(formattedDict, slot)
         return formattedDict
 
@@ -63,16 +49,9 @@ class text:
         if isAmpersandCoded(value):
             value = ampersandToMinimessage(value)
         self.value = value
-      
+    
     def format(self, slot: int|None):
-      formattedDict = {
-              "item": {
-                "id": self.type,
-                "data": {
-                  "name": self.value
-                }
-              }
-            }
+      formattedDict = {"item": {"id": self.type, "data": {"name": self.value}}}
       _add_slot(formattedDict, slot)
       return formattedDict
 
@@ -87,14 +66,7 @@ class num:
         self.value = num
     
     def format(self, slot: int|None):
-        formattedDict = {
-            "item": {
-              "id": self.type,
-              "data": {
-                "name": str(self.value)
-              }
-            }
-          }
+        formattedDict = {"item": {"id": self.type, "data": {"name": str(self.value)}}}
         _add_slot(formattedDict, slot)
         return formattedDict
 
@@ -113,21 +85,19 @@ class loc:
         self.yaw = float(yaw)
     
     def format(self, slot: int|None):
-        formattedDict =  {
-            "item": {
-              "id": self.type,
-              "data": {
+        formattedDict =  {"item": {
+            "id": self.type,
+            "data": {
                 "isBlock": False,
                 "loc": {
-                  "x": self.x,
-                  "y": self.y,
-                  "z": self.z,
-                  "pitch": self.pitch,
-                  "yaw": self.yaw
+                    "x": self.x,
+                    "y": self.y,
+                    "z": self.z,
+                    "pitch": self.pitch,
+                    "yaw": self.yaw
                 }
-              }
             }
-          }
+        }}
         _add_slot(formattedDict, slot)
         return formattedDict
 
@@ -143,15 +113,7 @@ class var:
         self.scope = scope
 
     def format(self, slot: int|None):
-        formattedDict = {
-            "item": {
-              "id": self.type,
-              "data": {
-                "name": self.name,
-                "scope": self.scope
-              }
-            }
-          }
+        formattedDict = {"item": {"id": self.type,"data": {"name": self.name, "scope": self.scope}}}
         _add_slot(formattedDict, slot)
         return formattedDict
 
@@ -168,16 +130,7 @@ class sound:
         self.vol = vol
 
     def format(self, slot: int|None):
-        formattedDict = {
-            "item": {
-              "id": self.type,
-              "data": {
-                "sound": self.name,
-                "pitch": self.pitch,
-                "vol": self.vol
-              }
-            }
-          }
+        formattedDict = {"item": {"id": self.type,"data": {"sound": self.name, "pitch": self.pitch, "vol": self.vol}}}
         _add_slot(formattedDict, slot)
         return formattedDict
 
@@ -199,25 +152,22 @@ class particle:
         self.motionVariation = motionVariation
     
     def format(self, slot: int|None):
-        formattedDict = {
-            "item": {
-              "id": self.type,
-              "data": {
+        formattedDict = {"item": {"id": self.type,
+            "data": {
                 "particle": self.name,
                 "cluster": {
-                  "amount": self.amount,
-                  "horizontal": self.horizontal,
-                  "vertical": self.vertical
+                    "amount": self.amount,
+                    "horizontal": self.horizontal,
+                    "vertical": self.vertical
                 },
                 "data": {
-                  "x": self.x,
-                  "y": self.y,
-                  "z": self.z,
-                  "motionVariation": self.motionVariation
+                    "x": self.x,
+                    "y": self.y,
+                    "z": self.z,
+                    "motionVariation": self.motionVariation
                 }
-              }
             }
-          }
+        }}
         _add_slot(formattedDict, slot)
         return formattedDict
 
@@ -234,16 +184,7 @@ class potion:
         self.amp = amp
     
     def format(self, slot: int|None):
-        formattedDict = {
-            "item": {
-              "id": self.type,
-              "data": {
-                "pot": self.name,
-                "dur": self.dur,
-                "amp": self.amp
-              }
-            }
-          }
+        formattedDict = {"item": {"id": self.type,"data": {"pot": self.name, "dur": self.dur, "amp": self.amp}}}
         _add_slot(formattedDict, slot)
         return formattedDict
 
@@ -259,15 +200,7 @@ class gamevalue:
         self.target = target
     
     def format(self, slot: int|None):
-        formattedDict = {
-            "item": {
-              "id": self.type,
-              "data": {
-                "type": self.name,
-                "target": self.target
-              }
-            }
-          }
+        formattedDict = {"item": {"id": self.type, "data": {"type": self.name, "target": self.target}}}
         _add_slot(formattedDict, slot)
         return formattedDict
 
@@ -284,16 +217,7 @@ class vector:
         self.z = float(z)
     
     def format(self, slot: int|None):
-        formattedDict = {
-            "item": {
-              "id": self.type,
-              "data": {
-                "x": self.x,
-                "y": self.y,
-                "z": self.z
-              }
-            }
-          }
+        formattedDict = {"item": {"id": self.type, "data": {"x": self.x, "y": self.y, "z": self.z}}}
         _add_slot(formattedDict, slot)
         return formattedDict
 
@@ -335,18 +259,16 @@ class parameter:
       
     
     def format(self, slot: int):
-        formattedDict = {
-            "item": {
-              "id": self.type,
-              "data": {
+        formattedDict = {"item": {
+            "id": self.type,
+            "data": {
                 "name": self.name,
                 "type": self.paramType.get_string_value(),
                 "plural": self.plural,
                 "optional": self.optional,
-              }
-            },
+            }},
             "slot": slot
-          }
+        }
         if self.description:
             formattedDict['item']['data']['description'] = self.description
         if self.note:
