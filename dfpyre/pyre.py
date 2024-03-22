@@ -7,9 +7,6 @@ By Amp
 
 import base64
 import gzip
-import socket
-import websocket
-import time
 import json
 import os
 from difflib import get_close_matches
