@@ -254,7 +254,7 @@ class DFTemplate:
         return _df_encode(json_string)
     
 
-    def build_and_send(self, method: Literal['recode', 'codeclient']='recode', includeTags: bool=True) -> int:
+    def build_and_send(self, method: Literal['recode', 'codeclient'], includeTags: bool=True) -> int:
         """
         Builds this template and sends it to DiamondFire automatically.
         
