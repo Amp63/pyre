@@ -14,7 +14,7 @@ pip install dfpyre
 ## Features
 - All code block types
 - All code item types
-- Direct sending to DF via recode
+- Direct sending to DF via recode or codeclient
 - Automatic type conversion (int to num, str to text)
 - Name checking ("did you mean ___?" for close matches)
 - Default tag values
@@ -23,7 +23,7 @@ pip install dfpyre
 ## Basics
 
 - [Setting up a program](#setup)
-- [Events and Actions](#eventsactions)
+- [Events and Actions](#events-and-actions)
 - [Building](#building)
 
 ## Var Items
@@ -42,13 +42,13 @@ pip install dfpyre
 
 ## Conditionals and Loops
 
-- [Conditionals and Brackets](#conditionalsbrackets)
+- [Conditionals and Brackets](#conditionals-and-brackets)
 - [Loops](#loops)
 
 ## Functions and Procedures
 
-- [Creating Functions and Procedures](#create-functionsprocedures)
-- [Calling Functions and Procedures](#call-functionsprocedures)
+- [Creating Functions and Processes](#creating-functions-and-processes)
+- [Calling Functions and Processes](#calling-functions-and-processes)
 
 ## Extras
 
@@ -89,7 +89,7 @@ t.player_action('SendMessage', '%default has joined!', target=Target.ALL_PLAYERS
 t.build_and_send('codeclient')
 ```
 
-### Events/Actions
+### Events and Actions
 
 You can find a list of events and actions [here](#method-list)
 
@@ -351,7 +351,7 @@ t.function('SayHi', name_parameter)
 t.player_action('SendMessage', 'Hello, ', var('name', 'line'))
 ```
 
-### Conditionals/Brackets
+### Conditionals and Brackets
 
 A list of conditionals and loops can be found [here](#commands).
 
@@ -401,7 +401,7 @@ t.bracket(
 )
 ```
 
-### Creating Functions/Processes
+### Creating Functions and Processes
 
 To create a function or process, just start the template with a `function` or `process` method:
 
@@ -413,7 +413,7 @@ t.function('doStuff')
 t.player_action('GiveItems', item('golden_apple', 64))
 ```
 
-### Calling Functions/Processes
+### Calling Functions and Processes
 
 Calling Functions and processes is also simple:
 
