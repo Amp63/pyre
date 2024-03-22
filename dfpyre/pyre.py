@@ -214,74 +214,6 @@ def getTemplateItem(templateCode: str, name: str, author: str) -> NbtItem:
     return templateItem
 
 
-def sendRecode(templateCode: str, name: str='Unnamed Template', author: str='pyre') -> int:
-    """
-    Sends a template to DiamondFire via recode item api.
-
-    :param str templateCode: The code for the template as a base64 string.
-    :param str name: The name of the template.
-    :param str author: The author of the template.
-
-    :return: status code
-        - `0` = Success
-        - `1` = Connection refused
-        - `2` = Other socket error
-    """
-    
-    templateItem = getTemplateItem(templateCode, name, author)
-    data = {'type': 'nbt', 'source': f'pyre Template - {name}', 'data': templateItem.get_nbt()}
-    s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    try:
-        s.connect(('127.0.0.1', 31372))
-    except ConnectionRefusedError:
-        print(f"""{COL_ERROR}Could not connect to recode item API. Possible problems:
-    - Minecraft is not open
-    - Recode is not installed (get it here: https://modrinth.com/mod/recode or join the discord here: https://discord.gg/GWxWtcwA2C){COL_RESET}""")
-        s.close()
-        return 1
-    
-    s.send((str(data) + '\n').encode('utf-8'))
-    received = json.loads(s.recv(1024).decode())
-    status = received['status']
-    s.close()
-    time.sleep(0.5)
-
-    if status == 'success':
-        print(f'{COL_SUCCESS}Template sent to client successfully.{COL_RESET}')
-        return 0
-    error = received['error']
-    print(f'{COL_ERROR}Error sending template: {error}{COL_RESET}')
-    return 2
-
-
-def sendCodeClient(templateCode: str, name: str='Unnamed Template', author: str='pyre') -> int:
-    try:
-        ws = websocket.WebSocket()
-        ws.connect(CODECLIENT_URL)
-        print(f'{COL_SUCCESS}Connected. {COL_WARN}Please run /auth in game.{COL_RESET}')
-        
-        ws.recv()  # auth response
-
-        templateItem = getTemplateItem(templateCode, name, author)
-        command = f'give {templateItem.get_nbt()}'
-        ws.send(command)
-        ws.close()
-
-        print(f'{COL_SUCCESS}Template sent to client successfully.{COL_RESET}')
-        return 0
-        
-    except Exception as e:
-        if isinstance(e, ConnectionRefusedError):
-            print(f'{COL_ERROR}Could not connect to CodeClient API. Possible problems:')
-            print(f'    - Minecraft is not open')
-            print(f'    - CodeClient is not installed (get it here: https://modrinth.com/mod/codeclient)')
-            print(f'    - CodeClient API is not enabled (enable it in CodeClient general settings)')
-            return 1
-        
-        print(f'Connection failed: {e}')
-        return 2
-
-
 class DFTemplate:
     """
     Represents a DiamondFire code template.
@@ -332,11 +264,8 @@ class DFTemplate:
         :param bool includeTags: If True, include item tags in code blocks. Otherwise omit them.
         """
         templateCode = self.build(includeTags)
-        if sendMethod == 'recode':
-            return sendRecode(templateCode, name=self.name, author=self.author)
-        if sendMethod == 'codeclient':
-            return sendCodeClient(templateCode, name=self.name, author=self.author)
-        return -1
+        templateItem = getTemplateItem(templateCode, self.name, self.author)
+        return templateItem.send_to_minecraft(sendMethod)
     
 
     def clear(self):
