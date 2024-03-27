@@ -11,4 +11,4 @@ t.else_()
 t.bracket(
     t.player_action('SendMessage', 'There are less than 10 players online.')
 )
-t.build_and_send()
+t.build_and_send('recode')
