@@ -220,6 +220,10 @@ class DFTemplate:
         self.closebracket = None
         self.name = name
         self.author = author
+    
+
+    def __repr__(self) -> str:
+        return f'DFTemplate(name: {self.name}, author: {self.author}, codeblocks: {len(self.codeblocks)})'
 
 
     def _set_template_name(self, first_block):
