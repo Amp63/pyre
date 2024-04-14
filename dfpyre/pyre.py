@@ -157,12 +157,12 @@ def _build_block(codeblock: CodeBlock, include_tags: bool):
     """
     Builds a properly formatted block from a CodeBlock object.
     """
-    final_block = codeblock.data.copy()
+    built_block = codeblock.data.copy()
     codeblock_type = codeblock.data.get('block')
     
     # add target if necessary ('Selection' is the default when 'target' is blank)
     if codeblock_type in TARGET_CODEBLOCKS and codeblock.target != DEFAULT_TARGET:
-        final_block['target'] = codeblock.target.get_string_value()
+        built_block['target'] = codeblock.target.get_string_value()
     
     # add items into args
     final_args = [arg.format(slot) for slot, arg in enumerate(codeblock.args) if arg.type in VARIABLE_TYPES]
@@ -177,8 +177,8 @@ def _build_block(codeblock: CodeBlock, include_tags: bool):
                 final_args = final_args[:(27-len(tags))]  # trim list if over 27 elements
             final_args.extend(tags)  # add tags to end
     
-    final_block['args'] = {'items': final_args}
-    return final_block
+    built_block['args'] = {'items': final_args}
+    return built_block
 
 
 def _df_encode(jsonString: str) -> str:
