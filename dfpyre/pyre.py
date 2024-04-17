@@ -2,7 +2,6 @@
 A package for externally creating code templates for the DiamondFire Minecraft server.
 
 By Amp
-2/24/2024
 """
 
 import base64
@@ -13,6 +12,7 @@ from difflib import get_close_matches
 import datetime
 from typing import Tuple, List, Dict
 from enum import Enum
+import socket
 from mcitemlib.itemlib import Item as NbtItem
 from dfpyre.items import *
 
@@ -25,6 +25,7 @@ CODEBLOCK_DATA_PATH = os.path.join(os.path.dirname(__file__), 'data/data.json')
 
 VARIABLE_TYPES = {'txt', 'comp', 'num', 'item', 'loc', 'var', 'snd', 'part', 'pot', 'g_val', 'vec', 'pn_el'}
 TEMPLATE_STARTERS = {'event', 'entity_event', 'func', 'process'}
+SINGLE_NAME_CODEBLOCKS = {'func', 'process', 'call_func', 'start_process'}
 
 TARGETS = ['Selection', 'Default', 'Killer', 'Damager', 'Shooter', 'Victim', 'AllPlayers', 'Projectile', 'AllEntities', 'AllMobs', 'LastEntity']
 TARGET_CODEBLOCKS = {'player_action', 'entity_action', 'if_player', 'if_entity'}
@@ -181,12 +182,16 @@ def _build_block(codeblock: CodeBlock, include_tags: bool):
     return built_block
 
 
-def _df_encode(jsonString: str) -> str:
+def _df_encode(json_string: str) -> str:
     """
     Encodes a stringified json.
     """
-    encodedString = gzip.compress(jsonString.encode('utf-8'))
-    return base64.b64encode(encodedString).decode('utf-8')
+    encoded_string = gzip.compress(json_string.encode('utf-8'))
+    return base64.b64encode(encoded_string).decode('utf-8')
+
+
+def _df_decode(encoded_string: str) -> str:
+    return gzip.decompress(base64.b64decode(encoded_string)).decode('utf-8')
 
 
 def _get_template_item(template_code: str, name: str, author: str) -> NbtItem:
@@ -211,6 +216,9 @@ def _get_template_item(template_code: str, name: str, author: str) -> NbtItem:
     return template_item
 
 
+# TODO: 
+# - add inserting codeblocks at any index
+# - generate python code from template object
 class DFTemplate:
     """
     Represents a DiamondFire code template.
@@ -224,6 +232,43 @@ class DFTemplate:
 
     def __repr__(self) -> str:
         return f'DFTemplate(name: {self.name}, author: {self.author}, codeblocks: {len(self.codeblocks)})'
+
+
+    @staticmethod
+    def from_code(template_code: str):
+        """
+        Create a template object from an existing template code.
+        """
+        template_dict = json.loads(_df_decode(template_code))
+        template = DFTemplate()
+        for block_dict in template_dict['blocks']:
+            if 'args' in block_dict:
+                args = []
+                for item_dict in block_dict['args']['items']:
+                    parsed_item = item_from_dict(item_dict['item'])
+                    if parsed_item is not None:
+                        args.append(parsed_item)
+            target = Target(TARGETS.index(block_dict['target'])) if 'target' in block_dict else DEFAULT_TARGET
+
+            codeblock_name = 'bracket'
+            if 'block' in block_dict and block_dict['block'] in SINGLE_NAME_CODEBLOCKS:
+                codeblock_name = block_dict['block']
+            elif 'action' in block_dict:
+                codeblock_name = block_dict['action']
+            codeblock = CodeBlock(codeblock_name, args, target, block_dict)
+            template.codeblocks.append(codeblock)
+        
+        return template
+
+
+    @staticmethod
+    def receive_from_recode():
+        print('Waiting for item to be sent...')
+        s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        s.connect(('localhost', 31372))
+        received = s.recv(8192)
+        print(received)
+        s.close()
 
 
     def _set_template_name(self, first_block):
@@ -266,7 +311,7 @@ class DFTemplate:
         """
         templateCode = self.build(includeTags)
         templateItem = _get_template_item(templateCode, self.name, self.author)
-        return templateItem.send_to_minecraft(method)
+        return templateItem.send_to_minecraft(method, 'pyre')
     
 
     def clear(self):
@@ -277,7 +322,7 @@ class DFTemplate:
     
 
     def _openbracket(self, btype: Literal['norm', 'repeat']='norm'):
-        bracket = CodeBlock('Bracket', data={'id': 'bracket', 'direct': 'open', 'type': btype})
+        bracket = CodeBlock('bracket', data={'id': 'bracket', 'direct': 'open', 'type': btype})
         self.codeblocks.append(bracket)
         self.closebracket = btype
     
@@ -295,7 +340,7 @@ class DFTemplate:
 
     def function(self, name: str, *args):
         args = _convert_data_types(args)
-        cmd = CodeBlock('function', args, data={'id': 'block', 'block': 'func', 'data': name})
+        cmd = CodeBlock('func', args, data={'id': 'block', 'block': 'func', 'data': name})
         self.codeblocks.append(cmd)
     
 
@@ -387,7 +432,7 @@ class DFTemplate:
 
     def bracket(self, *args):
         args = _convert_data_types(args)
-        cmd = CodeBlock('Bracket', data={'id': 'bracket', 'direct': 'close', 'type': self.closebracket})
+        cmd = CodeBlock('bracket', data={'id': 'bracket', 'direct': 'close', 'type': self.closebracket})
         self.codeblocks.append(cmd)
     
 
