@@ -3,14 +3,19 @@ Contains class definitions for code items.
 """
 
 from enum import Enum
-from typing import Literal, Dict
+from typing import Literal, Dict, Any
 from dfpyre.style import is_ampersand_coded, ampersand_to_minimessage
 from mcitemlib.itemlib import Item as NbtItem
+
+
+class PyreException(Exception):
+    pass
 
 
 def _add_slot(d: Dict, slot: int|None):
     if slot is not None:
         d['slot'] = slot
+
 
 class item(NbtItem):
     """
@@ -254,3 +259,57 @@ class parameter:
             formatted_dict['item']['data']['default_value'] = self.default_value.format(None)['item']
         
         return formatted_dict
+
+
+def _some_or(value: Any, none_value: Any):
+    """
+    Returns `none_value` if `value` is None, otherwise returns `value`.
+    """
+    if value is None:
+        return none_value
+    return value
+
+
+def item_from_dict(item_dict: Dict) -> object:
+    item_id = item_dict['id']
+    item_data = item_dict['data']
+
+    if item_id == 'item':
+        return item.from_nbt(item_data['item'])
+    elif item_id == 'txt':
+        return string(item_data['name'])
+    elif item_id == 'comp':
+        return text(item_data['name'])
+    elif item_id == 'num':
+        num_value = float(item_data['name'])
+        if num_value % 1 == 0:
+            num_value = int(num_value)
+        return num(num_value)
+    elif item_id == 'loc':
+        item_loc = item_data['loc']
+        return loc(item_loc['x'], item_loc['y'], item_loc['z'], item_loc['pitch'], item_loc['yaw'])
+    elif item_id == 'var':
+        return var(item_data['name'], item_data['scope'])
+    elif item_id == 'snd':
+        return sound(item_data['sound'], item_data['pitch'], item_data['vol'])
+    elif item_id == 'part':
+        return particle(item_data)
+    elif item_id == 'pot':
+        return potion(item_data['pot'], item_data['dur'], item_data['amp'])
+    elif item_id == 'g_val':
+        return gamevalue(item_data['type'], item_data['target'])
+    elif item_id == 'vec':
+        return vector(item_data['x'], item_data['y'], item_data['z'])
+    elif item_id == 'pn_el':
+        description = _some_or(item_data.get('description'), '')
+        note = _some_or(item_data.get('note'), '')
+        param_type = ParameterType(PARAMETER_TYPE_LOOKUP.index(item_data['type']))
+        if item_data['optional']:
+            param = parameter(item_data['name'], param_type, item_data['plural'], True, description, note, item_from_dict(item_data['default_value']))
+        else:
+            param = parameter(item_data['name'], param_type, item_data['plural'], False, description, note)
+        return param
+    elif item_id == 'bl_tag':
+        return
+    else:
+        raise PyreException(f'Unrecognized item id `{item_id}`')
