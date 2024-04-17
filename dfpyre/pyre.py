@@ -61,6 +61,11 @@ class CodeBlock:
         self.args = args
         self.target = target
         self.data = data
+    
+    def __repr__(self) -> str:
+        if 'block' in self.data:
+            return f'CodeBlock({self.data["block"]}, {self.name})'
+        return f'CodeBlock(bracket, {self.data["direct"]})'
 
 
 def _warn(message):
