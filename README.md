@@ -261,7 +261,7 @@ t.player_action('PlaySound', sound('Grass Place'))
 Represents a diamondfire particle item:
 
 ```py
-particle(name='Cloud', amount=10, horizontal=1.0, vertical=0.5, x=1.0, y=0.0, z=0.0, motionVariation=100)
+particle({'particle':'Cloud','cluster':{'amount':1,'horizontal':0.0,'vertical':0.0},'data':{'x':1.0,'y':0.0,'z':0.0,'motionVariation':100}})
 ```
 
 Example:
@@ -271,7 +271,8 @@ Example:
 from dfpyre import *
 t = DFTemplate()
 t.player_event('Join')
-t.player_action('Particle', particle('Cloud'), loc(5, 50, 5))
+part = particle({'particle':'Cloud','cluster':{'amount':1,'horizontal':0.0,'vertical':0.0},'data':{'x':1.0,'y':0.0,'z':0.0,'motionVariation':100}})
+t.player_action('Particle', part, loc(5, 50, 5))
 ```
 
 Currently, the particle object does not support colors.
