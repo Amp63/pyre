@@ -63,7 +63,9 @@ class CodeBlock:
         self.data = data
     
     def __repr__(self) -> str:
-        if 'block' in self.data:
+        if self.name in {'call_func', 'start_process'}:
+            return f'CodeBlock({self.name}, {self.data["data"]})'
+        elif 'block' in self.data:
             return f'CodeBlock({self.data["block"]}, {self.name})'
         return f'CodeBlock(bracket, {self.data["direct"]})'
 
