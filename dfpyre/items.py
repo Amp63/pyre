@@ -140,34 +140,11 @@ class particle:
     Represents a DiamondFire particle object.
     """
     type = 'part'
-    def __init__(self, name: str='Cloud', amount: int=1, horizontal: float=0.0, vertical: float=0.0, 
-                 x: float=1.0, y: float=0.0, z: float=0.0, motionVariation: float=100):
-        self.name = name
-        self.amount = amount
-        self.horizontal = horizontal
-        self.vertical = vertical
-        self.x = x
-        self.y = y
-        self.z = z
-        self.motionVariation = motionVariation
+    def __init__(self, particle_data: dict):
+        self.particle_data = particle_data
     
     def format(self, slot: int|None):
-        formatted_dict = {"item": {"id": self.type,
-            "data": {
-                "particle": self.name,
-                "cluster": {
-                    "amount": self.amount,
-                    "horizontal": self.horizontal,
-                    "vertical": self.vertical
-                },
-                "data": {
-                    "x": self.x,
-                    "y": self.y,
-                    "z": self.z,
-                    "motionVariation": self.motionVariation
-                }
-            }
-        }}
+        formatted_dict = {"item": {"id": self.type, "data": self.particle_data}}
         _add_slot(formatted_dict, slot)
         return formatted_dict
 
