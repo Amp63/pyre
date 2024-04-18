@@ -136,7 +136,7 @@ def generate_script(template, flags: GeneratorFlags) -> str:
         codeblock_args = [argument_item_to_string(flags, i) for i in codeblock.args]
         if codeblock_args:
             method_args.extend(codeblock_args)
-        if method_name in TARGET_CODEBLOCKS:
+        if method_name in TARGET_CODEBLOCKS and codeblock.target.name != 'SELECTION':
             method_args.append(f'target=Target.{codeblock.target.name}')
         
         line = f't.{method_name}({", ".join(method_args)})'
