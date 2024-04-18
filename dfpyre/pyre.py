@@ -15,6 +15,7 @@ from enum import Enum
 import socket
 from mcitemlib.itemlib import Item as NbtItem
 from dfpyre.items import *
+from dfpyre.scriptgen import generate_script, GeneratorFlags
 
 COL_WARN = '\x1b[33m'
 COL_RESET = '\x1b[0m'
@@ -25,7 +26,7 @@ CODEBLOCK_DATA_PATH = os.path.join(os.path.dirname(__file__), 'data/data.json')
 
 VARIABLE_TYPES = {'txt', 'comp', 'num', 'item', 'loc', 'var', 'snd', 'part', 'pot', 'g_val', 'vec', 'pn_el'}
 TEMPLATE_STARTERS = {'event', 'entity_event', 'func', 'process'}
-SINGLE_NAME_CODEBLOCKS = {'func', 'process', 'call_func', 'start_process'}
+SINGLE_NAME_CODEBLOCKS = {'func', 'process', 'call_func', 'start_process', 'else'}
 
 TARGETS = ['Selection', 'Default', 'Killer', 'Damager', 'Shooter', 'Victim', 'AllPlayers', 'Projectile', 'AllEntities', 'AllMobs', 'LastEntity']
 TARGET_CODEBLOCKS = {'player_action', 'entity_action', 'if_player', 'if_entity'}
@@ -63,11 +64,13 @@ class CodeBlock:
         self.data = data
     
     def __repr__(self) -> str:
-        if self.name in {'call_func', 'start_process'}:
+        if self.name in SINGLE_NAME_CODEBLOCKS:
+            if self.name == 'else':
+                return 'CodeBlock(else)'
             return f'CodeBlock({self.name}, {self.data["data"]})'
         elif 'block' in self.data:
             return f'CodeBlock({self.data["block"]}, {self.name})'
-        return f'CodeBlock(bracket, {self.data["direct"]})'
+        return f'CodeBlock(bracket, {self.data["type"]}, {self.data["direct"]})'
 
 
 def _warn(message):
@@ -116,7 +119,7 @@ def _convert_data_types(args):
         if type(value) in {int, float}:
             converted_args.append(num(value))
         elif type(value) is str:
-            if value[0] == VAR_SHORTHAND_CHAR and value[1] in VAR_SCOPES:
+            if len(value) > 2 and value[0] == VAR_SHORTHAND_CHAR and value[1] in VAR_SCOPES:
                 var_object = var(value[2:], VAR_SCOPES[value[1]])
                 converted_args.append(var_object)
             else:
@@ -225,14 +228,13 @@ def _get_template_item(template_code: str, name: str, author: str) -> NbtItem:
 
 # TODO: 
 # - add inserting codeblocks at any index
-# - generate python code from template object
 class DFTemplate:
     """
     Represents a DiamondFire code template.
     """
     def __init__(self, name: str=None, author: str='pyre'):
         self.codeblocks: List[CodeBlock] = []
-        self.closebracket = None
+        self.bracket_stack: list[str] = []
         self.name = name
         self.author = author
     
@@ -331,7 +333,7 @@ class DFTemplate:
     def _openbracket(self, btype: Literal['norm', 'repeat']='norm'):
         bracket = CodeBlock('bracket', data={'id': 'bracket', 'direct': 'open', 'type': btype})
         self.codeblocks.append(bracket)
-        self.closebracket = btype
+        self.bracket_stack.append(btype)
     
 
     # command methods
@@ -351,8 +353,9 @@ class DFTemplate:
         self.codeblocks.append(cmd)
     
 
-    def process(self, name: str):
-        cmd = CodeBlock('process', data={'id': 'block', 'block': 'process', 'data': name})
+    def process(self, name: str, *args):
+        args = _convert_data_types(args)
+        cmd = CodeBlock('process', args, data={'id': 'block', 'block': 'process', 'data': name})
         self.codeblocks.append(cmd)
     
 
@@ -439,7 +442,7 @@ class DFTemplate:
 
     def bracket(self, *args):
         args = _convert_data_types(args)
-        cmd = CodeBlock('bracket', data={'id': 'bracket', 'direct': 'close', 'type': self.closebracket})
+        cmd = CodeBlock('bracket', data={'id': 'bracket', 'direct': 'close', 'type': self.bracket_stack.pop()})
         self.codeblocks.append(cmd)
     
 
@@ -459,3 +462,18 @@ class DFTemplate:
         args = _convert_data_types(args)
         cmd = CodeBlock(name, args, data={'id': 'block', 'block': 'set_var', 'action': name})
         self.codeblocks.append(cmd)
+    
+    
+    def generate_script(self, output_path: str, indent_size: int=4, literal_shorthand: bool=True, var_shorthand: bool=False):
+        """
+        Generate an equivalent python script for this template.
+
+        :param str output_path: The file path to write the script to.
+        :param int indent_size: The multiple of spaces to add when indenting lines.
+        :param bool literal_shorthand: If True, `text` and `num` items will be written as strings and ints respectively.
+        :param bool var_shorthand: If True, all variables will be written using variable shorthand.
+        """
+        flags = GeneratorFlags(indent_size, literal_shorthand, var_shorthand)
+        with open(output_path, 'w') as f:
+            f.write(generate_script(self, flags))
+        
