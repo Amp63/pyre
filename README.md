@@ -52,6 +52,8 @@ pip install dfpyre
 
 ## Extras
 
+- [Importing from Code](#importing-from-code)
+- [Script Generation](#script-generation)
 - [Method List](#method-list)
 
 ___
@@ -423,6 +425,31 @@ from dfpyre import *
 t = DFTemplate()
 t.player_event('Join')
 t.call_function('doStuff')
+```
+ 
+### Importing from Code
+
+You can import existing templates from their built code using the `from_code` method:
+
+```py
+from dfpyre import *
+template_code = 'H4sIAGVyIGYC/3WOMQ7CMAxFz4LnDsw5AhITI6qQSaw2IrGrxkJCVe5eh3boAJP9n/Kfs8AziX8VcPcFYgC3Zej26YDexGoZvUZhAxeJ3PI8WMtKSrnV+1q7P4op4Yfmx244qG7E4Uql4EA/jNv2Jc3qJU/2KqBiY4yZjI6UkpzAjkNJouDO1X7S1xUDaGUl2QAAAA=='
+
+t = DFTemplate.from_code(template_code)
+# add onto the template from here
+```
+
+
+### Script Generation
+
+You can also generate an equivalent python script for a template from a template object:
+
+```py
+from dfpyre import *
+template_code = 'H4sIAGVyIGYC/3WOMQ7CMAxFz4LnDsw5AhITI6qQSaw2IrGrxkJCVe5eh3boAJP9n/Kfs8AziX8VcPcFYgC3Zej26YDexGoZvUZhAxeJ3PI8WMtKSrnV+1q7P4op4Yfmx244qG7E4Uql4EA/jNv2Jc3qJU/2KqBiY4yZjI6UkpzAjkNJouDO1X7S1xUDaGUl2QAAAA=='
+
+t = DFTemplate.from_code(template_code)
+t.generate_script('my_template.py')    # generated python script will be written to my_template.py
 ```
 
 ### Method List
