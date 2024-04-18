@@ -3,9 +3,13 @@ Contains class definitions for code items.
 """
 
 from enum import Enum
+import re
 from typing import Literal, Dict, Any
 from dfpyre.style import is_ampersand_coded, ampersand_to_minimessage
 from mcitemlib.itemlib import Item as NbtItem
+
+
+NUMBER_REGEX = r'-?\d*\.?\d+'
 
 
 class PyreException(Exception):
@@ -67,7 +71,7 @@ class num:
     """
     type = 'num'
 
-    def __init__(self, num: int|float):
+    def __init__(self, num: int|float|str):
         self.value = num
     
     def format(self, slot: int|None):
@@ -281,9 +285,12 @@ def item_from_dict(item_dict: Dict) -> object:
     elif item_id == 'comp':
         return text(item_data['name'])
     elif item_id == 'num':
-        num_value = float(item_data['name'])
-        if num_value % 1 == 0:
-            num_value = int(num_value)
+        num_value = item_data['name']
+        if re.match(NUMBER_REGEX, num_value):
+            num_value = float(item_data['name'])
+            if num_value % 1 == 0:
+                num_value = int(num_value)
+            return num(num_value)
         return num(num_value)
     elif item_id == 'loc':
         item_loc = item_data['loc']
