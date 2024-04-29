@@ -45,12 +45,14 @@ def argument_item_to_string(flags: GeneratorFlags, arg_item: object) -> str:
         return f'{class_name}.from_nbt("""{arg_item.get_nbt()}""")'
     
     if isinstance(arg_item, string):
-        return f'{class_name}("{arg_item.value}")'
+        value = arg_item.value.replace('\n', '\\n')
+        return f'{class_name}("{value}")'
     
     if isinstance(arg_item, text):
+        value = arg_item.value.replace('\n', '\\n')
         if flags.literal_shorthand:
-            return f'"{arg_item.value}"'
-        return f'{class_name}("{arg_item.value}")'
+            return f'"{value}"'
+        return f'{class_name}("{value}")'
     
     if isinstance(arg_item, num):
         if not re.match(NUMBER_REGEX, str(arg_item.value)):
