@@ -306,8 +306,6 @@ class DFTemplate:
 
         self._set_template_name(first_block)
 
-        print(f'{COL_SUCCESS}Template built successfully.{COL_RESET}')
-
         json_string = json.dumps(template_dict, separators=(',', ':'))
         return _df_encode(json_string)
     
