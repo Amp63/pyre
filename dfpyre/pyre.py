@@ -226,8 +226,6 @@ def _get_template_item(template_code: str, name: str, author: str) -> NbtItem:
     return template_item
 
 
-# TODO: 
-# - add inserting codeblocks at any index
 class DFTemplate:
     """
     Represents a DiamondFire code template.
@@ -310,15 +308,15 @@ class DFTemplate:
         return _df_encode(json_string)
     
 
-    def build_and_send(self, method: Literal['recode', 'codeclient'], includeTags: bool=True) -> int:
+    def build_and_send(self, method: Literal['recode', 'codeclient'], include_tags: bool=True) -> int:
         """
         Builds this template and sends it to DiamondFire automatically.
         
-        :param bool includeTags: If True, include item tags in code blocks. Otherwise omit them.
+        :param bool include_tags: If True, include item tags in code blocks. Otherwise omit them.
         """
-        templateCode = self.build(includeTags)
-        templateItem = _get_template_item(templateCode, self.name, self.author)
-        return templateItem.send_to_minecraft(method, 'pyre')
+        template_code = self.build(include_tags)
+        template_item = _get_template_item(template_code, self.name, self.author)
+        return template_item.send_to_minecraft(method, 'pyre')
     
 
     def clear(self):
@@ -328,138 +326,144 @@ class DFTemplate:
         self.__init__()
     
 
-    def _openbracket(self, btype: Literal['norm', 'repeat']='norm'):
+    def _add_codeblock(self, codeblock: CodeBlock, index: int|None):
+        if index is None:
+            self.codeblocks.append(codeblock)
+        else:
+            self.codeblocks.insert(index, codeblock)
+    
+
+    def _openbracket(self, index: int|None, btype: Literal['norm', 'repeat']='norm'):
         bracket = CodeBlock('bracket', data={'id': 'bracket', 'direct': 'open', 'type': btype})
-        self.codeblocks.append(bracket)
+        self._add_codeblock(bracket, index+1)
         self.bracket_stack.append(btype)
     
 
     # command methods
-    def player_event(self, name: str):
+    def player_event(self, name: str, index: int|None=None):
         cmd = CodeBlock(name, data={'id': 'block', 'block': 'event', 'action': name})
-        self.codeblocks.append(cmd)
+        self._add_codeblock(cmd, index)
     
 
-    def entity_event(self, name: str):
+    def entity_event(self, name: str, index: int|None=None):
         cmd = CodeBlock(name, data={'id': 'block', 'block': 'entity_event', 'action': name})
-        self.codeblocks.append(cmd)
+        self._add_codeblock(cmd, index)
     
 
-    def function(self, name: str, *args):
+    def function(self, name: str, *args, index: int|None=None):
         args = _convert_data_types(args)
         cmd = CodeBlock('func', args, data={'id': 'block', 'block': 'func', 'data': name})
-        self.codeblocks.append(cmd)
+        self._add_codeblock(cmd, index)
     
 
-    def process(self, name: str, *args):
+    def process(self, name: str, *args, index: int|None=None):
         args = _convert_data_types(args)
         cmd = CodeBlock('process', args, data={'id': 'block', 'block': 'process', 'data': name})
-        self.codeblocks.append(cmd)
+        self._add_codeblock(cmd, index)
     
 
-    def call_function(self, name: str, *args):
+    def call_function(self, name: str, *args, index: int|None=None):
         args = _convert_data_types(args)
         cmd = CodeBlock('call_func', args, data={'id': 'block', 'block': 'call_func', 'data': name})
-        self.codeblocks.append(cmd)
-    
+        self._add_codeblock(cmd, index)    
 
-    def start_process(self, name: str):
+    def start_process(self, name: str, index: int|None=None):
         cmd = CodeBlock('start_process', data={'id': 'block', 'block': 'start_process', 'data': name})
-        self.codeblocks.append(cmd)
+        self._add_codeblock(cmd, index)
 
 
-    def player_action(self, name: str, *args, target: Target=DEFAULT_TARGET):
+    def player_action(self, name: str, *args, target: Target=DEFAULT_TARGET, index: int|None=None):
         args = _convert_data_types(args)
         cmd = CodeBlock(name, args, target=target, data={'id': 'block', 'block': 'player_action', 'action': name})
-        self.codeblocks.append(cmd)
+        self._add_codeblock(cmd, index)
     
 
-    def game_action(self, name: str, *args):
+    def game_action(self, name: str, *args, index: int|None=None):
         args = _convert_data_types(args)
         cmd = CodeBlock(name, args, data={'id': 'block', 'block': 'game_action', 'action': name})
-        self.codeblocks.append(cmd)
+        self._add_codeblock(cmd, index)
     
 
-    def entity_action(self, name: str, *args, target: Target=DEFAULT_TARGET):
+    def entity_action(self, name: str, *args, target: Target=DEFAULT_TARGET, index: int|None=None):
         args = _convert_data_types(args)
         cmd = CodeBlock(name, args, target=target, data={'id': 'block', 'block': 'entity_action', 'action': name})
-        self.codeblocks.append(cmd)
+        self._add_codeblock(cmd, index)
     
 
-    def if_player(self, name: str, *args, target: Target=DEFAULT_TARGET, inverted: bool=False):
+    def if_player(self, name: str, *args, target: Target=DEFAULT_TARGET, inverted: bool=False, index: int|None=None):
         args = _convert_data_types(args)
         data = {'id': 'block', 'block': 'if_player', 'action': name}
         _add_inverted(data, inverted)
         cmd = CodeBlock(name, args, target=target, data=data)
-        self.codeblocks.append(cmd)
-        self._openbracket()
+        self._add_codeblock(cmd, index)
+        self._openbracket(index)
     
 
-    def if_variable(self, name: str, *args, inverted: bool=False):
+    def if_variable(self, name: str, *args, inverted: bool=False, index: int|None=None):
         args = _convert_data_types(args)
         data = {'id': 'block', 'block': 'if_var', 'action': name}
         _add_inverted(data, inverted)
         cmd = CodeBlock(name, args, data=data)
-        self.codeblocks.append(cmd)
-        self._openbracket()
+        self._add_codeblock(cmd, index)
+        self._openbracket(index)
     
 
-    def if_game(self, name: str, *args, inverted: bool=False):
+    def if_game(self, name: str, *args, inverted: bool=False, index: int|None=None):
         args = _convert_data_types(args)
         data = {'id': 'block', 'block': 'if_game', 'action': name}
         _add_inverted(data, inverted)
         cmd = CodeBlock(name, args, data=data)
-        self.codeblocks.append(cmd)
-        self._openbracket()
+        self._add_codeblock(cmd, index)
+        self._openbracket(index)
     
 
-    def if_entity(self, name: str, *args, target: Target=DEFAULT_TARGET, inverted: bool=False):
+    def if_entity(self, name: str, *args, target: Target=DEFAULT_TARGET, inverted: bool=False, index: int|None=None):
         args = _convert_data_types(args)
         data = {'id': 'block', 'block': 'if_entity', 'action': name}
         _add_inverted(data, inverted)
         cmd = CodeBlock(name, args, target=target, data=data)
-        self.codeblocks.append(cmd)
-        self._openbracket()
+        self._add_codeblock(cmd, index)
+        self._openbracket(index)
 
 
-    def else_(self):
+    def else_(self, index: int|None=None):
         cmd = CodeBlock('else', data={'id': 'block', 'block': 'else'})
-        self.codeblocks.append(cmd)
-        self._openbracket()
+        self._add_codeblock(cmd, index)
+        self._openbracket(index)
     
 
-    def repeat(self, name: str, *args, sub_action: str=None):
+    def repeat(self, name: str, *args, sub_action: str=None, index: int|None=None):
         args = _convert_data_types(args)
         data = {'id': 'block', 'block': 'repeat', 'action': name}
         if sub_action is not None:
             data['subAction'] = sub_action
         cmd = CodeBlock(name, args, data=data)
-        self.codeblocks.append(cmd)
-        self._openbracket('repeat')
+        self._add_codeblock(cmd, index)
+        self._openbracket(index, 'repeat')
 
 
-    def bracket(self, *args):
+    def bracket(self, *args, index: int|None=None):
         args = _convert_data_types(args)
         cmd = CodeBlock('bracket', data={'id': 'bracket', 'direct': 'close', 'type': self.bracket_stack.pop()})
-        self.codeblocks.append(cmd)
+        self._add_codeblock(cmd, index)
     
 
-    def control(self, name: str, *args):
+    def control(self, name: str, *args, index: int|None=None):
         args = _convert_data_types(args)
         cmd = CodeBlock(name, args, data={'id': 'block', 'block': 'control', 'action': name})
-        self.codeblocks.append(cmd)
+        self._add_codeblock(cmd, index)
     
 
-    def select_object(self, name: str, *args):
+    def select_object(self, name: str, *args, index: int|None=None):
         args = _convert_data_types(args)
         cmd = CodeBlock(name, args, data={'id': 'block', 'block': 'select_obj', 'action': name})
-        self.codeblocks.append(cmd)
+        self._add_codeblock(cmd, index)
     
 
-    def set_variable(self, name: str, *args):
+    def set_variable(self, name: str, *args, index: int|None=None):
         args = _convert_data_types(args)
         cmd = CodeBlock(name, args, data={'id': 'block', 'block': 'set_var', 'action': name})
-        self.codeblocks.append(cmd)
+        self._add_codeblock(cmd, index)
     
     
     def generate_script(self, output_path: str, indent_size: int=4, literal_shorthand: bool=True, var_shorthand: bool=False):
