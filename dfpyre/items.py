@@ -316,7 +316,7 @@ def item_from_dict(item_dict: Dict) -> object:
         else:
             param = parameter(item_data['name'], param_type, item_data['plural'], False, description, note)
         return param
-    elif item_id == 'bl_tag':
+    elif item_id in {'bl_tag', 'hint'}:
         return
     else:
         raise PyreException(f'Unrecognized item id `{item_id}`')
