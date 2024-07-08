@@ -335,7 +335,7 @@ class DFTemplate:
 
     def _openbracket(self, index: int|None, btype: Literal['norm', 'repeat']='norm'):
         bracket = CodeBlock('bracket', data={'id': 'bracket', 'direct': 'open', 'type': btype})
-        self._add_codeblock(bracket, index+1)
+        self._add_codeblock(bracket, index)
         self.bracket_stack.append(btype)
     
 
