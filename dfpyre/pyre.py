@@ -262,7 +262,11 @@ class DFTemplate:
                 codeblock_name = block_dict['block']
             elif 'action' in block_dict:
                 codeblock_name = block_dict['action']
-            codeblock = CodeBlock(codeblock_name, args, target, block_dict)
+            
+            if codeblock_name == 'bracket' or block_dict['block'] == 'else':
+                codeblock = CodeBlock(codeblock_name, data=block_dict)
+            else:
+                codeblock = CodeBlock(codeblock_name, args, target, block_dict)
             template.codeblocks.append(codeblock)
         
         return template
@@ -305,6 +309,7 @@ class DFTemplate:
         self._set_template_name(first_block)
 
         json_string = json.dumps(template_dict, separators=(',', ':'))
+        print(json_string)
         return _df_encode(json_string)
     
 
