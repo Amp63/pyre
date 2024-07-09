@@ -32,6 +32,9 @@ class item(NbtItem):
         _add_slot(formatted_dict, slot)
         return formatted_dict
 
+    def __repr__(self) -> str:
+        return f'{self.__class__.__name__}({self.get_id()}, {self.get_count()})'
+
 
 class string:
     """
@@ -46,6 +49,9 @@ class string:
         formatted_dict = {"item": {"id": self.type, "data": {"name": self.value}}}
         _add_slot(formatted_dict, slot)
         return formatted_dict
+    
+    def __repr__(self) -> str:
+        return f'{self.__class__.__name__}("{self.value}")'
 
 
 class text:
@@ -64,6 +70,9 @@ class text:
       _add_slot(formatted_dict, slot)
       return formatted_dict
 
+    def __repr__(self) -> str:
+        return f'{self.__class__.__name__}("{self.value}")'
+
 
 class num:
     """
@@ -78,6 +87,9 @@ class num:
         formatted_dict = {"item": {"id": self.type, "data": {"name": str(self.value)}}}
         _add_slot(formatted_dict, slot)
         return formatted_dict
+
+    def __repr__(self) -> str:
+        return f'{self.__class__.__name__}({self.value})'
 
 
 class loc:
@@ -110,6 +122,9 @@ class loc:
         _add_slot(formatted_dict, slot)
         return formatted_dict
 
+    def __repr__(self) -> str:
+        return f'{self.__class__.__name__}({self.x}, {self.y}, {self.z}, {self.pitch}, {self.yaw})'
+
 
 class var:
     """
@@ -125,6 +140,9 @@ class var:
         formatted_dict = {"item": {"id": self.type,"data": {"name": self.name, "scope": self.scope}}}
         _add_slot(formatted_dict, slot)
         return formatted_dict
+
+    def __repr__(self) -> str:
+        return f'{self.__class__.__name__}({self.scope}, "{self.name}")'
 
 
 class sound:
@@ -143,6 +161,9 @@ class sound:
         _add_slot(formatted_dict, slot)
         return formatted_dict
 
+    def __repr__(self) -> str:
+        return f'{self.__class__.__name__}(pitch: {self.pitch}, volume: {self.vol})'
+
 
 class particle:
     """
@@ -156,6 +177,9 @@ class particle:
         formatted_dict = {"item": {"id": self.type, "data": self.particle_data}}
         _add_slot(formatted_dict, slot)
         return formatted_dict
+
+    def __repr__(self) -> str:
+        return f'{self.__class__.__name__}({self.particle_data})'
 
 
 class potion:
@@ -174,6 +198,9 @@ class potion:
         _add_slot(formatted_dict, slot)
         return formatted_dict
 
+    def __repr__(self) -> str:
+        return f'{self.__class__.__name__}(effect: {self.name}, duration: {self.dur}, amplifier: {self.amp})'
+
 
 class gamevalue:
     """
@@ -189,6 +216,9 @@ class gamevalue:
         formatted_dict = {"item": {"id": self.type, "data": {"type": self.name, "target": self.target}}}
         _add_slot(formatted_dict, slot)
         return formatted_dict
+
+    def __repr__(self) -> str:
+        return f'{self.__class__.__name__}({self.name}, target: {self.target})'
 
 
 class vector:
@@ -206,6 +236,9 @@ class vector:
         formatted_dict = {"item": {"id": self.type, "data": {"x": self.x, "y": self.y, "z": self.z}}}
         _add_slot(formatted_dict, slot)
         return formatted_dict
+
+    def __repr__(self) -> str:
+        return f'{self.__class__.__name__}({self.x}, {self.y}, {self.z})'
 
 
 PARAMETER_TYPE_LOOKUP = ['txt', 'comp', 'num', 'loc', 'vec', 'snd', 'part', 'pot', 'item', 'any', 'var', 'list', 'dict']
@@ -263,6 +296,10 @@ class parameter:
             formatted_dict['item']['data']['default_value'] = self.default_value.format(None)['item']
         
         return formatted_dict
+    
+    def __repr__(self) -> str:
+        raw_type = str(self.param_type).partition('.')[2]
+        return f'{self.__class__.__name__}({self.name}, type: {raw_type})'
 
 
 def _some_or(value: Any, none_value: Any):
