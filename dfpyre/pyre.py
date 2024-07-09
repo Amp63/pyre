@@ -310,7 +310,6 @@ class DFTemplate:
         self._set_template_name(first_block)
 
         json_string = json.dumps(template_dict, separators=(',', ':'))
-        print(json_string)
         return _df_encode(json_string)
     
 
