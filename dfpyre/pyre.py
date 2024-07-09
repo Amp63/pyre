@@ -14,13 +14,9 @@ from typing import Tuple, List, Dict
 from enum import Enum
 import socket
 from mcitemlib.itemlib import Item as NbtItem
+from dfpyre.util import *
 from dfpyre.items import *
 from dfpyre.scriptgen import generate_script, GeneratorFlags
-
-COL_WARN = '\x1b[33m'
-COL_RESET = '\x1b[0m'
-COL_SUCCESS = '\x1b[32m'
-COL_ERROR = '\x1b[31m'
 
 CODEBLOCK_DATA_PATH = os.path.join(os.path.dirname(__file__), 'data/data.json')
 
@@ -73,16 +69,12 @@ class CodeBlock:
         return f'CodeBlock(bracket, {self.data["type"]}, {self.data["direct"]})'
 
 
-def _warn(message):
-    print(f'{COL_WARN}! WARNING ! {message}{COL_RESET}')
-
-
 def _warn_unrecognized_name(codeblock_type: str, codeblock_name: str):
     close = get_close_matches(codeblock_name, TAGDATA[codeblock_type].keys())
     if close:
-        _warn(f'Code block name "{codeblock_name}" not recognized. Did you mean "{close[0]}"?')
+        warn(f'Code block name "{codeblock_name}" not recognized. Did you mean "{close[0]}"?')
     else:
-        _warn(f'Code block name "{codeblock_name}" not recognized. Try spell checking or retyping without spaces.')
+        warn(f'Code block name "{codeblock_name}" not recognized. Try spell checking or retyping without spaces.')
 
 
 def _load_codeblock_data() -> Tuple:
@@ -91,7 +83,7 @@ def _load_codeblock_data() -> Tuple:
         with open(CODEBLOCK_DATA_PATH, 'r') as f:
             tag_data = json.load(f)
     else:
-        _warn('data.json not found -- Item tags and error checking will not work.')
+        warn('data.json not found -- Item tags and error checking will not work.')
         return ({}, set(), set())
     
     del tag_data['meta']
@@ -305,7 +297,7 @@ class DFTemplate:
         template_dict = {'blocks': template_dict_blocks}
         first_block = template_dict_blocks[0]
         if first_block['block'] not in TEMPLATE_STARTERS:
-            _warn('Template does not start with an event, function, or process.')
+            warn('Template does not start with an event, function, or process.')
 
         self._set_template_name(first_block)
 
