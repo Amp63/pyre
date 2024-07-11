@@ -17,8 +17,8 @@ from mcitemlib.itemlib import Item as NbtItem
 from dfpyre.util import *
 from dfpyre.items import *
 from dfpyre.scriptgen import generate_script, GeneratorFlags
+from dfpyre.actiondump import CODEBLOCK_DATA
 
-CODEBLOCK_DATA_PATH = os.path.join(os.path.dirname(__file__), 'data/data.json')
 
 VARIABLE_TYPES = {'txt', 'comp', 'num', 'item', 'loc', 'var', 'snd', 'part', 'pot', 'g_val', 'vec', 'pn_el'}
 TEMPLATE_STARTERS = {'event', 'entity_event', 'func', 'process'}
@@ -70,32 +70,12 @@ class CodeBlock:
 
 
 def _warn_unrecognized_name(codeblock_type: str, codeblock_name: str):
-    close = get_close_matches(codeblock_name, TAGDATA[codeblock_type].keys())
+    close = get_close_matches(codeblock_name, CODEBLOCK_DATA[codeblock_type].keys())
     if close:
         warn(f'Code block name "{codeblock_name}" not recognized. Did you mean "{close[0]}"?')
     else:
         warn(f'Code block name "{codeblock_name}" not recognized. Try spell checking or retyping without spaces.')
 
-
-def _load_codeblock_data() -> Tuple:
-    tag_data = {}
-    if os.path.exists(CODEBLOCK_DATA_PATH):
-        with open(CODEBLOCK_DATA_PATH, 'r') as f:
-            tag_data = json.load(f)
-    else:
-        warn('data.json not found -- Item tags and error checking will not work.')
-        return ({}, set(), set())
-    
-    del tag_data['meta']
-
-    all_names = [x for l in [d.keys() for d in tag_data.values()] for x in l]  # flatten list
-    return (
-        tag_data,
-        set(tag_data['extras'].keys()),
-        set(all_names)
-    )
-
-TAGDATA, TAGDATA_EXTRAS_KEYS, ALL_CODEBLOCK_NAMES = _load_codeblock_data()
 
 def _add_inverted(data, inverted):
     """
@@ -121,9 +101,9 @@ def _convert_data_types(args):
     return tuple(converted_args)
 
 
-def _reformat_codeblock_tags(tags, codeblock_type: str, codeblock_name: str):
+def _reformat_codeblock_tags(tags: list[dict], codeblock_type: str, codeblock_name: str):
     """
-    Turns data.json tag items into DiamondFire formatted tag items
+    Turns tag objects into DiamondFire formatted tag items
     """
     reformatted_tags = []
     for tag_item in tags:
@@ -132,7 +112,7 @@ def _reformat_codeblock_tags(tags, codeblock_type: str, codeblock_name: str):
             'item': {
                 'id': 'bl_tag',
                 'data': {
-                    'option': tag_item['option'],
+                    'option': tag_item['default'],
                     'tag': tag_item['tag'],
                     'action': action_value,
                     'block': codeblock_type
@@ -148,11 +128,10 @@ def _get_codeblock_tags(codeblock_type: str, codeblock_name: str):
     """
     Get tags for the specified codeblock type and name
     """
-    tags = None
-    if codeblock_type in TAGDATA_EXTRAS_KEYS:
-        tags = TAGDATA['extras'][codeblock_type]
-    else:
-        tags = TAGDATA[codeblock_type].get(codeblock_name)
+    action_data = CODEBLOCK_DATA[codeblock_type][codeblock_name]
+    if 'deprecatedNote' in action_data:
+        warn(f'Action "{codeblock_name}" is deprecated: {action_data["deprecatedNote"]}')
+    tags = action_data['tags']
     return _reformat_codeblock_tags(tags, codeblock_type, codeblock_name)
 
 
@@ -172,7 +151,7 @@ def _build_block(codeblock: CodeBlock, include_tags: bool):
     
     # check for unrecognized name, add tags
     if codeblock_type is not None:  # for brackets
-        if codeblock_type not in TAGDATA_EXTRAS_KEYS and codeblock.name not in ALL_CODEBLOCK_NAMES:
+        if codeblock.name not in CODEBLOCK_DATA[codeblock_type]:
             _warn_unrecognized_name(codeblock_type, codeblock.name)
         elif include_tags:
             tags = _get_codeblock_tags(codeblock_type, codeblock.name)
@@ -349,23 +328,23 @@ class DFTemplate:
 
     def function(self, name: str, *args, index: int|None=None):
         args = _convert_data_types(args)
-        cmd = CodeBlock('func', args, data={'id': 'block', 'block': 'func', 'data': name})
+        cmd = CodeBlock('dynamic', args, data={'id': 'block', 'block': 'func', 'data': name})
         self._add_codeblock(cmd, index)
     
 
     def process(self, name: str, *args, index: int|None=None):
         args = _convert_data_types(args)
-        cmd = CodeBlock('process', args, data={'id': 'block', 'block': 'process', 'data': name})
+        cmd = CodeBlock('dynamic', args, data={'id': 'block', 'block': 'process', 'data': name})
         self._add_codeblock(cmd, index)
     
 
     def call_function(self, name: str, *args, index: int|None=None):
         args = _convert_data_types(args)
-        cmd = CodeBlock('call_func', args, data={'id': 'block', 'block': 'call_func', 'data': name})
+        cmd = CodeBlock('dynamic', args, data={'id': 'block', 'block': 'call_func', 'data': name})
         self._add_codeblock(cmd, index)    
 
     def start_process(self, name: str, index: int|None=None):
-        cmd = CodeBlock('start_process', data={'id': 'block', 'block': 'start_process', 'data': name})
+        cmd = CodeBlock('dynamic', data={'id': 'block', 'block': 'start_process', 'data': name})
         self._add_codeblock(cmd, index)
 
 
