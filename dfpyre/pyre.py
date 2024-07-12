@@ -87,7 +87,7 @@ def _convert_data_types(args):
     for value in args:
         if type(value) in {int, float}:
             converted_args.append(num(value))
-        elif type(value) is str:
+        elif isinstance(value, str):
             if len(value) > 2 and value[0] == VAR_SHORTHAND_CHAR and value[1] in VAR_SCOPES:
                 var_object = var(value[2:], VAR_SCOPES[value[1]])
                 converted_args.append(var_object)
