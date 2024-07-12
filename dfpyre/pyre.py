@@ -61,7 +61,7 @@ class CodeBlock:
             if self.name == 'else':
                 return 'CodeBlock(else)'
             return f'CodeBlock({self.name}, {self.data["data"]})'
-        elif 'block' in self.data:
+        if 'block' in self.data:
             return f'CodeBlock({self.data["block"]}, {self.name})'
         return f'CodeBlock(bracket, {self.data["type"]}, {self.data["direct"]})'
 
