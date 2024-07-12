@@ -96,7 +96,7 @@ def argument_item_to_string(flags: GeneratorFlags, arg_item: object) -> str:
         if arg_item.optional:
             param_args.append('optional=True')
             if arg_item.default_value is not None:
-                param_args.append(f'default_value={argument_item_to_string(arg_item.default_value)}')
+                param_args.append(f'default_value={argument_item_to_string(flags, arg_item.default_value)}')
         if arg_item.description:
             param_args.append(f'description="{arg_item.description}"')
         if arg_item.note:
