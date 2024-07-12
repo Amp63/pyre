@@ -4,10 +4,7 @@ A package for externally creating code templates for the DiamondFire Minecraft s
 By Amp
 """
 
-import base64
-import gzip
 import json
-import os
 from difflib import get_close_matches
 import datetime
 from typing import Tuple, List, Dict
@@ -164,18 +161,6 @@ def _build_block(codeblock: CodeBlock, include_tags: bool):
     return built_block
 
 
-def _df_encode(json_string: str) -> str:
-    """
-    Encodes a stringified json.
-    """
-    encoded_string = gzip.compress(json_string.encode('utf-8'))
-    return base64.b64encode(encoded_string).decode('utf-8')
-
-
-def _df_decode(encoded_string: str) -> str:
-    return gzip.decompress(base64.b64decode(encoded_string)).decode('utf-8')
-
-
 def _get_template_item(template_code: str, name: str, author: str) -> NbtItem:
     now = datetime.datetime.now()
 
@@ -218,7 +203,7 @@ class DFTemplate:
         """
         Create a template object from an existing template code.
         """
-        template_dict = json.loads(_df_decode(template_code))
+        template_dict = json.loads(df_decode(template_code))
         template = DFTemplate()
         for block_dict in template_dict['blocks']:
             if 'args' in block_dict:
@@ -281,7 +266,7 @@ class DFTemplate:
         self._set_template_name(first_block)
 
         json_string = json.dumps(template_dict, separators=(',', ':'))
-        return _df_encode(json_string)
+        return df_encode(json_string)
     
 
     def build_and_send(self, method: Literal['recode', 'codeclient'], include_tags: bool=True) -> int:
