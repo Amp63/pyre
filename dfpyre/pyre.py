@@ -437,6 +437,6 @@ class DFTemplate:
         :param bool var_shorthand: If True, all variables will be written using variable shorthand.
         """
         flags = GeneratorFlags(indent_size, literal_shorthand, var_shorthand)
-        with open(output_path, 'w') as f:
+        with open(output_path, 'w', encoding='utf-8') as f:
             f.write(generate_script(self, flags))
         
