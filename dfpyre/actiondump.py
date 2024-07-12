@@ -3,7 +3,7 @@ import json
 from dfpyre.util import warn
 
 
-ACTIONDUMP_PATH = os.path.join(os.path.dirname(__file__), 'data/actiondump.json')
+ACTIONDUMP_PATH = os.path.join(os.path.dirname(__file__), 'data/actiondump_min.json')
 
 CODEBLOCK_NAME_LOOKUP = {
     'PLAYER ACTION': 'player_action',
