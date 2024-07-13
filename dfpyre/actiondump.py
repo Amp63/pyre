@@ -48,7 +48,7 @@ def parse_actiondump():
         warn('data.json not found -- Item tags and error checking will not work.')
         return {}, set()
     
-    with open(ACTIONDUMP_PATH, 'r') as f:
+    with open(ACTIONDUMP_PATH, 'r', encoding='utf-8') as f:
         actiondump = json.loads(f.read())
     
     for action_data in actiondump['actions']:
