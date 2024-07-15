@@ -110,7 +110,7 @@ def _reformat_codeblock_tags(tags: list[dict], codeblock_type: str, codeblock_na
                 'id': 'bl_tag',
                 'data': {
                     'option': tag_item['default'],
-                    'tag': tag_item['tag'],
+                    'tag': tag_item['name'],
                     'action': action_value,
                     'block': codeblock_type
                 }

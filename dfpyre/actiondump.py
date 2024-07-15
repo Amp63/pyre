@@ -31,7 +31,7 @@ def get_action_tags(action_data: dict) -> list[dict]:
     for tag_data in action_data['tags']:
         options = [o['name'] for o in tag_data['options']]
         converted_tag_data = {
-            'tag': tag_data['name'],
+            'name': tag_data['name'],
             'options': options,
             'default': tag_data['defaultOption'],
             'slot': tag_data['slot']
