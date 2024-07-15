@@ -7,7 +7,7 @@ By Amp
 import json
 from difflib import get_close_matches
 import datetime
-from typing import Tuple, List, Dict
+from typing import Tuple
 from enum import Enum
 import socket
 from mcitemlib.itemlib import Item as NbtItem
@@ -50,11 +50,12 @@ DEFAULT_TARGET = Target.SELECTION
 
 
 class CodeBlock:
-    def __init__(self, name: str, args: Tuple=(), target: Target=DEFAULT_TARGET, data: Dict={}):
+    def __init__(self, name: str, args: Tuple=(), target: Target=DEFAULT_TARGET, data: dict={}, tags: dict[str, str]={}):
         self.name = name
         self.args = args
         self.target = target
         self.data = data
+        self.tags = tags
     
     def __repr__(self) -> str:
         if self.name in SINGLE_NAME_CODEBLOCKS:
@@ -64,6 +65,34 @@ class CodeBlock:
         if 'block' in self.data:
             return f'CodeBlock({self.data["block"]}, {self.name})'
         return f'CodeBlock(bracket, {self.data["type"]}, {self.data["direct"]})'
+
+    def build(self, include_tags: bool=True) -> dict:
+        """
+        Builds a properly formatted block from a CodeBlock object.
+        """
+        built_block = self.data.copy()
+        codeblock_type = self.data.get('block')
+        
+        # add target if necessary ('Selection' is the default when 'target' is blank)
+        if codeblock_type in TARGET_CODEBLOCKS and self.target != DEFAULT_TARGET:
+            built_block['target'] = self.target.get_string_value()
+        
+        # add items into args
+        final_args = [arg.format(slot) for slot, arg in enumerate(self.args) if arg.type in VARIABLE_TYPES]
+        
+        # check for unrecognized name, add tags
+        if codeblock_type is not None:  # for brackets
+            if self.name not in CODEBLOCK_DATA[codeblock_type]:
+                _warn_unrecognized_name(codeblock_type, self.name)
+            elif include_tags:
+                tags = _get_codeblock_tags(codeblock_type, self.name)
+                if len(final_args) + len(tags) > 27:
+                    final_args = final_args[:(27-len(tags))]  # trim list if over 27 elements
+                final_args.extend(tags)  # add tags to end
+    
+        if final_args:
+            built_block['args'] = {'items': final_args}
+        return built_block
 
 
 def _warn_unrecognized_name(codeblock_type: str, codeblock_name: str):
@@ -132,35 +161,6 @@ def _get_codeblock_tags(codeblock_type: str, codeblock_name: str):
     return _reformat_codeblock_tags(tags, codeblock_type, codeblock_name)
 
 
-def _build_block(codeblock: CodeBlock, include_tags: bool):
-    """
-    Builds a properly formatted block from a CodeBlock object.
-    """
-    built_block = codeblock.data.copy()
-    codeblock_type = codeblock.data.get('block')
-    
-    # add target if necessary ('Selection' is the default when 'target' is blank)
-    if codeblock_type in TARGET_CODEBLOCKS and codeblock.target != DEFAULT_TARGET:
-        built_block['target'] = codeblock.target.get_string_value()
-    
-    # add items into args
-    final_args = [arg.format(slot) for slot, arg in enumerate(codeblock.args) if arg.type in VARIABLE_TYPES]
-    
-    # check for unrecognized name, add tags
-    if codeblock_type is not None:  # for brackets
-        if codeblock.name not in CODEBLOCK_DATA[codeblock_type]:
-            _warn_unrecognized_name(codeblock_type, codeblock.name)
-        elif include_tags:
-            tags = _get_codeblock_tags(codeblock_type, codeblock.name)
-            if len(final_args) + len(tags) > 27:
-                final_args = final_args[:(27-len(tags))]  # trim list if over 27 elements
-            final_args.extend(tags)  # add tags to end
-    
-    if final_args:
-        built_block['args'] = {'items': final_args}
-    return built_block
-
-
 def _get_template_item(template_code: str, name: str, author: str) -> NbtItem:
     now = datetime.datetime.now()
 
@@ -188,7 +188,7 @@ class DFTemplate:
     Represents a DiamondFire code template.
     """
     def __init__(self, name: str=None, author: str='pyre'):
-        self.codeblocks: List[CodeBlock] = []
+        self.codeblocks: list[CodeBlock] = []
         self.bracket_stack: list[str] = []
         self.name = name
         self.author = author
@@ -257,7 +257,7 @@ class DFTemplate:
         :param bool include_tags: If True, include item tags in code blocks. Otherwise omit them.
         :return: String containing encoded template data.
         """
-        template_dict_blocks = [_build_block(codeblock, include_tags) for codeblock in self.codeblocks]
+        template_dict_blocks = [codeblock.build(include_tags) for codeblock in self.codeblocks]
         template_dict = {'blocks': template_dict_blocks}
         first_block = template_dict_blocks[0]
         if first_block['block'] not in TEMPLATE_STARTERS:
@@ -333,7 +333,7 @@ class DFTemplate:
         self._add_codeblock(cmd, index)
 
 
-    def player_action(self, name: str, *args, target: Target=DEFAULT_TARGET, index: int|None=None):
+    def player_action(self, name: str, *args, target: Target=DEFAULT_TARGET, tags: dict[str, str]={}, index: int|None=None):
         args = _convert_data_types(args)
         cmd = CodeBlock(name, args, target=target, data={'id': 'block', 'block': 'player_action', 'action': name})
         self._add_codeblock(cmd, index)
