@@ -143,7 +143,6 @@ def generate_script(template, flags: GeneratorFlags) -> str:
         if method_name in TARGET_CODEBLOCKS and codeblock.target.name != 'SELECTION':
             method_args.append(f'target=Target.{codeblock.target.name}')
         if codeblock.tags:
-            print(codeblock.tags)
             default_tags = get_default_tags(codeblock.data.get('block'), codeblock.name)
             written_tags = {t: o for t, o in codeblock.tags.items() if default_tags[t] != o}
             if written_tags:
