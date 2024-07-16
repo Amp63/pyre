@@ -36,6 +36,27 @@ class item(NbtItem):
     """
     type = 'item'
 
+    def get_custom_tag(self, tag_name: str) -> str | float:
+        """
+        Get a custom DF tag value from this item.
+
+        :param str tag_name: The name of the custom tag to access.
+        """
+        if f'"hypercube:{tag_name}"' in self.nbt['tag']['PublicBukkitValues'].data:
+            return self.nbt['tag']['PublicBukkitValues'][f'"hypercube:{tag_name}"']
+        raise PyreException(f'Custom tag `{tag_name}` not found')
+
+    def set_custom_tag(self, tag_name: str, tag_value: str | float):
+        """
+        Set a custom DF tag for this item.
+
+        :param str tag_name: The name of the custom tag.
+        :param str tag_value: The value for the custom tag.
+        """
+        if isinstance(tag_value, int):
+            tag_value = float(tag_value)
+        self.nbt['tag']['PublicBukkitValues'][f'"hypercube:{tag_name}"'] = tag_value
+
     def format(self, slot: int|None):
         formatted_dict = {"item": {"id": self.type, "data": {"item": self.get_nbt()}}}
         _add_slot(formatted_dict, slot)
