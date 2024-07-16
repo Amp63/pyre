@@ -11,6 +11,18 @@ from mcitemlib.itemlib import Item as NbtItem
 
 
 NUMBER_REGEX = r'-?\d*\.?\d+'
+VAR_SHORTHAND_CHAR = '$'
+VAR_SCOPES = {'g': 'unsaved', 's': 'saved', 'l': 'local', 'i': 'line'}
+
+
+def convert_argument(arg: Any):
+    if type(arg) in {int, float}:
+        return num(arg)
+    elif isinstance(arg, str):
+        if len(arg) > 2 and arg[0] == VAR_SHORTHAND_CHAR and arg[1] in VAR_SCOPES:
+            return var(arg[2:], VAR_SCOPES[arg[1]])
+        return text(arg)
+    return arg
 
 
 def _add_slot(d: Dict, slot: int|None):

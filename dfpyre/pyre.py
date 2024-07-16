@@ -24,9 +24,6 @@ SINGLE_NAME_CODEBLOCKS = {'func', 'process', 'call_func', 'start_process', 'else
 TARGETS = ['Selection', 'Default', 'Killer', 'Damager', 'Shooter', 'Victim', 'AllPlayers', 'Projectile', 'AllEntities', 'AllMobs', 'LastEntity']
 TARGET_CODEBLOCKS = {'player_action', 'entity_action', 'if_player', 'if_entity'}
 
-VAR_SHORTHAND_CHAR = '$'
-VAR_SCOPES = {'g': 'unsaved', 's': 'saved', 'l': 'local', 'i': 'line'}
-
 CODECLIENT_URL = 'ws://localhost:31375'
 
 
@@ -111,20 +108,8 @@ def _add_inverted(data, inverted):
         data['inverted'] = 'NOT'
 
 
-def _convert_data_types(args):
-    converted_args = []
-    for value in args:
-        if type(value) in {int, float}:
-            converted_args.append(num(value))
-        elif isinstance(value, str):
-            if len(value) > 2 and value[0] == VAR_SHORTHAND_CHAR and value[1] in VAR_SCOPES:
-                var_object = var(value[2:], VAR_SCOPES[value[1]])
-                converted_args.append(var_object)
-            else:
-                converted_args.append(text(value))
-        else:
-            converted_args.append(value)
-    return tuple(converted_args)
+def _convert_args(args):
+    return tuple(map(convert_argument, args))
 
 
 def _check_applied_tags(tags: list[dict], applied_tags: dict[str, str], codeblock_name: str) -> dict[str, str]:
@@ -336,19 +321,19 @@ class DFTemplate:
     
 
     def function(self, name: str, *args, tags: dict[str, str]={}, index: int|None=None):
-        args = _convert_data_types(args)
+        args = _convert_args(args)
         cmd = CodeBlock('dynamic', args, data={'id': 'block', 'block': 'func', 'data': name}, tags=tags)
         self._add_codeblock(cmd, index)
     
 
     def process(self, name: str, *args, tags: dict[str, str]={}, index: int|None=None):
-        args = _convert_data_types(args)
+        args = _convert_args(args)
         cmd = CodeBlock('dynamic', args, data={'id': 'block', 'block': 'process', 'data': name}, tags=tags)
         self._add_codeblock(cmd, index)
     
 
     def call_function(self, name: str, *args, index: int|None=None):
-        args = _convert_data_types(args)
+        args = _convert_args(args)
         cmd = CodeBlock('dynamic', args, data={'id': 'block', 'block': 'call_func', 'data': name})
         self._add_codeblock(cmd, index)    
 
@@ -359,25 +344,25 @@ class DFTemplate:
 
 
     def player_action(self, name: str, *args, target: Target=DEFAULT_TARGET, tags: dict[str, str]={}, index: int|None=None):
-        args = _convert_data_types(args)
+        args = _convert_args(args)
         cmd = CodeBlock(name, args, target=target, data={'id': 'block', 'block': 'player_action', 'action': name}, tags=tags)
         self._add_codeblock(cmd, index)
     
 
     def game_action(self, name: str, *args, tags: dict[str, str]={}, index: int|None=None):
-        args = _convert_data_types(args)
+        args = _convert_args(args)
         cmd = CodeBlock(name, args, data={'id': 'block', 'block': 'game_action', 'action': name}, tags=tags)
         self._add_codeblock(cmd, index)
     
 
     def entity_action(self, name: str, *args, target: Target=DEFAULT_TARGET, tags: dict[str, str]={}, index: int|None=None):
-        args = _convert_data_types(args)
+        args = _convert_args(args)
         cmd = CodeBlock(name, args, target=target, data={'id': 'block', 'block': 'entity_action', 'action': name}, tags=tags)
         self._add_codeblock(cmd, index)
     
 
     def if_player(self, name: str, *args, target: Target=DEFAULT_TARGET, tags: dict[str, str]={}, inverted: bool=False, index: int|None=None):
-        args = _convert_data_types(args)
+        args = _convert_args(args)
         data = {'id': 'block', 'block': 'if_player', 'action': name}
         _add_inverted(data, inverted)
         cmd = CodeBlock(name, args, target=target, data=data, tags=tags)
@@ -386,7 +371,7 @@ class DFTemplate:
     
 
     def if_variable(self, name: str, *args, tags: dict[str, str]={}, inverted: bool=False, index: int|None=None):
-        args = _convert_data_types(args)
+        args = _convert_args(args)
         data = {'id': 'block', 'block': 'if_var', 'action': name}
         _add_inverted(data, inverted)
         cmd = CodeBlock(name, args, data=data, tags=tags)
@@ -395,7 +380,7 @@ class DFTemplate:
     
 
     def if_game(self, name: str, *args, tags: dict[str, str]={}, inverted: bool=False, index: int|None=None):
-        args = _convert_data_types(args)
+        args = _convert_args(args)
         data = {'id': 'block', 'block': 'if_game', 'action': name}
         _add_inverted(data, inverted)
         cmd = CodeBlock(name, args, data=data, tags=tags)
@@ -404,7 +389,7 @@ class DFTemplate:
     
 
     def if_entity(self, name: str, *args, target: Target=DEFAULT_TARGET, tags: dict[str, str]={}, inverted: bool=False, index: int|None=None):
-        args = _convert_data_types(args)
+        args = _convert_args(args)
         data = {'id': 'block', 'block': 'if_entity', 'action': name}
         _add_inverted(data, inverted)
         cmd = CodeBlock(name, args, target=target, data=data, tags=tags)
@@ -419,7 +404,7 @@ class DFTemplate:
     
 
     def repeat(self, name: str, *args, tags: dict[str, str]={}, sub_action: str=None, index: int|None=None):
-        args = _convert_data_types(args)
+        args = _convert_args(args)
         data = {'id': 'block', 'block': 'repeat', 'action': name}
         if sub_action is not None:
             data['subAction'] = sub_action
@@ -429,25 +414,25 @@ class DFTemplate:
 
 
     def bracket(self, *args, index: int|None=None):
-        args = _convert_data_types(args)
+        args = _convert_args(args)
         cmd = CodeBlock('bracket', data={'id': 'bracket', 'direct': 'close', 'type': self.bracket_stack.pop()})
         self._add_codeblock(cmd, index)
     
 
     def control(self, name: str, *args, tags: dict[str, str]={}, index: int|None=None):
-        args = _convert_data_types(args)
+        args = _convert_args(args)
         cmd = CodeBlock(name, args, data={'id': 'block', 'block': 'control', 'action': name}, tags=tags)
         self._add_codeblock(cmd, index)
     
 
     def select_object(self, name: str, *args, tags: dict[str, str]={}, index: int|None=None):
-        args = _convert_data_types(args)
+        args = _convert_args(args)
         cmd = CodeBlock(name, args, data={'id': 'block', 'block': 'select_obj', 'action': name}, tags=tags)
         self._add_codeblock(cmd, index)
     
 
     def set_variable(self, name: str, *args, tags: dict[str, str]={}, index: int|None=None):
-        args = _convert_data_types(args)
+        args = _convert_args(args)
         cmd = CodeBlock(name, args, data={'id': 'block', 'block': 'set_var', 'action': name}, tags=tags)
         self._add_codeblock(cmd, index)
     
