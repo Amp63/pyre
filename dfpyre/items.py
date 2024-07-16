@@ -4,7 +4,7 @@ Contains class definitions for code items.
 
 from enum import Enum
 import re
-from typing import Literal, Dict, Any
+from typing import Literal, Any
 from dfpyre.style import is_ampersand_coded, ampersand_to_minimessage
 from dfpyre.util import PyreException, warn
 from mcitemlib.itemlib import Item as NbtItem
@@ -25,7 +25,7 @@ def convert_argument(arg: Any):
     return arg
 
 
-def _add_slot(d: Dict, slot: int|None):
+def _add_slot(d: dict, slot: int|None):
     if slot is not None:
         d['slot'] = slot
 
@@ -325,7 +325,7 @@ def _some_or(value: Any, none_value: Any):
     return value
 
 
-def item_from_dict(item_dict: Dict) -> object:
+def item_from_dict(item_dict: dict) -> object:
     item_id = item_dict['id']
     item_data = item_dict['data']
 
