@@ -59,6 +59,11 @@ def parse_actiondump():
         
         codeblock_name = CODEBLOCK_NAME_LOOKUP[action_data['codeblockName']]
         codeblock_data[codeblock_name][action_data['name']] = parsed_action_data
+        if aliases := action_data['aliases']:
+            alias_data = parsed_action_data.copy()
+            alias_data['alias'] = action_data['name']
+            for alias in aliases:
+                codeblock_data[codeblock_name][alias] = alias_data
     
     return codeblock_data
 
@@ -70,3 +75,4 @@ def get_default_tags(codeblock_type: str|None, codeblock_action: str|None) -> di
 
 
 CODEBLOCK_DATA = parse_actiondump()
+print(CODEBLOCK_DATA['set_var']['TextLength'])
