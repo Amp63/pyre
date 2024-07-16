@@ -19,7 +19,7 @@ from dfpyre.actiondump import CODEBLOCK_DATA, get_default_tags
 
 VARIABLE_TYPES = {'txt', 'comp', 'num', 'item', 'loc', 'var', 'snd', 'part', 'pot', 'g_val', 'vec', 'pn_el'}
 TEMPLATE_STARTERS = {'event', 'entity_event', 'func', 'process'}
-SINGLE_NAME_CODEBLOCKS = {'func', 'process', 'call_func', 'start_process', 'else'}
+DYNAMIC_CODEBLOCKS = {'func', 'process', 'call_func', 'start_process'}
 
 TARGETS = ['Selection', 'Default', 'Killer', 'Damager', 'Shooter', 'Victim', 'AllPlayers', 'Projectile', 'AllEntities', 'AllMobs', 'LastEntity']
 TARGET_CODEBLOCKS = {'player_action', 'entity_action', 'if_player', 'if_entity'}
@@ -55,7 +55,7 @@ class CodeBlock:
         self.tags = tags
     
     def __repr__(self) -> str:
-        if self.name in SINGLE_NAME_CODEBLOCKS:
+        if self.name in DYNAMIC_CODEBLOCKS:
             if self.name == 'else':
                 return 'CodeBlock(else)'
             return f'CodeBlock({self.name}, {self.data["data"]})'
@@ -227,16 +227,15 @@ class DFTemplate:
                         args.append(parsed_item)
             target = Target(TARGETS.index(block_dict['target'])) if 'target' in block_dict else DEFAULT_TARGET
 
-            codeblock_name = 'bracket'
-            if 'block' in block_dict and block_dict['block'] in SINGLE_NAME_CODEBLOCKS:
-                codeblock_name = block_dict['block']
+            codeblock_action = 'bracket'
+            if block_dict.get('block') in DYNAMIC_CODEBLOCKS:
+                codeblock_action = 'dynamic'
             elif 'action' in block_dict:
-                codeblock_name = block_dict['action']
-            
-            if codeblock_name == 'bracket' or block_dict['block'] == 'else':
-                codeblock = CodeBlock(codeblock_name, data=block_dict)
+                codeblock_action = block_dict['action']
+            if codeblock_action == 'bracket' or block_dict['block'] == 'else':
+                codeblock = CodeBlock(codeblock_action, data=block_dict)
             else:
-                codeblock = CodeBlock(codeblock_name, args, target, block_dict, tags=block_tags)
+                codeblock = CodeBlock(codeblock_action, args, target, block_dict, tags=block_tags)
             template.codeblocks.append(codeblock)
         
         return template

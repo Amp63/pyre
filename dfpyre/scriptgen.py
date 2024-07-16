@@ -29,7 +29,6 @@ TEMPLATE_METHOD_LOOKUP = {
 }
 
 TARGET_CODEBLOCKS = {'player_action', 'entity_action', 'if_player', 'if_entity'}
-SINGLE_NAME_CODEBLOCKS = {'func', 'process', 'call_func', 'start_process'}
 VAR_SCOPES = {'unsaved': 'g', 'saved': 's', 'local': 'l', 'line': 'i'}
 
 
@@ -134,7 +133,7 @@ def generate_script(template, flags: GeneratorFlags) -> str:
 
         method_name = TEMPLATE_METHOD_LOOKUP[codeblock.data['block']]
         method_args = [f'"{codeblock.name}"']
-        if codeblock.name in SINGLE_NAME_CODEBLOCKS:
+        if codeblock.name == 'dynamic':
             method_args[0] = f'"{codeblock.data["data"]}"'
         
         codeblock_args = [argument_item_to_string(flags, i) for i in codeblock.args]
