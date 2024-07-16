@@ -283,7 +283,7 @@ class parameter:
         self.optional = optional
         self.description = description
         self.note = note
-        self.default_value = default_value
+        self.default_value = convert_argument(default_value)
       
     
     def format(self, slot: int):
