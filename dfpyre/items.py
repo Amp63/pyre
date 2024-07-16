@@ -7,8 +7,7 @@ import re
 from typing import Literal, Any
 from dfpyre.style import is_ampersand_coded, ampersand_to_minimessage
 from dfpyre.util import PyreException, warn
-from mcitemlib.itemlib import Item as NbtItem
-
+from mcitemlib.itemlib import Item as NbtItem, AutoDict
 
 NUMBER_REGEX = r'-?\d*\.?\d+'
 VAR_SHORTHAND_CHAR = '$'
@@ -35,6 +34,21 @@ class item(NbtItem):
     Represents a Minecraft item.
     """
     type = 'item'
+
+    def glow(self):
+        """Apply the enchantment glow to this item."""
+        hide_flag_count = 0.0 if isinstance(self.nbt['tag']['HideFlags'], AutoDict) else self.get_tag('HideFlags')
+
+        self.set_tag('HideFlags', min(hide_flag_count + 1.0, 255.0))
+        self.set_enchantment('riptide' if 'fishing_rod' in self.get_id() else 'lure', 1)
+
+    def unbreakable(self):
+        """Make this item unbreakable."""
+        self.set_tag('Unbreakable', 1.0)
+
+    def hide_flags(self):
+        """Hide this item's flags."""
+        self.set_tag('HideFlags', 255.0)
 
     def get_custom_tag(self, tag_name: str) -> str | float:
         """
