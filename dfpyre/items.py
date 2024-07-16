@@ -6,14 +6,11 @@ from enum import Enum
 import re
 from typing import Literal, Dict, Any
 from dfpyre.style import is_ampersand_coded, ampersand_to_minimessage
+from dfpyre.util import PyreException
 from mcitemlib.itemlib import Item as NbtItem
 
 
 NUMBER_REGEX = r'-?\d*\.?\d+'
-
-
-class PyreException(Exception):
-    pass
 
 
 def _add_slot(d: Dict, slot: int|None):

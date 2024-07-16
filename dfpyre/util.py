@@ -8,6 +8,10 @@ COL_SUCCESS = '\x1b[32m'
 COL_ERROR = '\x1b[31m'
 
 
+class PyreException(Exception):
+    pass
+
+
 def warn(message: str):
     print(f'{COL_WARN}! WARNING ! {message}{COL_RESET}')
 
