@@ -51,7 +51,7 @@ class item(NbtItem):
         Set a custom DF tag for this item.
 
         :param str tag_name: The name of the custom tag.
-        :param str tag_value: The value for the custom tag.
+        :param str | float tag_value: The value for the custom tag.
         """
         if isinstance(tag_value, int):
             tag_value = float(tag_value)
