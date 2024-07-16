@@ -6,7 +6,7 @@ from enum import Enum
 import re
 from typing import Literal, Dict, Any
 from dfpyre.style import is_ampersand_coded, ampersand_to_minimessage
-from dfpyre.util import PyreException
+from dfpyre.util import PyreException, warn
 from mcitemlib.itemlib import Item as NbtItem
 
 
@@ -301,8 +301,13 @@ class parameter:
             formatted_dict['item']['data']['description'] = self.description
         if self.note:
             formatted_dict['item']['data']['note'] = self.note
-        if self.default_value is not None and not self.plural and self.optional:
-            formatted_dict['item']['data']['default_value'] = self.default_value.format(None)['item']
+        if self.default_value is not None:
+            if not self.optional:
+                warn(f'For parameter "{self.name}": Default value cannot be set if optional is False.')
+            elif self.plural:
+                warn(f'For parameter "{self.name}": Default value cannot be set while plural is True.')
+            else:
+                formatted_dict['item']['data']['default_value'] = self.default_value.format(None)['item']
         
         return formatted_dict
     
