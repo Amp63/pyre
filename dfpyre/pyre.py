@@ -228,10 +228,13 @@ class DFTemplate:
             target = Target(TARGETS.index(block_dict['target'])) if 'target' in block_dict else DEFAULT_TARGET
 
             codeblock_action = 'bracket'
-            if block_dict.get('block') in DYNAMIC_CODEBLOCKS:
+            if block_dict.get('block') == 'else':
+                codeblock_action = 'else'
+            elif block_dict.get('block') in DYNAMIC_CODEBLOCKS:
                 codeblock_action = 'dynamic'
             elif 'action' in block_dict:
                 codeblock_action = block_dict['action']
+            
             if codeblock_action == 'bracket' or block_dict['block'] == 'else':
                 codeblock = CodeBlock(codeblock_action, data=block_dict)
             else:

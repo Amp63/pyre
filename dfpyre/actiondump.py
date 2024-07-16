@@ -75,4 +75,3 @@ def get_default_tags(codeblock_type: str|None, codeblock_action: str|None) -> di
 
 
 CODEBLOCK_DATA = parse_actiondump()
-print(CODEBLOCK_DATA['set_var']['TextLength'])
