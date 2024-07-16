@@ -114,6 +114,7 @@ def add_script_line(flags: GeneratorFlags, script_lines: list[str], indent_level
     script_lines.append(added_line)
 
 
+# TODO: add tag values if not default
 def generate_script(template, flags: GeneratorFlags) -> str:
     indent_level = 0
     script_lines = []
