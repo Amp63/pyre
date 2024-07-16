@@ -14,7 +14,7 @@ from mcitemlib.itemlib import Item as NbtItem
 from dfpyre.util import *
 from dfpyre.items import *
 from dfpyre.scriptgen import generate_script, GeneratorFlags
-from dfpyre.actiondump import CODEBLOCK_DATA
+from dfpyre.actiondump import CODEBLOCK_DATA, get_default_tags
 
 
 VARIABLE_TYPES = {'txt', 'comp', 'num', 'item', 'loc', 'var', 'snd', 'part', 'pot', 'g_val', 'vec', 'pn_el'}
@@ -215,9 +215,13 @@ class DFTemplate:
         template_dict = json.loads(df_decode(template_code))
         template = DFTemplate()
         for block_dict in template_dict['blocks']:
+            block_tags = get_default_tags(block_dict.get('block'), block_dict.get('action'))
             if 'args' in block_dict:
                 args = []
                 for item_dict in block_dict['args']['items']:
+                    if item_dict['item'].get('id') == 'bl_tag':
+                        tag_data = item_dict['item']['data']
+                        block_tags[tag_data['tag']] = tag_data['option']
                     parsed_item = item_from_dict(item_dict['item'])
                     if parsed_item is not None:
                         args.append(parsed_item)
@@ -232,7 +236,7 @@ class DFTemplate:
             if codeblock_name == 'bracket' or block_dict['block'] == 'else':
                 codeblock = CodeBlock(codeblock_name, data=block_dict)
             else:
-                codeblock = CodeBlock(codeblock_name, args, target, block_dict)
+                codeblock = CodeBlock(codeblock_name, args, target, block_dict, tags=block_tags)
             template.codeblocks.append(codeblock)
         
         return template

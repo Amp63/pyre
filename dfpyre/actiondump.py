@@ -63,4 +63,10 @@ def parse_actiondump():
     return codeblock_data
 
 
+def get_default_tags(codeblock_type: str|None, codeblock_action: str|None) -> dict[str, str]:
+    if codeblock_type is None or codeblock_action is None:
+        return {}
+    return {t['name']: t['default'] for t in CODEBLOCK_DATA[codeblock_type][codeblock_action]['tags']}
+
+
 CODEBLOCK_DATA = parse_actiondump()

@@ -1,6 +1,7 @@
 import dataclasses
 import re
 from dfpyre.items import *
+from dfpyre.actiondump import get_default_tags
 
 SCRIPT_START = '''from dfpyre import *
 t = DFTemplate()
@@ -141,6 +142,12 @@ def generate_script(template, flags: GeneratorFlags) -> str:
             method_args.extend(codeblock_args)
         if method_name in TARGET_CODEBLOCKS and codeblock.target.name != 'SELECTION':
             method_args.append(f'target=Target.{codeblock.target.name}')
+        if codeblock.tags:
+            print(codeblock.tags)
+            default_tags = get_default_tags(codeblock.data.get('block'), codeblock.name)
+            written_tags = {t: o for t, o in codeblock.tags.items() if default_tags[t] != o}
+            if written_tags:
+                method_args.append(f'tags={str(written_tags)}')
         
         line = f't.{method_name}({", ".join(method_args)})'
         add_script_line(flags, script_lines, indent_level, line)
