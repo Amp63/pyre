@@ -52,6 +52,7 @@ pip install dfpyre
 
 ## Extras
 
+- [Editing Tags](#editing-tags)
 - [Importing from Code](#importing-from-code)
 - [Script Generation](#script-generation)
 - [Method List](#method-list)
@@ -356,7 +357,7 @@ t.player_action('SendMessage', 'Hello, ', var('name', 'line'))
 
 ### Conditionals and Brackets
 
-A list of conditionals and loops can be found [here](#commands).
+A list of conditionals and loops can be found [here](#method-list).
 
 A specific syntax must be followed when creating conditionals and loops. Each conditional statement must be followed by a `bracket()` method, which will contain code. Here's an example:
 
@@ -386,7 +387,6 @@ t.else_()
 t.bracket(
     t.player_action('ActionBar', 'in the air')
 )
-t.build()
 ```
 
 ### Loops
@@ -426,6 +426,19 @@ t = DFTemplate()
 t.player_event('Join')
 t.call_function('doStuff')
 ```
+
+### Editing Tags
+You can edit an action's tags by passing the `tags` argument to a template method:
+
+```py
+from dfpyre import *
+t = DFTemplate()
+t.player_event('Join')
+t.player_action('SendMessage', 'hello', tags={'Alignment Mode': 'Centered'})
+```
+
+If you choose not to modify a specific tag, its default value will be used.
+Order does not matter when adding multiple tag entries.
  
 ### Importing from Code
 
