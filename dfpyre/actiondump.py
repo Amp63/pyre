@@ -15,7 +15,7 @@ CODEBLOCK_NAME_LOOKUP = {
     'IF GAME': 'if_game',
     'IF VARIABLE': 'if_var',
     'REPEAT': 'repeat',
-    'SELECT OBJECT': 'select_object',
+    'SELECT OBJECT': 'select_obj',
     'CONTROL': 'control',
     'PLAYER EVENT': 'event',
     'ENTITY EVENT': 'entity_event',
