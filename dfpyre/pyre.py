@@ -78,7 +78,7 @@ class CodeBlock:
         final_args = [arg.format(slot) for slot, arg in enumerate(self.args) if arg.type in VARIABLE_TYPES]
         
         # check for unrecognized name, add tags
-        if codeblock_type is not None:  # for brackets
+        if codeblock_type is not None and codeblock_type != 'else':
             if self.name not in CODEBLOCK_DATA[codeblock_type]:
                 _warn_unrecognized_name(codeblock_type, self.name)
             elif include_tags:
