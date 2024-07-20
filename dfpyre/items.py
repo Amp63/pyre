@@ -364,12 +364,9 @@ def item_from_dict(item_dict: dict) -> object:
         param_type = ParameterType(PARAMETER_TYPE_LOOKUP.index(item_data['type']))
         if item_data['optional']:
             if 'default_value' in item_data:
-                param = parameter(item_data['name'], param_type, item_data['plural'], True, description, note, item_from_dict(item_data['default_value']))
-            else:
-                param = parameter(item_data['name'], param_type, item_data['plural'], True, description, note)
-        else:
-            param = parameter(item_data['name'], param_type, item_data['plural'], False, description, note)
-        return param
+                return parameter(item_data['name'], param_type, item_data['plural'], True, description, note, item_from_dict(item_data['default_value']))
+            return parameter(item_data['name'], param_type, item_data['plural'], True, description, note)
+        return parameter(item_data['name'], param_type, item_data['plural'], False, description, note)
     elif item_id in {'bl_tag', 'hint'}:
         return
     else:
