@@ -187,7 +187,7 @@ def _get_template_item(template_code: str, name: str, author: str) -> NbtItem:
         'hypercube:codetemplatedata': f'{{"author":"{author}","name":"{name}","version": 1,"code":"{template_code}"}}',
         'hypercube:pyre_creation_timestamp': now.timestamp()
     }
-    template_item.set_tag('PublicBukkitValues', pbv_tag, raw=True)
+    template_item.set_custom_data('PublicBukkitValues', pbv_tag, raw=True)
 
     return template_item
 
