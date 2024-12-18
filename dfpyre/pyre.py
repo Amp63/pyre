@@ -55,10 +55,10 @@ class CodeBlock:
         self.tags = tags
     
     def __repr__(self) -> str:
-        if self.name in DYNAMIC_CODEBLOCKS:
-            if self.name == 'else':
-                return 'CodeBlock(else)'
-            return f'CodeBlock({self.name}, {self.data["data"]})'
+        if self.name == 'dynamic':
+            return f'CodeBlock({self.data["block"]}, {self.data["data"]})'
+        if self.name == 'else':
+            return 'CodeBlock(else)'
         if 'block' in self.data:
             return f'CodeBlock({self.data["block"]}, {self.name})'
         return f'CodeBlock(bracket, {self.data["type"]}, {self.data["direct"]})'
@@ -214,6 +214,7 @@ class DFTemplate:
         """
         template_dict = json.loads(df_decode(template_code))
         template = DFTemplate()
+        template._set_template_name(template_dict['blocks'][0])
         for block_dict in template_dict['blocks']:
             block_tags = get_default_tags(block_dict.get('block'), block_dict.get('action'))
             if 'args' in block_dict:
@@ -242,16 +243,6 @@ class DFTemplate:
             template.codeblocks.append(codeblock)
         
         return template
-
-
-    @staticmethod
-    def receive_from_recode():
-        print('Waiting for item to be sent...')
-        s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        s.connect(('localhost', 31372))
-        received = s.recv(8192)
-        print(received)
-        s.close()
 
 
     def _set_template_name(self, first_block):
