@@ -21,7 +21,7 @@ def test_basic():
 
 def test_send():
     t = DFTemplate.from_code(TEMPLATE_CODE)
-    assert t.build_and_send('recode') == 0
+    assert t.build_and_send('codeclient') == 0
 
 
 def test_scriptgen():
