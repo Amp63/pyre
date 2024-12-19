@@ -63,6 +63,15 @@ class CodeBlock:
             return f'CodeBlock({self.data["block"]}, {self.name})'
         return f'CodeBlock(bracket, {self.data["type"]}, {self.data["direct"]})'
 
+    def __eq__(self, value):
+        if not isinstance(value, CodeBlock):
+            return False
+        return self.name == value.name and \
+            self.args == value.args and \
+            self.target == value.target and \
+            self.data == value.data and \
+            self.tags == value.tags
+
     def build(self, include_tags: bool=True) -> dict:
         """
         Builds a properly formatted block from a CodeBlock object.
