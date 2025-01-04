@@ -40,10 +40,20 @@ class GeneratorFlags:
     var_shorthand: bool
 
 
+def item_to_string(class_name: str, i: item):
+    i.nbt.data.pop('~DF_NBT', None)
+    stripped_id = i.get_id().replace('minecraft:', '')
+    if i.nbt.key_set() == {'~id', '~count'}:
+        if i.get_count() == 1:
+            return f'{class_name}("{stripped_id}")'
+        return f'{class_name}("{stripped_id}", {i.get_count()})'
+    return f'{class_name}.from_nbt("""{i.get_nbt()}""")'
+
+
 def argument_item_to_string(flags: GeneratorFlags, arg_item: object) -> str:
     class_name = arg_item.__class__.__name__
     if isinstance(arg_item, item):
-        return f'{class_name}.from_nbt("""{arg_item.get_nbt()}""")'
+        return item_to_string(class_name, arg_item)
     
     if isinstance(arg_item, string):
         value = arg_item.value.replace('\n', '\\n')
