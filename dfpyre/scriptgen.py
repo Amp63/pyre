@@ -97,6 +97,8 @@ def argument_item_to_string(flags: GeneratorFlags, arg_item: object) -> str:
         return f'{class_name}("{arg_item.name}", {arg_item.dur}, {arg_item.amp})'
     
     if isinstance(arg_item, gamevalue):
+        if arg_item.target == 'Default':
+            return f'{class_name}("{arg_item.name}")'
         return f'{class_name}("{arg_item.name}", "{arg_item.target}")'
     
     if isinstance(arg_item, parameter):
