@@ -4,6 +4,7 @@ from dfpyre.items import *
 from dfpyre.actiondump import get_default_tags
 
 SCRIPT_START = '''from dfpyre import *
+
 t = DFTemplate()
 '''
 
