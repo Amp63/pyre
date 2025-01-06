@@ -3,6 +3,7 @@ import re
 from dfpyre.items import *
 from dfpyre.actiondump import get_default_tags
 
+
 SCRIPT_START = '''from dfpyre import *
 
 t = DFTemplate()
@@ -127,11 +128,11 @@ def add_script_line(flags: GeneratorFlags, script_lines: list[str], indent_level
     script_lines.append(added_line)
 
 
-# TODO: add tag values if not default
 def generate_script(template, flags: GeneratorFlags) -> str:
     indent_level = 0
     script_lines = []
     for codeblock in template.codeblocks:
+        # Handle brackets and indentation
         if codeblock.name == 'bracket':
             if codeblock.data['direct'] == 'open':
                 add_script_line(flags, script_lines, indent_level, 't.bracket(', False)
@@ -140,25 +141,44 @@ def generate_script(template, flags: GeneratorFlags) -> str:
                 indent_level -= 1
                 add_script_line(flags, script_lines, indent_level, ')')
             continue
+            
+        # Handle else
         if codeblock.name == 'else':
             add_script_line(flags, script_lines, indent_level, 't.else_()')
             continue
 
+        
+        # Get codeblock method and start its arguments with the action
         method_name = TEMPLATE_METHOD_LOOKUP[codeblock.data['block']]
         method_args = [f'"{codeblock.name}"']
+
+        # Set function or process name if necessary
         if codeblock.name == 'dynamic':
             method_args[0] = f'"{codeblock.data["data"]}"'
         
+        # Convert argument objects to valid Python strings
         codeblock_args = [argument_item_to_string(flags, i) for i in codeblock.args]
         if codeblock_args:
             method_args.extend(codeblock_args)
+        
+        # Add target if necessary
         if method_name in TARGET_CODEBLOCKS and codeblock.target.name != 'SELECTION':
             method_args.append(f'target=Target.{codeblock.target.name}')
+        
+        # Add tags
         if codeblock.tags:
             default_tags = get_default_tags(codeblock.data.get('block'), codeblock.name)
             written_tags = {t: o for t, o in codeblock.tags.items() if default_tags[t] != o}
             if written_tags:
                 method_args.append(f'tags={str(written_tags)}')
+        
+        # Add sub-action for repeat
+        if codeblock.data.get('subAction'):
+            method_args.append(f'sub_action="{codeblock.data["subAction"]}"')
+        
+        # Add inversion for NOT
+        if codeblock.data.get('attribute') == 'NOT':
+            method_args.append('inverted=True')
         
         line = f't.{method_name}({", ".join(method_args)})'
         add_script_line(flags, script_lines, indent_level, line)
