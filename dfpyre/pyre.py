@@ -111,10 +111,10 @@ def _warn_unrecognized_name(codeblock_type: str, codeblock_name: str):
 
 def _add_inverted(data, inverted):
     """
-    If inverted is true, add 'inverted': 'NOT' to data.
+    If inverted is true, add 'attribute': 'NOT' to data.
     """
     if inverted:
-        data['inverted'] = 'NOT'
+        data['attribute'] = 'NOT'
 
 
 def _convert_args(args):
