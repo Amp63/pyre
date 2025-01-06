@@ -1,0 +1,4 @@
+mcitemlib==0.3.4
+nbtlib==2.0.4
+numpy==2.2.1
+websocket-client==1.8.0
