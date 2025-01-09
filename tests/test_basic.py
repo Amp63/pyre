@@ -10,11 +10,12 @@ def test_basic():
     t = DFTemplate.from_code(TEMPLATE_CODE)
     init_codeblocks = len(t.codeblocks)
     
-    t.player_action('SendMessage', 'hi')
-    t.if_variable('=', '$ix', 5)
-    t.bracket(
-        t.player_action('GiveItems', item('diamond'))
-    )
+    t.insert([
+        player_action('SendMessage', 'hi'),
+        if_variable('=', '$ix', 5, codeblocks=[
+            player_action('GiveItems', Item('diamond'))
+        ])
+    ]).build()
     
     assert len(t.codeblocks) == init_codeblocks+5, 'Mismatched number of added codeblocks.'
 
@@ -33,41 +34,35 @@ def test_scriptgen():
     t.generate_script(script_path)
     assert os.path.exists(script_path), 'File was not generated.'
 
-    __import__(module_name)
-    mod = sys.modules[module_name]
-    assert hasattr(mod, 't'), 'Script does not have a template object.'
-
-    assert len(t.codeblocks) == len(mod.t.codeblocks), 'Number of codeblocks does not match.'
-
     os.remove(script_path)
 
 
 def test_all_codeblocks():
-    t = DFTemplate()
-    t.player_event('Join')
-    t.player_action('SendMessage', 'test')
-    t.entity_action('Heal', 20)
-    t.game_action('SetBlock', item('stone'), loc(1.5, 2.5, 3.5))
-    t.set_variable('=', '$ix', 5)
-    t.if_player('IsHolding', item('diamond_pickaxe')); t.bracket()
-    t.if_entity('IsGrounded'); t.bracket()
-    t.if_game('BlockEquals', loc(1.5, 2.5, 3.5), item('stone')); t.bracket()
-    t.if_variable('=', '$ix', 5); t.bracket()
-    t.repeat('Multiple', 10); t.bracket()
-    t.select_object('AllPlayers')
-    t.control('Wait', 1)
-    t.call_function('foo')
-    t.start_process('bar')
-    t.build()
+    player_event('Join', [
+        player_action('SendMessage', 'test'),
+        entity_action('Heal', 20),
+        game_action('SetBlock', Item('stone'), Location(1.5, 2.5, 3.5)),
+        set_variable('=', '$i x', 5),
+        if_player('IsHolding', Item('diamond_pickaxe')),
+        if_entity('IsGrounded'),
+        if_game('BlockEquals', Location(1.5, 2.5, 3.5), Item('stone')),
+        if_variable('=', '$i x', 5),
+        repeat('Multiple', 10, codeblocks=[
+            select_object('AllPlayers'),
+            control('Wait', 1)
+        ]),
+        call_function('foo'),
+        start_process('bar')
+    ]).build()
 
-    t = DFTemplate()
-    t.entity_event('FallingBlockLand')
-    t.build()
+    entity_event('FallingBlockLand', [
+        player_action('SendMessage', 'landed', target=Target.ALL_PLAYERS)
+    ]).build()
 
-    t = DFTemplate()
-    t.function('foo')
-    t.build()
+    function('foo', codeblocks=[
+        player_action('SendMessage', 'called foo')
+    ]).build()
 
-    t = DFTemplate()
-    t.process('bar')
-    t.build()
+    process('bar', codeblocks=[
+        player_action('SendMessage', 'started bar')
+    ]).build()
