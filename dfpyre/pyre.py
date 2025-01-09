@@ -1,5 +1,5 @@
 """
-A package for externally creating code templates for the DiamondFire Minecraft server.
+A package for making code templates for the DiamondFire Minecraft server.
 
 By Amp
 """
@@ -7,9 +7,7 @@ By Amp
 import json
 from difflib import get_close_matches
 import datetime
-from typing import Tuple
 from enum import Enum
-import socket
 from mcitemlib.itemlib import Item as NbtItem
 from dfpyre.util import *
 from dfpyre.items import *
@@ -46,57 +44,90 @@ class Target(Enum):
 DEFAULT_TARGET = Target.SELECTION
 
 
+def _convert_args(args):
+    return tuple(map(convert_argument, args))
+
+
 class CodeBlock:
-    def __init__(self, name: str, args: Tuple=(), target: Target=DEFAULT_TARGET, data: dict={}, tags: dict[str, str]={}):
-        self.name = name
+    def __init__(self, codeblock_type: str, action_name: str, args: tuple=(), target: Target=DEFAULT_TARGET, data: dict={}, tags: dict[str, str]={}):
+        self.type = codeblock_type
+        self.action_name = action_name
         self.args = args
         self.target = target
         self.data = data
         self.tags = tags
     
+
+    @classmethod
+    def new_action(cls, codeblock_type: str, action_name: str, args: tuple, tags: dict[str, str], target: Target=DEFAULT_TARGET) -> "CodeBlock":
+        args = _convert_args(args)
+        return cls(codeblock_type, action_name, args=args, data={'id': 'block', 'block': codeblock_type, 'action': action_name}, tags=tags, target=target)
+
+    @classmethod
+    def new_data(cls, codeblock_type: str, data_value: str, args: tuple, tags: dict[str, str]) -> "CodeBlock":
+        args = _convert_args(args)
+        return cls(codeblock_type, 'dynamic', args=args, data={'id': 'block', 'block': codeblock_type, 'data': data_value}, tags=tags)
+
+    @classmethod
+    def new_conditional(cls, codeblock_type: str, action_name: str, args: tuple, tags: dict[str, str], inverted: bool, target: Target=DEFAULT_TARGET) -> "CodeBlock":
+        args = _convert_args(args)
+        data = {'id': 'block', 'block': codeblock_type, 'action': action_name}
+        if inverted:
+            data['attribute'] = 'NOT'
+        return cls(codeblock_type, action_name, args=args, data=data, tags=tags, target=target)
+
+    @classmethod
+    def new_repeat(cls, action_name: str, args: tuple, tags: dict[str, str], sub_action: str|None, inverted: bool) -> "CodeBlock":
+        args = _convert_args(args)
+        data = {'id': 'block', 'block': 'repeat', 'action': action_name}
+        if inverted:
+            data['attribute'] = 'NOT'
+        if sub_action is not None:
+            data['subAction'] = sub_action
+        return cls('repeat', action_name, args=args, data=data, tags=tags)
+
+    @classmethod
+    def new_else(cls) -> "CodeBlock":
+        return cls('else', 'else', data={'id': 'block', 'block': 'else'})
+
+    @classmethod
+    def new_bracket(cls, direction: Literal['open', 'close'], bracket_type: Literal['norm', 'repeat']) -> "CodeBlock":
+        return cls('bracket', 'bracket', data={'id': 'bracket', 'direct': direction, 'type': bracket_type})
+
+
     def __repr__(self) -> str:
-        if self.name == 'dynamic':
+        if self.action_name == 'dynamic':
             return f'CodeBlock({self.data["block"]}, {self.data["data"]})'
-        if self.name == 'else':
+        if self.action_name == 'else':
             return 'CodeBlock(else)'
         if 'block' in self.data:
-            return f'CodeBlock({self.data["block"]}, {self.name})'
+            return f'CodeBlock({self.data["block"]}, {self.action_name})'
         return f'CodeBlock(bracket, {self.data["type"]}, {self.data["direct"]})'
 
-    def __eq__(self, value):
-        if not isinstance(value, CodeBlock):
-            return False
-        return self.name == value.name and \
-            self.args == value.args and \
-            self.target == value.target and \
-            self.data == value.data and \
-            self.tags == value.tags
 
     def build(self, include_tags: bool=True) -> dict:
         """
         Builds a properly formatted block from a CodeBlock object.
         """
         built_block = self.data.copy()
-        codeblock_type = self.data.get('block')
         
         # add target if necessary ('Selection' is the default when 'target' is blank)
-        if codeblock_type in TARGET_CODEBLOCKS and self.target != DEFAULT_TARGET:
+        if self.type in TARGET_CODEBLOCKS and self.target != DEFAULT_TARGET:
             built_block['target'] = self.target.get_string_value()
         
         # add items into args
         final_args = [arg.format(slot) for slot, arg in enumerate(self.args) if arg.type in VARIABLE_TYPES]
         
         # check for unrecognized name, add tags
-        if codeblock_type is not None and codeblock_type != 'else':
-            if self.name not in CODEBLOCK_DATA[codeblock_type]:
-                _warn_unrecognized_name(codeblock_type, self.name)
+        if self.type not in {'bracket', 'else'}:
+            if self.action_name not in CODEBLOCK_DATA[self.type]:
+                _warn_unrecognized_name(self.type, self.action_name)
             elif include_tags:
-                tags = _get_codeblock_tags(codeblock_type, self.name, self.tags)
+                tags = _get_codeblock_tags(self.type, self.action_name, self.tags)
                 if len(final_args) + len(tags) > 27:
                     final_args = final_args[:(27-len(tags))]  # trim list if over 27 elements
                 final_args.extend(tags)  # add tags to end
-    
-        # if final_args:
+
         built_block['args'] = {'items': final_args}
         return built_block
 
@@ -109,22 +140,11 @@ def _warn_unrecognized_name(codeblock_type: str, codeblock_name: str):
         warn(f'Code block name "{codeblock_name}" not recognized. Try spell checking or retyping without spaces.')
 
 
-def _add_inverted(data, inverted):
-    """
-    If inverted is true, add 'attribute': 'NOT' to data.
-    """
-    if inverted:
-        data['attribute'] = 'NOT'
-
-
-def _convert_args(args):
-    return tuple(map(convert_argument, args))
-
-
 def _check_applied_tags(tags: list[dict], applied_tags: dict[str, str], codeblock_name: str) -> dict[str, str]:
     if len(applied_tags) > 0 and len(tags) == 0:
         warn(f'Action "{codeblock_name}" does not have any tags, but still received {len(applied_tags)}.')
         return {}
+    
     valid_tags = {}
     tags_formatted = {t['name']: t for t in tags}
     for name, option in applied_tags.items():
@@ -139,12 +159,21 @@ def _check_applied_tags(tags: list[dict], applied_tags: dict[str, str], codebloc
     return valid_tags
 
 
-def _reformat_codeblock_tags(tags: list[dict], codeblock_type: str, codeblock_name: str, applied_tags: dict[str, str]):
+def _reformat_codeblock_tags(tags: list[dict], codeblock_type: str, codeblock_action: str, applied_tags: dict[str, str]):
     """
     Turns tag objects into DiamondFire formatted tag items
     """
+
+    def format_tag(option: str, name: str):
+        return {
+            'item': {
+                'id': 'bl_tag',
+                'data': {'option': option, 'tag': name, 'action': codeblock_action, 'block': codeblock_type}
+            },
+            'slot': tag_item['slot']
+        }
     
-    valid_applied_tags = _check_applied_tags(tags, applied_tags, codeblock_name)
+    valid_applied_tags = _check_applied_tags(tags, applied_tags, codeblock_action)
     reformatted_tags = []
     for tag_item in tags:
         tag_name = tag_item['name']
@@ -152,18 +181,7 @@ def _reformat_codeblock_tags(tags: list[dict], codeblock_type: str, codeblock_na
         if tag_name in valid_applied_tags:
             tag_option = valid_applied_tags[tag_name]
 
-        new_tag_item = {
-            'item': {
-                'id': 'bl_tag',
-                'data': {
-                    'option': tag_option,
-                    'tag': tag_name,
-                    'action': codeblock_name,
-                    'block': codeblock_type
-                }
-            },
-            'slot': tag_item['slot']
-        }
+        new_tag_item = format_tag(tag_option, tag_name)
         reformatted_tags.append(new_tag_item)
     return reformatted_tags
 
@@ -205,15 +223,21 @@ class DFTemplate:
     """
     Represents a DiamondFire code template.
     """
-    def __init__(self, name: str=None, author: str='pyre'):
-        self.codeblocks: list[CodeBlock] = []
-        self.bracket_stack: list[str] = []
-        self.name = name
+    def __init__(self, codeblocks: list[CodeBlock], author: str='pyre'):
+        self.codeblocks = codeblocks
         self.author = author
     
 
+    def _get_template_name(self):
+        first_block_data = self.codeblocks[0].data
+        if 'data' in first_block_data:
+            name = first_block_data['data']
+            return name if name else 'Unnamed Template'
+        return first_block_data['block'] + '_' + first_block_data['action']
+
+
     def __repr__(self) -> str:
-        return f'DFTemplate(name: {self.name}, author: {self.author}, codeblocks: {len(self.codeblocks)})'
+        return f'DFTemplate(name: "{self._get_template_name()}", author: "{self.author}", codeblocks: {len(self.codeblocks)})'
 
 
     @staticmethod
@@ -222,47 +246,54 @@ class DFTemplate:
         Create a template object from an existing template code.
         """
         template_dict = json.loads(df_decode(template_code))
-        template = DFTemplate()
-        template._set_template_name(template_dict['blocks'][0])
+        codeblocks: list[CodeBlock] = []
         for block_dict in template_dict['blocks']:
             block_tags = get_default_tags(block_dict.get('block'), block_dict.get('action'))
             if 'args' in block_dict:
-                args = []
+                block_args = []
                 for item_dict in block_dict['args']['items']:
                     if item_dict['item'].get('id') == 'bl_tag':
                         tag_data = item_dict['item']['data']
                         block_tags[tag_data['tag']] = tag_data['option']
                     parsed_item = item_from_dict(item_dict['item'])
                     if parsed_item is not None:
-                        args.append(parsed_item)
-            target = Target(TARGETS.index(block_dict['target'])) if 'target' in block_dict else DEFAULT_TARGET
+                        block_args.append(parsed_item)
+            block_target = Target(TARGETS.index(block_dict['target'])) if 'target' in block_dict else DEFAULT_TARGET
 
-            codeblock_action = 'bracket'
-            if block_dict.get('block') == 'else':
-                codeblock_action = 'else'
-            elif block_dict.get('block') in DYNAMIC_CODEBLOCKS:
-                codeblock_action = 'dynamic'
+            codeblock_type = block_dict.get('block')
+
+            if codeblock_type is None:
+                codeblock = CodeBlock.new_bracket(block_dict['direct'], block_dict['type'])
+            if codeblock_type == 'else':
+                codeblock = CodeBlock.new_else()
+            elif codeblock_type in DYNAMIC_CODEBLOCKS:
+                codeblock = CodeBlock.new_data(codeblock_type, block_dict['data'], block_args, block_tags)
             elif 'action' in block_dict:
-                codeblock_action = block_dict['action']
-            
-            if codeblock_action == 'bracket' or block_dict['block'] == 'else':
-                codeblock = CodeBlock(codeblock_action, data=block_dict)
-            else:
-                codeblock = CodeBlock(codeblock_action, args, target, block_dict, tags=block_tags)
-            template.codeblocks.append(codeblock)
+                codeblock = CodeBlock.new_action(codeblock_type, block_dict['action'], block_args, block_tags, block_target)
+            codeblocks.append(codeblock)
         
-        return template
+        return DFTemplate(codeblocks)
 
+    
+    def insert(self, insert_codeblocks: CodeBlock|list[CodeBlock], index: int=-1) -> "DFTemplate":
+        """
+        Insert `insert_codeblocks` into this template at `index`.
 
-    def _set_template_name(self, first_block):
-        if self.name is not None:
-            return
-        if 'data' in first_block:
-            self.name = first_block['data']
-            if not self.name:
-                self.name = 'Unnamed Template'
+        :param CodeBlock|list[CodeBlock] insert_codeblocks: The block(s) to insert
+        :param int index: The index to insert at.
+        :return: self
+        """
+        if isinstance(insert_codeblocks, list):
+            insert_codeblocks = list(flatten(insert_codeblocks))
+            if index == -1:
+                self.codeblocks.extend(insert_codeblocks)
+            else:
+                self.codeblocks[index:index+len(insert_codeblocks)] = insert_codeblocks
+        elif isinstance(insert_codeblocks, CodeBlock):
+            self.codeblocks.insert(index, insert_codeblocks)
         else:
-            self.name = first_block['block'] + '_' + first_block['action']
+            raise PyreException('Expected CodeBlock or list[CodeBlock] to insert.')
+        return self
 
 
     def build(self, include_tags: bool=True) -> str:
@@ -278,8 +309,6 @@ class DFTemplate:
         if first_block['block'] not in TEMPLATE_STARTERS:
             warn('Template does not start with an event, function, or process.')
 
-        self._set_template_name(first_block)
-
         json_string = json.dumps(template_dict, separators=(',', ':'))
         return df_encode(json_string)
     
@@ -291,156 +320,8 @@ class DFTemplate:
         :param bool include_tags: If True, include item tags in code blocks. Otherwise omit them.
         """
         template_code = self.build(include_tags)
-        template_item = _get_template_item(template_code, self.name, self.author)
+        template_item = _get_template_item(template_code, self._get_template_name(), self.author)
         return template_item.send_to_minecraft(method, 'pyre')
-    
-
-    def clear(self):
-        """
-        Clears this template's data.
-        """
-        self.__init__()
-    
-
-    def _add_codeblock(self, codeblock: CodeBlock, index: int|None):
-        if index is None:
-            self.codeblocks.append(codeblock)
-        else:
-            self.codeblocks.insert(index, codeblock)
-    
-
-    def _openbracket(self, index: int|None, btype: Literal['norm', 'repeat']='norm'):
-        bracket = CodeBlock('bracket', data={'id': 'bracket', 'direct': 'open', 'type': btype})
-        self._add_codeblock(bracket, index)
-        self.bracket_stack.append(btype)
-    
-
-    # command methods
-    def player_event(self, name: str, index: int|None=None):
-        cmd = CodeBlock(name, data={'id': 'block', 'block': 'event', 'action': name})
-        self._add_codeblock(cmd, index)
-    
-
-    def entity_event(self, name: str, index: int|None=None):
-        cmd = CodeBlock(name, data={'id': 'block', 'block': 'entity_event', 'action': name})
-        self._add_codeblock(cmd, index)
-    
-
-    def function(self, name: str, *args, tags: dict[str, str]={}, index: int|None=None):
-        args = _convert_args(args)
-        cmd = CodeBlock('dynamic', args, data={'id': 'block', 'block': 'func', 'data': name}, tags=tags)
-        self._add_codeblock(cmd, index)
-    
-
-    def process(self, name: str, *args, tags: dict[str, str]={}, index: int|None=None):
-        args = _convert_args(args)
-        cmd = CodeBlock('dynamic', args, data={'id': 'block', 'block': 'process', 'data': name}, tags=tags)
-        self._add_codeblock(cmd, index)
-    
-
-    def call_function(self, name: str, *args, index: int|None=None):
-        args = _convert_args(args)
-        cmd = CodeBlock('dynamic', args, data={'id': 'block', 'block': 'call_func', 'data': name})
-        self._add_codeblock(cmd, index)    
-
-
-    def start_process(self, name: str, tags: dict[str, str]={}, index: int|None=None):
-        cmd = CodeBlock('dynamic', data={'id': 'block', 'block': 'start_process', 'data': name}, tags=tags)
-        self._add_codeblock(cmd, index)
-
-
-    def player_action(self, name: str, *args, target: Target=DEFAULT_TARGET, tags: dict[str, str]={}, index: int|None=None):
-        args = _convert_args(args)
-        cmd = CodeBlock(name, args, target=target, data={'id': 'block', 'block': 'player_action', 'action': name}, tags=tags)
-        self._add_codeblock(cmd, index)
-    
-
-    def game_action(self, name: str, *args, tags: dict[str, str]={}, index: int|None=None):
-        args = _convert_args(args)
-        cmd = CodeBlock(name, args, data={'id': 'block', 'block': 'game_action', 'action': name}, tags=tags)
-        self._add_codeblock(cmd, index)
-    
-
-    def entity_action(self, name: str, *args, target: Target=DEFAULT_TARGET, tags: dict[str, str]={}, index: int|None=None):
-        args = _convert_args(args)
-        cmd = CodeBlock(name, args, target=target, data={'id': 'block', 'block': 'entity_action', 'action': name}, tags=tags)
-        self._add_codeblock(cmd, index)
-    
-
-    def if_player(self, name: str, *args, target: Target=DEFAULT_TARGET, tags: dict[str, str]={}, inverted: bool=False, index: int|None=None):
-        args = _convert_args(args)
-        data = {'id': 'block', 'block': 'if_player', 'action': name}
-        _add_inverted(data, inverted)
-        cmd = CodeBlock(name, args, target=target, data=data, tags=tags)
-        self._add_codeblock(cmd, index)
-        self._openbracket(index)
-    
-
-    def if_variable(self, name: str, *args, tags: dict[str, str]={}, inverted: bool=False, index: int|None=None):
-        args = _convert_args(args)
-        data = {'id': 'block', 'block': 'if_var', 'action': name}
-        _add_inverted(data, inverted)
-        cmd = CodeBlock(name, args, data=data, tags=tags)
-        self._add_codeblock(cmd, index)
-        self._openbracket(index)
-    
-
-    def if_game(self, name: str, *args, tags: dict[str, str]={}, inverted: bool=False, index: int|None=None):
-        args = _convert_args(args)
-        data = {'id': 'block', 'block': 'if_game', 'action': name}
-        _add_inverted(data, inverted)
-        cmd = CodeBlock(name, args, data=data, tags=tags)
-        self._add_codeblock(cmd, index)
-        self._openbracket(index)
-    
-
-    def if_entity(self, name: str, *args, target: Target=DEFAULT_TARGET, tags: dict[str, str]={}, inverted: bool=False, index: int|None=None):
-        args = _convert_args(args)
-        data = {'id': 'block', 'block': 'if_entity', 'action': name}
-        _add_inverted(data, inverted)
-        cmd = CodeBlock(name, args, target=target, data=data, tags=tags)
-        self._add_codeblock(cmd, index)
-        self._openbracket(index)
-
-
-    def else_(self, index: int|None=None):
-        cmd = CodeBlock('else', data={'id': 'block', 'block': 'else'})
-        self._add_codeblock(cmd, index)
-        self._openbracket(index)
-    
-
-    def repeat(self, name: str, *args, tags: dict[str, str]={}, sub_action: str=None, index: int|None=None):
-        args = _convert_args(args)
-        data = {'id': 'block', 'block': 'repeat', 'action': name}
-        if sub_action is not None:
-            data['subAction'] = sub_action
-        cmd = CodeBlock(name, args, data=data, tags=tags)
-        self._add_codeblock(cmd, index)
-        self._openbracket(index, 'repeat')
-
-
-    def bracket(self, *args, index: int|None=None):
-        args = _convert_args(args)
-        cmd = CodeBlock('bracket', data={'id': 'bracket', 'direct': 'close', 'type': self.bracket_stack.pop()})
-        self._add_codeblock(cmd, index)
-    
-
-    def control(self, name: str, *args, tags: dict[str, str]={}, index: int|None=None):
-        args = _convert_args(args)
-        cmd = CodeBlock(name, args, data={'id': 'block', 'block': 'control', 'action': name}, tags=tags)
-        self._add_codeblock(cmd, index)
-    
-
-    def select_object(self, name: str, *args, tags: dict[str, str]={}, index: int|None=None):
-        args = _convert_args(args)
-        cmd = CodeBlock(name, args, data={'id': 'block', 'block': 'select_obj', 'action': name}, tags=tags)
-        self._add_codeblock(cmd, index)
-    
-
-    def set_variable(self, name: str, *args, tags: dict[str, str]={}, index: int|None=None):
-        args = _convert_args(args)
-        cmd = CodeBlock(name, args, data={'id': 'block', 'block': 'set_var', 'action': name}, tags=tags)
-        self._add_codeblock(cmd, index)
     
     
     def generate_script(self, output_path: str, indent_size: int=4, literal_shorthand: bool=True, var_shorthand: bool=False):
@@ -455,4 +336,119 @@ class DFTemplate:
         flags = GeneratorFlags(indent_size, literal_shorthand, var_shorthand)
         with open(output_path, 'w', encoding='utf-8') as f:
             f.write(generate_script(self, flags))
-        
+
+
+def _assemble_template(starting_block: CodeBlock, codeblocks: list[CodeBlock], author: str|None) -> DFTemplate:
+    """
+    Create a DFTemplate object from a starting block and a list of codeblocks.
+    `codeblocks` can contain nested lists of CodeBlock objects, so it must be flattened.
+    """
+    if author is None:
+        author = 'pyre'
+    template_codeblocks = [starting_block] + list(flatten(codeblocks))  # flatten codeblocks list and insert starting block
+    return DFTemplate(template_codeblocks, author)
+
+
+def player_event(event_name: str, codeblocks: list[CodeBlock]=(), author: str|None=None) -> DFTemplate:
+    starting_block = CodeBlock.new_action('event', event_name, (), {})
+    return _assemble_template(starting_block, codeblocks, author)
+
+
+def entity_event(event_name: str, codeblocks: list[CodeBlock]=[], author: str|None=None) -> DFTemplate:
+    starting_block = CodeBlock.new_action('entity_event', event_name, (), {})
+    return _assemble_template(starting_block, codeblocks, author)
+
+
+def function(function_name: str, *args, tags: dict[str, str]={}, codeblocks: list[CodeBlock]=[], author: str|None=None) -> DFTemplate:
+    starting_block = CodeBlock.new_data('func', function_name, args, tags)
+    return _assemble_template(starting_block, codeblocks, author)
+
+
+def process(process_name: str, *args, tags: dict[str, str]={}, codeblocks: list[CodeBlock]=[], author: str|None=None) -> DFTemplate:
+    starting_block = CodeBlock.new_data('process', process_name, args, tags)
+    return _assemble_template(starting_block, codeblocks, author)
+
+
+def call_function(function_name: str, *args) -> CodeBlock:
+    return CodeBlock.new_data('call_func', function_name, args, {})
+
+
+def start_process(process_name: str, *args, tags: dict[str, str]={}) -> CodeBlock:
+    return CodeBlock.new_data('start_process', process_name, args, tags)
+
+
+def player_action(action_name: str, *args, target: Target=DEFAULT_TARGET, tags: dict[str, str]={}) -> CodeBlock:
+    return CodeBlock.new_action('player_action', action_name, args, tags, target=target)
+
+
+def entity_action(action_name: str, *args, target: Target=DEFAULT_TARGET, tags: dict[str, str]={}) -> CodeBlock:
+    return CodeBlock.new_action('entity_action', action_name, args, tags, target=target)
+
+
+def game_action(action_name: str, *args, tags: dict[str, str]={}) -> CodeBlock:
+    return CodeBlock.new_action('game_action', action_name, args, tags)
+
+
+def if_player(action_name: str, *args, target: Target=DEFAULT_TARGET, tags: dict[str, str]={}, inverted: bool=False, codeblocks: list[CodeBlock]=[]) -> list[CodeBlock]:
+    return [
+        CodeBlock.new_conditional('if_player', action_name, args, tags, inverted, target),
+        CodeBlock.new_bracket('open', 'norm')
+    ] + list(codeblocks) + [
+        CodeBlock.new_bracket('close', 'norm')
+    ]
+
+def if_entity(action_name: str, *args, target: Target=DEFAULT_TARGET, tags: dict[str, str]={}, inverted: bool=False, codeblocks: list[CodeBlock]=[]) -> list[CodeBlock]:
+    return [
+        CodeBlock.new_conditional('if_entity', action_name, args, tags, inverted, target),
+        CodeBlock.new_bracket('open', 'norm')
+    ] + list(codeblocks) + [
+        CodeBlock.new_bracket('close', 'norm')
+    ]
+
+
+def if_game(action_name: str, *args, tags: dict[str, str]={}, inverted: bool=False, codeblocks: list[CodeBlock]=[]) -> list[CodeBlock]:
+    return [
+        CodeBlock.new_conditional('if_game', action_name, args, tags, inverted),
+        CodeBlock.new_bracket('open', 'norm')
+    ] + list(codeblocks) + [
+        CodeBlock.new_bracket('close', 'norm')
+    ]
+
+
+def if_variable(action_name: str, *args, tags: dict[str, str]={}, inverted: bool=False, codeblocks: list[CodeBlock]=[]) -> list[CodeBlock]:
+    return [
+        CodeBlock.new_conditional('if_var', action_name, args, tags, inverted),
+        CodeBlock.new_bracket('open', 'norm')
+    ] + list(codeblocks) + [
+        CodeBlock.new_bracket('close', 'norm')
+    ]
+
+
+def else_(codeblocks: list[CodeBlock]=[]) -> list[CodeBlock]:
+    return [
+        CodeBlock.new_else(),
+        CodeBlock.new_bracket('open', 'norm')
+    ] + list(codeblocks) + [
+        CodeBlock.new_bracket('close', 'norm')
+    ]
+
+
+def repeat(action_name: str, *args, tags: dict[str, str]={}, sub_action: str|None=None, inverted: bool=False, codeblocks: list[CodeBlock]=[]) -> CodeBlock:
+    return [
+        CodeBlock.new_repeat(action_name, args, tags, sub_action, inverted),
+        CodeBlock.new_bracket('open', 'repeat')
+    ] + list(codeblocks) + [
+        CodeBlock.new_bracket('close', 'repeat')
+    ]
+
+
+def control(action_name: str, *args, tags: dict[str, str]={}) -> CodeBlock:
+    return CodeBlock.new_action('control', action_name, args, tags)
+
+
+def select_object(action_name: str, *args, tags: dict[str, str]={}) -> CodeBlock:
+    return CodeBlock.new_action('select_obj', action_name, args, tags) 
+
+
+def set_variable(action_name: str, *args, tags: dict[str, str]={}) -> CodeBlock:
+    return CodeBlock.new_action('set_var', action_name, args, tags)
