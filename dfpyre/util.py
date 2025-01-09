@@ -26,3 +26,14 @@ def df_encode(json_string: str) -> str:
 
 def df_decode(encoded_string: str) -> str:
     return gzip.decompress(base64.b64decode(encoded_string)).decode('utf-8')
+
+
+def flatten(nested_list: list):
+    """
+    Flattens a list.
+    """
+    for item in nested_list:
+        if isinstance(item, list):
+            yield from flatten(item)
+        else:
+            yield item
