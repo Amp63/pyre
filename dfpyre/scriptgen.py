@@ -4,12 +4,9 @@ from dfpyre.items import *
 from dfpyre.actiondump import get_default_tags
 
 
-SCRIPT_START = '''from dfpyre import *
+SCRIPT_START = '''from dfpyre import *\n\n'''
 
-t = DFTemplate()
-'''
-
-TEMPLATE_METHOD_LOOKUP = {
+TEMPLATE_FUNCTION_LOOKUP = {
     'event': 'player_event',
     'entity_event': 'entity_event',
     'func': 'function',
@@ -31,6 +28,7 @@ TEMPLATE_METHOD_LOOKUP = {
 }
 
 TARGET_CODEBLOCKS = {'player_action', 'entity_action', 'if_player', 'if_entity'}
+CONTAINER_CODEBLOCKS = {'event', 'entity_event', 'func', 'process', 'if_player', 'if_entity', 'if_game', 'if_variable', 'else', 'repeat'}
 VAR_SCOPES = {'unsaved': 'g', 'saved': 's', 'local': 'l', 'line': 'i'}
 
 
@@ -41,7 +39,7 @@ class GeneratorFlags:
     var_shorthand: bool
 
 
-def item_to_string(class_name: str, i: item):
+def item_to_string(class_name: str, i: Item):
     i.nbt.data.pop('~DF_NBT', None)
     stripped_id = i.get_id().replace('minecraft:', '')
     if i.nbt.key_set() == {'~id', '~count'}:
@@ -53,27 +51,27 @@ def item_to_string(class_name: str, i: item):
 
 def argument_item_to_string(flags: GeneratorFlags, arg_item: object) -> str:
     class_name = arg_item.__class__.__name__
-    if isinstance(arg_item, item):
+    if isinstance(arg_item, Item):
         return item_to_string(class_name, arg_item)
     
-    if isinstance(arg_item, string):
+    if isinstance(arg_item, String):
         value = arg_item.value.replace('\n', '\\n')
         return f'{class_name}("{value}")'
     
-    if isinstance(arg_item, text):
+    if isinstance(arg_item, Text):
         value = arg_item.value.replace('\n', '\\n')
         if flags.literal_shorthand:
             return f'"{value}"'
         return f'{class_name}("{value}")'
     
-    if isinstance(arg_item, num):
+    if isinstance(arg_item, Number):
         if not re.match(NUMBER_REGEX, str(arg_item.value)):
             return f'{class_name}("{arg_item.value}")' 
         if flags.literal_shorthand:
             return str(arg_item.value)
         return f'{class_name}({arg_item.value})'
     
-    if isinstance(arg_item, loc):
+    if isinstance(arg_item, Location):
         loc_components = [arg_item.x, arg_item.y, arg_item.z]
         if arg_item.pitch != 0:
             loc_components.append(arg_item.pitch)
@@ -81,28 +79,28 @@ def argument_item_to_string(flags: GeneratorFlags, arg_item: object) -> str:
             loc_components.append(arg_item.yaw)
         return f'{class_name}({", ".join(str(c) for c in loc_components)})'
     
-    if isinstance(arg_item, var):
+    if isinstance(arg_item, Variable):
         if flags.var_shorthand:
-            return f'"${VAR_SCOPES[arg_item.scope]}{arg_item.name}"'
+            return f'"${VAR_SCOPES[arg_item.scope]} {arg_item.name}"'
         if arg_item.scope == 'unsaved':
             return f'{class_name}("{arg_item.name}")'
         return f'{class_name}("{arg_item.name}", "{arg_item.scope}")'
     
-    if isinstance(arg_item, sound):
+    if isinstance(arg_item, Sound):
         return f'{class_name}("{arg_item.name}", {arg_item.pitch}, {arg_item.vol})'
     
-    if isinstance(arg_item, particle):
+    if isinstance(arg_item, Particle):
         return f'{class_name}({arg_item.particle_data})'
     
-    if isinstance(arg_item, potion):
+    if isinstance(arg_item, Potion):
         return f'{class_name}("{arg_item.name}", {arg_item.dur}, {arg_item.amp})'
     
-    if isinstance(arg_item, gamevalue):
+    if isinstance(arg_item, GameValue):
         if arg_item.target == 'Default':
             return f'{class_name}("{arg_item.name}")'
         return f'{class_name}("{arg_item.name}", "{arg_item.target}")'
     
-    if isinstance(arg_item, parameter):
+    if isinstance(arg_item, Parameter):
         param_type_class_name = arg_item.param_type.__class__.__name__
         param_args = [f'"{arg_item.name}"', f'{param_type_class_name}.{arg_item.param_type.name}']
         if arg_item.plural:
@@ -117,7 +115,7 @@ def argument_item_to_string(flags: GeneratorFlags, arg_item: object) -> str:
             param_args.append(f'note="{arg_item.note}"')
         return f'{class_name}({", ".join(param_args)})'
     
-    if isinstance(arg_item, vector):
+    if isinstance(arg_item, Vector):
         return f'{class_name}({arg_item.x}, {arg_item.y}, {arg_item.z})'
 
 
@@ -132,54 +130,58 @@ def generate_script(template, flags: GeneratorFlags) -> str:
     indent_level = 0
     script_lines = []
     for codeblock in template.codeblocks:
-        # Handle brackets and indentation
-        if codeblock.name == 'bracket':
-            if codeblock.data['direct'] == 'open':
-                add_script_line(flags, script_lines, indent_level, 't.bracket(', False)
-                indent_level += 1
-            elif codeblock.data['direct'] == 'close':
+        # Handle closing brackets
+        if codeblock.type == 'bracket':
+            if codeblock.data['direct'] == 'close':
                 indent_level -= 1
-                add_script_line(flags, script_lines, indent_level, ')')
-            continue
-            
-        # Handle else
-        if codeblock.name == 'else':
-            add_script_line(flags, script_lines, indent_level, 't.else_()')
+                add_script_line(flags, script_lines, indent_level, '])')
             continue
 
-        
-        # Get codeblock method and start its arguments with the action
-        method_name = TEMPLATE_METHOD_LOOKUP[codeblock.data['block']]
-        method_args = [f'"{codeblock.name}"']
+        # Get codeblock function and start its arguments with the action
+        function_name = TEMPLATE_FUNCTION_LOOKUP[codeblock.type]
+        function_args = [f'"{codeblock.action_name}"']
 
         # Set function or process name if necessary
-        if codeblock.name == 'dynamic':
-            method_args[0] = f'"{codeblock.data["data"]}"'
+        if codeblock.action_name == 'dynamic':
+            function_args[0] = f'"{codeblock.data["data"]}"'
         
         # Convert argument objects to valid Python strings
         codeblock_args = [argument_item_to_string(flags, i) for i in codeblock.args]
         if codeblock_args:
-            method_args.extend(codeblock_args)
+            function_args.extend(codeblock_args)
         
         # Add target if necessary
-        if method_name in TARGET_CODEBLOCKS and codeblock.target.name != 'SELECTION':
-            method_args.append(f'target=Target.{codeblock.target.name}')
+        if function_name in TARGET_CODEBLOCKS and codeblock.target.name != 'SELECTION':
+            function_args.append(f'target=Target.{codeblock.target.name}')
         
         # Add tags
         if codeblock.tags:
-            default_tags = get_default_tags(codeblock.data.get('block'), codeblock.name)
+            default_tags = get_default_tags(codeblock.data.get('block'), codeblock.action_name)
             written_tags = {t: o for t, o in codeblock.tags.items() if default_tags[t] != o}
             if written_tags:
-                method_args.append(f'tags={str(written_tags)}')
+                function_args.append(f'tags={str(written_tags)}')
         
         # Add sub-action for repeat
         if codeblock.data.get('subAction'):
-            method_args.append(f'sub_action="{codeblock.data["subAction"]}"')
+            function_args.append(f'sub_action="{codeblock.data["subAction"]}"')
         
         # Add inversion for NOT
         if codeblock.data.get('attribute') == 'NOT':
-            method_args.append('inverted=True')
-        
-        line = f't.{method_name}({", ".join(method_args)})'
-        add_script_line(flags, script_lines, indent_level, line)
+            function_args.append('inverted=True')
+
+        if codeblock.type in CONTAINER_CODEBLOCKS:
+            if codeblock.type == 'else':
+                line = f'{function_name}(['
+            elif codeblock.type in {'event', 'entity_event'}:
+                line = f'{function_name}({", ".join(function_args)}, ['  # omit `codeblocks=` when we don't need it
+            else:
+                line = f'{function_name}({", ".join(function_args)}, codeblocks=['
+            add_script_line(flags, script_lines, indent_level, line, False)
+            indent_level += 1
+        else:
+            line = f'{function_name}({", ".join(function_args)})'
+            add_script_line(flags, script_lines, indent_level, line)
+    
+    indent_level -= 1
+    add_script_line(flags, script_lines, indent_level, '])')  # add final closing brackets
     return SCRIPT_START + '\n'.join(script_lines)
