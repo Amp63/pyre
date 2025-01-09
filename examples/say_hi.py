@@ -1,6 +1,5 @@
 from dfpyre import *
 
-t = DFTemplate()
-t.player_event('Join')
-t.player_action('SendMessage', 'Hello %default!')
-t.build_and_send('recode')
+player_event('Join', [
+    player_action('SendMessage', 'Hello %default!')
+]).build_and_send('codeclient')
