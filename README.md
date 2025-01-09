@@ -1,6 +1,6 @@
 # pyre
 
-A package for external creation of code templates for the DiamondFire Minecraft server (mcdiamondfire.com).
+A package for external creation of code templates for the DiamondFire Minecraft server (mcDiamondFire.com).
 
 PyPi Link: https://pypi.org/project/dfpyre/
 
@@ -16,8 +16,8 @@ pip install dfpyre
 - All code item types
 - Direct sending to DF via recode or codeclient
 - Automatic type conversion (int to num, str to text)
-- Name checking ("did you mean ___?" for close matches)
-- Default tag values
+- Warnings for unrecognized actions and tags
+- Full tag support
 
 ## Documentation
 ## Basics
@@ -55,92 +55,64 @@ pip install dfpyre
 - [Editing Tags](#editing-tags)
 - [Importing from Code](#importing-from-code)
 - [Script Generation](#script-generation)
-- [Method List](#method-list)
+- [Function List](#function-list)
 
 ___
 
-### Setup
+## Setup
 
-To start creating in pyre, you have to create a DFTemplate object like so:
-
-```py
-from dfpyre import *
-t = DFTemplate()
-```
-
-Basically everything stems from this template object.
-
-This is the basic layout of a file:
+To start creating in pyre, use the `player_event`, `entity_event`, `function`, or `process` functions to start a template.
 
 ```py
 from dfpyre import *
-t = DFTemplate()
-# [Event, Function, or Process]
-# [Your code here]
-t.build()
+
+template = player_event('Join', [
+
+])
 ```
 
-The commented lines represent where you will insert calls to methods in the template object.
+You can then insert additional codeblocks inside of that first function call.
 
 Here's a complete program that prints a message to every player when a player joins:
 
 ```py
 from dfpyre import *
-t = DFTemplate()
-t.player_event('Join')
-t.player_action('SendMessage', '%default has joined!', target=Target.ALL_PLAYERS)
-t.build_and_send('codeclient')
+
+player_event('Join', [
+  player_action('SendMessage', '%default has joined!', target=Target.ALL_PLAYERS)
+]).build_and_send('codeclient')
 ```
 
-### Events and Actions
+## Events and Actions
 
 You can find a list of events and actions [here](#method-list)
-
-As shown in [setup](#setup), every code line must start with an event, function, or process. After that, you're free to put anything you want.
 
 The following program sends a message to all players and gives a player 10 apples upon joining:
 
 ```py
 from dfpyre import *
-t = DFTemplate()
-t.player_event('Join')
-t.player_action('SendMessage', '%default has joined!', target=Target.ALL_PLAYERS)
-t.player_action('GiveItems', item('apple', 10))
+
+player_event('Join', [
+  player_action('SendMessage', '%default has joined!', target=Target.ALL_PLAYERS)
+  player_action('GiveItems', Item('apple', 10))
+]).build_and_send('codeclient')
 ```
 
-### Building
+## Building
 
 You have 2 different options for building your code line.
 You can either:
 
 1. Save the compressed template code to a variable and send it to minecraft later
+   - Use the `build` method on a template object
 2. Build and send directly to your minecraft client (recommended)
+   - Use the `build_and_send` method on a template object
 
-If you choose the first option, the code would look something like this:
-
-```py
-from dfpyre import *
-t = DFTemplate()
-t.player_event('Join')
-t.player_action('SendMessage', '%default has joined!', target=Target.ALL_PLAYERS)
-template_code = t.build()  # do whatever you want with this
-```
-
-If you choose the second option, you can do this:
-
-```py
-from dfpyre import *
-t = DFTemplate()
-t.player_event('Join')
-t.player_action('SendMessage', '%default has joined!', target=Target.ALL_PLAYERS)
-t.build_and_send('codeclient')  # builds and sends automatically to minecraft
-```
-
-### Variable Items
+## Variable Items
 
 ### Text
 
-Represents a diamondfire text item:
+Represents a DiamondFire text item:
 
 ```py
 text('hello %default.')
@@ -150,63 +122,67 @@ If a regular string is passed to a method as a chest parameter, it will automati
 
 ```py
 # These do the same thing:
-t.player_action('SendMessage', text('%default joined.'))
-t.player_action('SendMessage', '%default joined.')
+player_action('SendMessage', Text('%default joined.'))
+player_action('SendMessage', '%default joined.')
 ```
 
 ### Number
 
-Represents a diamondfire number item:
+Alias: `Num`
+
+Represents a DiamondFire number item:
 
 ```py
-num(5)
-num(3.14)
+Number(5)
+Number(3.14)
 ```
 
 If a regular integer or float is passed to a method as a chest parameter, it will automatically be converted to a num object:
 
 ```py
 # These do the same thing:
-t.set_variable('=', var('number'), num(10))
-t.set_variable('=', var('number'), 10)
+set_variable('=', Variable('number'), num(10))
+set_variable('=', Variable('number'), 10)
 ```
 
 ### Variable
 
-Represents a diamondfire variable item:
+Alias: `Var`
+
+Represents a DiamondFire variable item:
 
 ```py
-var('num')
-var('text1')
+Variable('num')
+Variable('text1')
 ```
 
 You can set variable values by using the `set_variable` method:
 
 ```py
-t.set_variable('=', var('num'), 12)  # sets 'num' to 12
-t.set_variable('x', var('doubled'), var('num'), 2)  # sets 'doubled' to 24
+set_variable('=', Variable('num'), 12)  # sets 'num' to 12
+set_variable('x', Variable('doubled'), Variable('num'), 2)  # sets 'doubled' to 24
 ```
 
-You can set the scope of the variable by using the `scope` argument:
+You can set the scope of the variable using the `scope` argument:
 
 ```py
-t.set_variable('=', var(num1, scope='unsaved'), 12)  # `unsaved` is the same as a game variable.
-t.set_variable('=', var(num1, scope='saved'), 12)
-t.set_variable('=', var(num1, scope='local'), 12)
+set_variable('=', Variable('num1', scope='unsaved'), 12)  # `unsaved` is the same as a game variable.
+set_variable('=', Variable('num2', scope='saved'), 12)
+set_variable('=', Variable('num3', scope='local'), 12)
 ```
 
 #### Shorthand Variables
 
-You can also use the variable shorthand format like this:
+You can also use the variable shorthand format to express variables more tersely:
 ```py
 # These do the same thing:
-t.set_variable('=', var('lineVar', scope='line'), 5)
-t.set_variable('=', '$ilineVar', 5)
+set_variable('=', Variable('lineVar', scope='line'), 5)
+set_variable('=', '$i lineVar', 5)
 ```
 
-Shorthand vars should be formatted like this: `$[scope id][var name]`
+Shorthand vars should be formatted like this: `$[scope id] [var name]`
 
-Here's a list of the scope IDs:
+Here's the list of scope IDs:
 - `g` = Game (unsaved)
 - `s` = Saved
 - `l` = Local
@@ -214,20 +190,23 @@ Here's a list of the scope IDs:
 
 ### Location
 
-Represents a diamondfire location item:
+Alias: `Loc`
+
+Represents a DiamondFire location item:
 
 ```py
-loc(x=25.5, y=50, z=25.5, pitch=0, yaw=-90)
+Location(x=25.5, y=50, z=25.5, pitch=0, yaw=-90)
 ```
 
 Example:
 
 ```py
-# teleport player on join
+# Teleport player on join
 from dfpyre import *
-t = DFTemplate()
-t.player_event('Join')
-t.player_action('Teleport', loc(10, 50, 10))
+
+player_event('Join', [
+  player_action('Teleport', Location(10, 50, 10))
+])
 ```
 
 ### Item
@@ -235,58 +214,64 @@ t.player_action('Teleport', loc(10, 50, 10))
 Represents a minecraft item:
 
 ```py
-item('stick', count=5)
-item('stone', 64)
+Item('stick', count=5)
+Item('stone', 64)
 ```
 
 To add extra data to an item, you can use any methods from the [mcitemlib](https://github.com/Amp63/mcitemlib) library
 
 ### Sound
 
-Represents a diamondfire sound item:
+Alias: `Snd`
+
+Represents a DiamondFire sound item:
 
 ```py
-sound('Wood Break', pitch=1.5, vol=2.0)
+Sound('Wood Break', pitch=1.5, vol=2.0)
 ```
 
 Example:
 
 ```py
-# plays 'Grass Place' sound on join
+# Plays 'Grass Place' sound on join
 from dfpyre import *
-t = DFTemplate()
-t.player_event('Join')
-t.player_action('PlaySound', sound('Grass Place'))
+
+player_event('Join', [
+  player_action('PlaySound', Sound('Grass Place'))
+])
 ```
 
 ### Particle
 
-Represents a diamondfire particle item:
+Represents a DiamondFire particle item:
 
 ```py
-particle({'particle':'Cloud','cluster':{'amount':1,'horizontal':0.0,'vertical':0.0},'data':{'x':1.0,'y':0.0,'z':0.0,'motionVariation':100}})
+Particle({'particle':'Cloud','cluster':{'amount':1,'horizontal':0.0,'vertical':0.0},'data':{'x':1.0,'y':0.0,'z':0.0,'motionVariation':100}})
 ```
 
 Example:
 
 ```py
-# plays a white cloud particle effect at 5, 50, 5
+# Plays a white cloud particle effect at 5, 50, 5
 from dfpyre import *
-t = DFTemplate()
-t.player_event('Join')
-part = particle({'particle':'Cloud','cluster':{'amount':1,'horizontal':0.0,'vertical':0.0},'data':{'x':1.0,'y':0.0,'z':0.0,'motionVariation':100}})
-t.player_action('Particle', part, loc(5, 50, 5))
+
+part = Particle({'particle':'Cloud','cluster':{'amount':1,'horizontal':0.0,'vertical':0.0},'data':{'x':1.0,'y':0.0,'z':0.0,'motionVariation':100}})
+player_event('Join', [
+  player_action('Particle', part, loc(5, 50, 5))
+])
 ```
 
 Currently, the particle object does not support colors.
 
 ### Potion
 
-Represents a diamondfire potion item:
+Alias: `Pot`
+
+Represents a DiamondFire potion item:
 
 ```py
 # gives speed 1 for 1 minute
-potion('Speed', dur=1200, amp=0)
+Potion('Speed', dur=1200, amp=0)
 ```
 
 Example:
@@ -294,18 +279,19 @@ Example:
 ```py
 # gives the player infinite saturation 255
 from dfpyre import *
-t = DFTemplate()
-t.player_event('Join')
-t.player_action('GivePotion', potion('Saturation', amp=254))
+
+player_event('Join', [
+  player_action('GivePotion', Potion('Saturation', amp=10))
+])
 ```
 
 ### Game Value
 
-Represents a diamondfire game value item:
+Represents a DiamondFire game value item:
 
 ```py
-gamevalue('Player Count')
-gamevalue('Location' target='Selection')
+GameValue('Player Count')
+GameValue('Location' target='Selection')
 ```
 
 Example:
@@ -313,17 +299,20 @@ Example:
 ```py
 # function that prints player count and cpu
 from dfpyre import *
-t = DFTemplate()
-t.function('printData')
-t.player_action('SendMessage', gamevalue('Player Count'), gamevalue('CPU Usage'))
+
+function('printData', [
+  player_action('SendMessage', GameValue('Player Count'), GameValue('CPU Usage'))
+])
 ```
 
 ### Vector
 
-Represents a diamondfire vector item:
+Alias: `Vec`
+
+Represents a DiamondFire vector item:
 
 ```py
-vector(x=1.1, y=0.0, z=0.5)
+Vector(x=1.1, y=0.0, z=0.5)
 ```
 
 Example:
@@ -331,17 +320,18 @@ Example:
 ```py
 # sets the player's x velocity to 1.0 on join
 from dfpyre import *
-t = DFTemplate()
-t.player_event('Join')
-t.player_action('SetVelocity', vector(x=1.0, y=0.0, z=0.0))
+
+player_event('Join', [
+  player_action('SetVelocity', Vector(x=1.0, y=0.0, z=0.0))
+])
 ```
 
 ### Parameter
 
-Represents a diamondfire parameter item:
+Represents a DiamondFire parameter item:
 
 ```py
-parameter('text', ParameterType.STRING)
+Parameter('text', ParameterType.STRING)
 ```
 
 Example:
@@ -349,44 +339,44 @@ Example:
 ```py
 # builds a function that says "Hello, [name]" where `name` is the inputted parameter.
 from dfpyre import *
-t = DFTemplate()
+
 name_parameter = parameter('name', ParameterType.TEXT)
-t.function('SayHi', name_parameter)
-t.player_action('SendMessage', 'Hello, ', var('name', 'line'))
+function('SayHi', name_parameter codeblocks=[
+  player_action('SendMessage', 'Hello, ', Variable('name', 'line'))
+])
 ```
 
 ### Conditionals and Brackets
 
 A list of conditionals and loops can be found [here](#method-list).
 
-A specific syntax must be followed when creating conditionals and loops. Each conditional statement must be followed by a `bracket()` method, which will contain code. Here's an example:
+A specific syntax must be followed when creating conditionals and loops. Here's an example:
 
 ```py
-# prints 'clicked' when a player right clicks with a stick in their hand
+# Prints 'clicked' when a player right clicks with a stick in their hand
 from dfpyre import *
-t = DFTemplate()
-t.player_event('RightClick')
-t.if_player('IsHolding', item('stick'))
-t.bracket(
-    t.player_action('SendMessage', 'clicked')
-)
+
+player_event('RightClick', [
+  if_player('IsHolding', Item('stick'), codeblocks=[
+    player_action('SendMessage', 'clicked')
+  ])
+])
 ```
 
 To create an `else` statement, use the `else_` method:
 
 ```py
-# says the player is 'on the ground' when grounded and 'in the air' otherwise.
+# Says the player is 'on the ground' when grounded and 'in the air' otherwise.
 from dfpyre import *
-t = DFTemplate()
-t.function('grounded')
-t.if_player('IsGrounded')
-t.bracket(
-    t.player_action('ActionBar', 'on the ground')
-)
-t.else_()
-t.bracket(
-    t.player_action('ActionBar', 'in the air')
-)
+
+function('grounded' [
+  if_player('IsGrounded', codeblocks=[
+    player_action('ActionBar', 'on the ground')
+  ])
+  else_([
+    player_action('ActionBar', 'in the air')
+  ])
+])
 ```
 
 ### Loops
@@ -394,26 +384,27 @@ t.bracket(
 As for loops, the bracket syntax is the same and will automatically change to "repeat-type" brackets:
 
 ```py
-# prints numbers 1-5
+# Prints numbers 1-5
 from dfpyre import *
-t = DFTemplate()
-t.player_event('Join')
-t.repeat('Multiple', var('i'), 5)
-t.bracket(
-    t.player_action('SendMessage', var('i'))
-)
+
+player_event('Join', [
+  repeat('Multiple', Variable('i'), 5, codeblocks=[
+    player_action('SendMessage', Variable('i'))
+  ])
+])
 ```
 
 ### Creating Functions and Processes
 
-To create a function or process, just start the template with a `function` or `process` method:
+To create a function or process, just start the template with `function` or `process`:
 
 ```py
-# function that gives a player 64 golden apples
+# Function that gives a player 64 golden apples
 from dfpyre import *
-t = DFTemplate()
-t.function('doStuff')
-t.player_action('GiveItems', item('golden_apple', 64))
+
+function('doStuff', codeblocks=[
+  player_action('GiveItems', Item('golden_apple', 64))
+])
 ```
 
 ### Calling Functions and Processes
@@ -422,9 +413,10 @@ Calling Functions and processes is also simple:
 
 ```py
 from dfpyre import *
-t = DFTemplate()
-t.player_event('Join')
-t.call_function('doStuff')
+
+player_event('Join', [
+  call_function('doStuff')
+])
 ```
 
 ### Editing Tags
@@ -432,9 +424,10 @@ You can edit an action's tags by passing the `tags` argument to a template metho
 
 ```py
 from dfpyre import *
-t = DFTemplate()
-t.player_event('Join')
-t.player_action('SendMessage', 'hello', tags={'Alignment Mode': 'Centered'})
+
+player_event('Join', [
+  player_action('SendMessage', 'hello', tags={'Alignment Mode': 'Centered'})
+])
 ```
 
 If you choose not to modify a specific tag, its default value will be used.
@@ -446,10 +439,10 @@ You can import existing templates from their built code using the `from_code` me
 
 ```py
 from dfpyre import *
-template_code = 'H4sIAGVyIGYC/3WOMQ7CMAxFz4LnDsw5AhITI6qQSaw2IrGrxkJCVe5eh3boAJP9n/Kfs8AziX8VcPcFYgC3Zej26YDexGoZvUZhAxeJ3PI8WMtKSrnV+1q7P4op4Yfmx244qG7E4Uql4EA/jNv2Jc3qJU/2KqBiY4yZjI6UkpzAjkNJouDO1X7S1xUDaGUl2QAAAA=='
 
+template_code = 'H4sIAGVyIGYC/3WOMQ7CMAxFz4LnDsw5AhITI6qQSaw2IrGrxkJCVe5eh3boAJP9n/Kfs8AziX8VcPcFYgC3Zej26YDexGoZvUZhAxeJ3PI8WMtKSrnV+1q7P4op4Yfmx244qG7E4Uql4EA/jNv2Jc3qJU/2KqBiY4yZjI6UkpzAjkNJouDO1X7S1xUDaGUl2QAAAA=='
 t = DFTemplate.from_code(template_code)
-# add onto the template from here
+# Do stuff with the template here
 ```
 
 
@@ -459,13 +452,13 @@ You can also generate an equivalent python script for a template from a template
 
 ```py
 from dfpyre import *
-template_code = 'H4sIAGVyIGYC/3WOMQ7CMAxFz4LnDsw5AhITI6qQSaw2IrGrxkJCVe5eh3boAJP9n/Kfs8AziX8VcPcFYgC3Zej26YDexGoZvUZhAxeJ3PI8WMtKSrnV+1q7P4op4Yfmx244qG7E4Uql4EA/jNv2Jc3qJU/2KqBiY4yZjI6UkpzAjkNJouDO1X7S1xUDaGUl2QAAAA=='
 
+template_code = 'H4sIAGVyIGYC/3WOMQ7CMAxFz4LnDsw5AhITI6qQSaw2IrGrxkJCVe5eh3boAJP9n/Kfs8AziX8VcPcFYgC3Zej26YDexGoZvUZhAxeJ3PI8WMtKSrnV+1q7P4op4Yfmx244qG7E4Uql4EA/jNv2Jc3qJU/2KqBiY4yZjI6UkpzAjkNJouDO1X7S1xUDaGUl2QAAAA=='
 t = DFTemplate.from_code(template_code)
 t.generate_script('my_template.py')    # generated python script will be written to my_template.py
 ```
 
-### Method List
+### Function List
 
 - Events / Function / Process
   - player_event
@@ -487,7 +480,6 @@ t.generate_script('my_template.py')    # generated python script will be written
   - if_entity
   - else_
   - repeat
-  - bracket
 
 - Other
   - control
