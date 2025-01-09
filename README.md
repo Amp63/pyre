@@ -85,7 +85,7 @@ player_event('Join', [
 
 ## Events and Actions
 
-You can find a list of events and actions [here](#method-list)
+You can find a list of events and actions [here](#function-list)
 
 The following program sends a message to all players and gives a player 10 apples upon joining:
 
@@ -115,7 +115,7 @@ You can either:
 Represents a DiamondFire text item:
 
 ```py
-text('hello %default.')
+Text('hello %default.')
 ```
 
 If a regular string is passed to a method as a chest parameter, it will automatically be converted to a text object:
@@ -270,14 +270,14 @@ Alias: `Pot`
 Represents a DiamondFire potion item:
 
 ```py
-# gives speed 1 for 1 minute
+# Gives speed 1 for 1 minute
 Potion('Speed', dur=1200, amp=0)
 ```
 
 Example:
 
 ```py
-# gives the player infinite saturation 255
+# Gives the player infinite saturation 10
 from dfpyre import *
 
 player_event('Join', [
@@ -297,7 +297,7 @@ GameValue('Location' target='Selection')
 Example:
 
 ```py
-# function that prints player count and cpu
+# Function that prints player count and CPU usage
 from dfpyre import *
 
 function('printData', [
@@ -318,7 +318,7 @@ Vector(x=1.1, y=0.0, z=0.5)
 Example:
 
 ```py
-# sets the player's x velocity to 1.0 on join
+# Sets the player's x velocity to 1.0 on join
 from dfpyre import *
 
 player_event('Join', [
@@ -337,7 +337,7 @@ Parameter('text', ParameterType.STRING)
 Example:
 
 ```py
-# builds a function that says "Hello, [name]" where `name` is the inputted parameter.
+# Builds a function that says "Hello, [name]" where `name` is the inputted parameter.
 from dfpyre import *
 
 name_parameter = parameter('name', ParameterType.TEXT)
@@ -348,7 +348,7 @@ function('SayHi', name_parameter codeblocks=[
 
 ### Conditionals and Brackets
 
-A list of conditionals and loops can be found [here](#method-list).
+A list of conditionals and loops can be found [here](#function-list).
 
 A specific syntax must be followed when creating conditionals and loops. Here's an example:
 
