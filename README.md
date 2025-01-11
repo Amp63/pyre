@@ -11,6 +11,11 @@ Run the following command in a terminal:
 pip install dfpyre
 ```
 
+
+### CodeClient Installation
+
+This module works best with [CodeClient](https://modrinth.com/mod/codeclient) installed. Once you've installed it, enable `CodeClient API` in the General config tab.
+
 ## Features
 - All code block types
 - All code item types
@@ -141,7 +146,7 @@ If a regular integer or float is passed to a method as a chest parameter, it wil
 
 ```py
 # These do the same thing:
-set_variable('=', Variable('number'), num(10))
+set_variable('=', Variable('number'), Number(10))
 set_variable('=', Variable('number'), 10)
 ```
 
@@ -257,7 +262,7 @@ from dfpyre import *
 
 part = Particle({'particle':'Cloud','cluster':{'amount':1,'horizontal':0.0,'vertical':0.0},'data':{'x':1.0,'y':0.0,'z':0.0,'motionVariation':100}})
 player_event('Join', [
-  player_action('Particle', part, loc(5, 50, 5))
+  player_action('Particle', part, Location(5, 50, 5))
 ])
 ```
 
@@ -350,7 +355,7 @@ function('SayHi', name_parameter codeblocks=[
 
 A list of conditionals and loops can be found [here](#function-list).
 
-A specific syntax must be followed when creating conditionals and loops. Here's an example:
+To create code inside of brackets, use the `codeblocks` argument. Here's an example:
 
 ```py
 # Prints 'clicked' when a player right clicks with a stick in their hand
@@ -369,19 +374,21 @@ To create an `else` statement, use the `else_` method:
 # Says the player is 'on the ground' when grounded and 'in the air' otherwise.
 from dfpyre import *
 
-function('grounded' [
+function('grounded', codeblocks=[
   if_player('IsGrounded', codeblocks=[
     player_action('ActionBar', 'on the ground')
-  ])
+  ]),
   else_([
     player_action('ActionBar', 'in the air')
   ])
 ])
 ```
 
+Note that `player_event`, `entity_event`, and `else_` do not require `codeblocks=`, but all other bracket blocks do.
+
 ### Loops
 
-As for loops, the bracket syntax is the same and will automatically change to "repeat-type" brackets:
+As for loops, the syntax is the same and will automatically change to "repeat-type" brackets:
 
 ```py
 # Prints numbers 1-5
@@ -402,7 +409,7 @@ To create a function or process, just start the template with `function` or `pro
 # Function that gives a player 64 golden apples
 from dfpyre import *
 
-function('doStuff', codeblocks=[
+function('giveApples', codeblocks=[
   player_action('GiveItems', Item('golden_apple', 64))
 ])
 ```
@@ -415,12 +422,12 @@ Calling Functions and processes is also simple:
 from dfpyre import *
 
 player_event('Join', [
-  call_function('doStuff')
+  call_function('giveApples')
 ])
 ```
 
 ### Editing Tags
-You can edit an action's tags by passing the `tags` argument to a template method:
+You can modify an action's tags by passing the `tags` argument to a template method:
 
 ```py
 from dfpyre import *
@@ -448,7 +455,7 @@ t = DFTemplate.from_code(template_code)
 
 ### Script Generation
 
-You can also generate an equivalent python script for a template from a template object:
+You can also generate an equivalent Python script for a template from a template object:
 
 ```py
 from dfpyre import *
@@ -458,9 +465,11 @@ t = DFTemplate.from_code(template_code)
 t.generate_script('my_template.py')    # generated python script will be written to my_template.py
 ```
 
+This feature is useful for getting a text representation of existing templates.
+
 ### Function List
 
-- Events / Function / Process
+- **Events / Function / Process**
   - player_event
   - entity_event
   - function
@@ -468,12 +477,12 @@ t.generate_script('my_template.py')    # generated python script will be written
   - call_function
   - start_process
 
-- Actions
+- **Actions**
   - player_action
   - game_action
   - entity_action
 
-- Conditionals / Loops
+- **Conditionals / Loops**
   - if_player
   - if_variable
   - if_game
@@ -481,7 +490,7 @@ t.generate_script('my_template.py')    # generated python script will be written
   - else_
   - repeat
 
-- Other
+- **Other**
   - control
   - select_object
   - set_variable
