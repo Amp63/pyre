@@ -350,46 +350,123 @@ def _assemble_template(starting_block: CodeBlock, codeblocks: list[CodeBlock], a
 
 
 def player_event(event_name: str, codeblocks: list[CodeBlock]=(), author: str|None=None) -> DFTemplate:
+    """
+    Represents a Player Event codeblock.
+
+    :param str event_name: The name of the event. (Ex: "Join")
+    :param list[CodeBlock] codeblocks: The list of codeblocks in this template.
+    :param str|None author: The author of this template.
+    """
     starting_block = CodeBlock.new_action('event', event_name, (), {})
     return _assemble_template(starting_block, codeblocks, author)
 
 
 def entity_event(event_name: str, codeblocks: list[CodeBlock]=[], author: str|None=None) -> DFTemplate:
+    """
+    Represents an Entity Event codeblock.
+
+    :param str event_name: The name of the event. (Ex: "EntityDmg")
+    :param list[CodeBlock] codeblocks: The list of codeblocks in this template.
+    :param str|None author: The author of this template.
+    """
     starting_block = CodeBlock.new_action('entity_event', event_name, (), {})
     return _assemble_template(starting_block, codeblocks, author)
 
 
 def function(function_name: str, *args, tags: dict[str, str]={}, codeblocks: list[CodeBlock]=[], author: str|None=None) -> DFTemplate:
+    """
+    Represents a Function codeblock.
+
+    :param str event_name: The name of the function.
+    :param tuple args: The argument items to include.
+    :param dict[str, str] tags: The tags to include.
+    :param list[CodeBlock] codeblocks: The list of codeblocks in this template.
+    :param str|None author: The author of this template.
+    """
     starting_block = CodeBlock.new_data('func', function_name, args, tags)
     return _assemble_template(starting_block, codeblocks, author)
 
 
 def process(process_name: str, *args, tags: dict[str, str]={}, codeblocks: list[CodeBlock]=[], author: str|None=None) -> DFTemplate:
+    """
+    Represents a Process codeblock.
+
+    :param str event_name: The name of the process.
+    :param tuple args: The argument items to include.
+    :param dict[str, str] tags: The tags to include.
+    :param list[CodeBlock] codeblocks: The list of codeblocks in this template.
+    :param str|None author: The author of this template.
+    """
     starting_block = CodeBlock.new_data('process', process_name, args, tags)
     return _assemble_template(starting_block, codeblocks, author)
 
 
 def call_function(function_name: str, *args) -> CodeBlock:
+    """
+    Represents a Call Function codeblock.
+
+    :param str event_name: The name of the function.
+    :param tuple args: The argument items to include.
+    """
     return CodeBlock.new_data('call_func', function_name, args, {})
 
 
 def start_process(process_name: str, *args, tags: dict[str, str]={}) -> CodeBlock:
+    """
+    Represents a Call Function codeblock.
+
+    :param str event_name: The name of the function.
+    :param tuple args: The argument items to include.
+    """
     return CodeBlock.new_data('start_process', process_name, args, tags)
 
 
 def player_action(action_name: str, *args, target: Target=DEFAULT_TARGET, tags: dict[str, str]={}) -> CodeBlock:
+    """
+    Represents a Player Action codeblock.
+
+    :param str action_name: The name of the action.
+    :param tuple args: The argument items to include.
+    :param Target target: The target for the action.
+    :param dict[str, str] tags: The tags to include.
+    """
     return CodeBlock.new_action('player_action', action_name, args, tags, target=target)
 
 
 def entity_action(action_name: str, *args, target: Target=DEFAULT_TARGET, tags: dict[str, str]={}) -> CodeBlock:
+    """
+    Represents an Entity Action codeblock.
+
+    :param str action_name: The name of the action.
+    :param tuple args: The argument items to include.
+    :param Target target: The target for the action.
+    :param dict[str, str] tags: The tags to include.
+    """
     return CodeBlock.new_action('entity_action', action_name, args, tags, target=target)
 
 
 def game_action(action_name: str, *args, tags: dict[str, str]={}) -> CodeBlock:
+    """
+    Represents a Game Action codeblock.
+
+    :param str action_name: The name of the action.
+    :param tuple args: The argument items to include.
+    :param dict[str, str] tags: The tags to include.
+    """
     return CodeBlock.new_action('game_action', action_name, args, tags)
 
 
 def if_player(action_name: str, *args, target: Target=DEFAULT_TARGET, tags: dict[str, str]={}, inverted: bool=False, codeblocks: list[CodeBlock]=[]) -> list[CodeBlock]:
+    """
+    Represents an If Player codeblock.
+
+    :param str action_name: The name of the condition.
+    :param tuple args: The argument items to include.
+    :param Target target: The target for the condition.
+    :param dict[str, str] tags: The tags to include.
+    :param bool inverted: Whether the condition should be inverted.
+    :param list[CodeBlock] codeblocks: The list of codeblocks inside the brackets.
+    """
     return [
         CodeBlock.new_conditional('if_player', action_name, args, tags, inverted, target),
         CodeBlock.new_bracket('open', 'norm')
@@ -398,6 +475,16 @@ def if_player(action_name: str, *args, target: Target=DEFAULT_TARGET, tags: dict
     ]
 
 def if_entity(action_name: str, *args, target: Target=DEFAULT_TARGET, tags: dict[str, str]={}, inverted: bool=False, codeblocks: list[CodeBlock]=[]) -> list[CodeBlock]:
+    """
+    Represents an If Entity codeblock.
+
+    :param str action_name: The name of the condition.
+    :param tuple args: The argument items to include.
+    :param Target target: The target for the condition.
+    :param dict[str, str] tags: The tags to include.
+    :param bool inverted: Whether the condition should be inverted.
+    :param list[CodeBlock] codeblocks: The list of codeblocks inside the brackets.
+    """
     return [
         CodeBlock.new_conditional('if_entity', action_name, args, tags, inverted, target),
         CodeBlock.new_bracket('open', 'norm')
@@ -407,6 +494,15 @@ def if_entity(action_name: str, *args, target: Target=DEFAULT_TARGET, tags: dict
 
 
 def if_game(action_name: str, *args, tags: dict[str, str]={}, inverted: bool=False, codeblocks: list[CodeBlock]=[]) -> list[CodeBlock]:
+    """
+    Represents an If Game codeblock.
+
+    :param str action_name: The name of the condition.
+    :param tuple args: The argument items to include.
+    :param dict[str, str] tags: The tags to include.
+    :param bool inverted: Whether the condition should be inverted.
+    :param list[CodeBlock] codeblocks: The list of codeblocks inside the brackets.
+    """
     return [
         CodeBlock.new_conditional('if_game', action_name, args, tags, inverted),
         CodeBlock.new_bracket('open', 'norm')
@@ -416,6 +512,15 @@ def if_game(action_name: str, *args, tags: dict[str, str]={}, inverted: bool=Fal
 
 
 def if_variable(action_name: str, *args, tags: dict[str, str]={}, inverted: bool=False, codeblocks: list[CodeBlock]=[]) -> list[CodeBlock]:
+    """
+    Represents an If Variable codeblock.
+
+    :param str action_name: The name of the condition.
+    :param tuple args: The argument items to include.
+    :param dict[str, str] tags: The tags to include.
+    :param bool inverted: Whether the condition should be inverted.
+    :param list[CodeBlock] codeblocks: The list of codeblocks inside the brackets.
+    """
     return [
         CodeBlock.new_conditional('if_var', action_name, args, tags, inverted),
         CodeBlock.new_bracket('open', 'norm')
@@ -425,6 +530,11 @@ def if_variable(action_name: str, *args, tags: dict[str, str]={}, inverted: bool
 
 
 def else_(codeblocks: list[CodeBlock]=[]) -> list[CodeBlock]:
+    """
+    Represents an Else codeblock.
+
+    :param list[CodeBlock] codeblocks: The list of codeblocks inside the brackets.
+    """
     return [
         CodeBlock.new_else(),
         CodeBlock.new_bracket('open', 'norm')
@@ -434,6 +544,16 @@ def else_(codeblocks: list[CodeBlock]=[]) -> list[CodeBlock]:
 
 
 def repeat(action_name: str, *args, tags: dict[str, str]={}, sub_action: str|None=None, inverted: bool=False, codeblocks: list[CodeBlock]=[]) -> CodeBlock:
+    """
+    Represents a Repeat codeblock.
+
+    :param str action_name: The name of the action.
+    :param tuple args: The argument items to include.
+    :param dict[str, str] tags: The tags to include.
+    :param str|None sub_action: The sub-action for the repeat action (Only relevant for `While`)
+    :param bool inverted: Whether the sub-action condition should be inverted.
+    :param list[CodeBlock] codeblocks: The list of codeblocks inside the brackets.
+    """
     return [
         CodeBlock.new_repeat(action_name, args, tags, sub_action, inverted),
         CodeBlock.new_bracket('open', 'repeat')
@@ -443,12 +563,33 @@ def repeat(action_name: str, *args, tags: dict[str, str]={}, sub_action: str|Non
 
 
 def control(action_name: str, *args, tags: dict[str, str]={}) -> CodeBlock:
+    """
+    Represents a Control codeblock.
+
+    :param str action_name: The name of the action.
+    :param tuple args: The argument items to include.
+    :param dict[str, str] tags: The tags to include.
+    """
     return CodeBlock.new_action('control', action_name, args, tags)
 
 
 def select_object(action_name: str, *args, tags: dict[str, str]={}) -> CodeBlock:
+    """
+    Represents a Select Object codeblock.
+
+    :param str action_name: The name of the action.
+    :param tuple args: The argument items to include.
+    :param dict[str, str] tags: The tags to include.
+    """
     return CodeBlock.new_action('select_obj', action_name, args, tags) 
 
 
 def set_variable(action_name: str, *args, tags: dict[str, str]={}) -> CodeBlock:
+    """
+    Represents a Set Variable codeblock.
+
+    :param str action_name: The name of the action.
+    :param tuple args: The argument items to include.
+    :param dict[str, str] tags: The tags to include.
+    """
     return CodeBlock.new_action('set_var', action_name, args, tags)
