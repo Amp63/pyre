@@ -28,7 +28,7 @@ TEMPLATE_FUNCTION_LOOKUP = {
 }
 
 TARGET_CODEBLOCKS = {'player_action', 'entity_action', 'if_player', 'if_entity'}
-CONTAINER_CODEBLOCKS = {'event', 'entity_event', 'func', 'process', 'if_player', 'if_entity', 'if_game', 'if_variable', 'else', 'repeat'}
+CONTAINER_CODEBLOCKS = {'event', 'entity_event', 'func', 'process', 'if_player', 'if_entity', 'if_game', 'if_var', 'else', 'repeat'}
 VAR_SCOPES = {'unsaved': 'g', 'saved': 's', 'local': 'l', 'line': 'i'}
 
 
@@ -129,10 +129,15 @@ def add_script_line(flags: GeneratorFlags, script_lines: list[str], indent_level
 def generate_script(template, flags: GeneratorFlags) -> str:
     indent_level = 0
     script_lines = []
+
+    def remove_comma_from_last_line():
+        script_lines[-1] = script_lines[-1][:-1]
+
     for codeblock in template.codeblocks:
         # Handle closing brackets
         if codeblock.type == 'bracket':
             if codeblock.data['direct'] == 'close':
+                remove_comma_from_last_line()
                 indent_level -= 1
                 add_script_line(flags, script_lines, indent_level, '])')
             continue
@@ -182,6 +187,7 @@ def generate_script(template, flags: GeneratorFlags) -> str:
             line = f'{function_name}({", ".join(function_args)})'
             add_script_line(flags, script_lines, indent_level, line)
     
+    remove_comma_from_last_line()
     indent_level -= 1
     add_script_line(flags, script_lines, indent_level, '])')  # add final closing brackets
     return SCRIPT_START + '\n'.join(script_lines)
