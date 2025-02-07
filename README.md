@@ -98,7 +98,7 @@ The following program sends a message to all players and gives a player 10 apple
 from dfpyre import *
 
 player_event('Join', [
-  player_action('SendMessage', '%default has joined!', target=Target.ALL_PLAYERS)
+  player_action('SendMessage', '%default has joined!', target=Target.ALL_PLAYERS),
   player_action('GiveItems', Item('apple', 10))
 ]).build_and_send('codeclient')
 ```
