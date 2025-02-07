@@ -346,7 +346,7 @@ Example:
 from dfpyre import *
 
 name_parameter = parameter('name', ParameterType.TEXT)
-function('SayHi', name_parameter codeblocks=[
+function('SayHi', name_parameter, codeblocks=[
   player_action('SendMessage', 'Hello, ', Variable('name', 'line'))
 ])
 ```
