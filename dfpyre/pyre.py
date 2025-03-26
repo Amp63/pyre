@@ -13,6 +13,7 @@ from dfpyre.util import *
 from dfpyre.items import *
 from dfpyre.scriptgen import generate_script, GeneratorFlags
 from dfpyre.actiondump import CODEBLOCK_DATA, get_default_tags
+from dfpyre.action_literals import *
 
 
 VARIABLE_TYPES = {'txt', 'comp', 'num', 'item', 'loc', 'var', 'snd', 'part', 'pot', 'g_val', 'vec', 'pn_el'}
@@ -349,7 +350,7 @@ def _assemble_template(starting_block: CodeBlock, codeblocks: list[CodeBlock], a
     return DFTemplate(template_codeblocks, author)
 
 
-def player_event(event_name: str, codeblocks: list[CodeBlock]=(), author: str|None=None) -> DFTemplate:
+def player_event(event_name: EVENT_ACTION, codeblocks: list[CodeBlock]=(), author: str|None=None) -> DFTemplate:
     """
     Represents a Player Event codeblock.
 
@@ -361,7 +362,7 @@ def player_event(event_name: str, codeblocks: list[CodeBlock]=(), author: str|No
     return _assemble_template(starting_block, codeblocks, author)
 
 
-def entity_event(event_name: str, codeblocks: list[CodeBlock]=[], author: str|None=None) -> DFTemplate:
+def entity_event(event_name: ENTITY_EVENT_ACTION, codeblocks: list[CodeBlock]=[], author: str|None=None) -> DFTemplate:
     """
     Represents an Entity Event codeblock.
 
@@ -421,7 +422,7 @@ def start_process(process_name: str, *args, tags: dict[str, str]={}) -> CodeBloc
     return CodeBlock.new_data('start_process', process_name, args, tags)
 
 
-def player_action(action_name: str, *args, target: Target=DEFAULT_TARGET, tags: dict[str, str]={}) -> CodeBlock:
+def player_action(action_name: PLAYER_ACTION_ACTION, *args, target: Target=DEFAULT_TARGET, tags: dict[str, str]={}) -> CodeBlock:
     """
     Represents a Player Action codeblock.
 
@@ -433,7 +434,7 @@ def player_action(action_name: str, *args, target: Target=DEFAULT_TARGET, tags: 
     return CodeBlock.new_action('player_action', action_name, args, tags, target=target)
 
 
-def entity_action(action_name: str, *args, target: Target=DEFAULT_TARGET, tags: dict[str, str]={}) -> CodeBlock:
+def entity_action(action_name: ENTITY_ACTION_ACTION, *args, target: Target=DEFAULT_TARGET, tags: dict[str, str]={}) -> CodeBlock:
     """
     Represents an Entity Action codeblock.
 
@@ -445,7 +446,7 @@ def entity_action(action_name: str, *args, target: Target=DEFAULT_TARGET, tags: 
     return CodeBlock.new_action('entity_action', action_name, args, tags, target=target)
 
 
-def game_action(action_name: str, *args, tags: dict[str, str]={}) -> CodeBlock:
+def game_action(action_name: GAME_ACTION_ACTION, *args, tags: dict[str, str]={}) -> CodeBlock:
     """
     Represents a Game Action codeblock.
 
@@ -456,7 +457,7 @@ def game_action(action_name: str, *args, tags: dict[str, str]={}) -> CodeBlock:
     return CodeBlock.new_action('game_action', action_name, args, tags)
 
 
-def if_player(action_name: str, *args, target: Target=DEFAULT_TARGET, tags: dict[str, str]={}, inverted: bool=False, codeblocks: list[CodeBlock]=[]) -> list[CodeBlock]:
+def if_player(action_name: IF_PLAYER_ACTION, *args, target: Target=DEFAULT_TARGET, tags: dict[str, str]={}, inverted: bool=False, codeblocks: list[CodeBlock]=[]) -> list[CodeBlock]:
     """
     Represents an If Player codeblock.
 
@@ -474,7 +475,7 @@ def if_player(action_name: str, *args, target: Target=DEFAULT_TARGET, tags: dict
         CodeBlock.new_bracket('close', 'norm')
     ]
 
-def if_entity(action_name: str, *args, target: Target=DEFAULT_TARGET, tags: dict[str, str]={}, inverted: bool=False, codeblocks: list[CodeBlock]=[]) -> list[CodeBlock]:
+def if_entity(action_name: IF_ENTITY_ACTION, *args, target: Target=DEFAULT_TARGET, tags: dict[str, str]={}, inverted: bool=False, codeblocks: list[CodeBlock]=[]) -> list[CodeBlock]:
     """
     Represents an If Entity codeblock.
 
@@ -493,7 +494,7 @@ def if_entity(action_name: str, *args, target: Target=DEFAULT_TARGET, tags: dict
     ]
 
 
-def if_game(action_name: str, *args, tags: dict[str, str]={}, inverted: bool=False, codeblocks: list[CodeBlock]=[]) -> list[CodeBlock]:
+def if_game(action_name: IF_GAME_ACTION, *args, tags: dict[str, str]={}, inverted: bool=False, codeblocks: list[CodeBlock]=[]) -> list[CodeBlock]:
     """
     Represents an If Game codeblock.
 
@@ -511,7 +512,7 @@ def if_game(action_name: str, *args, tags: dict[str, str]={}, inverted: bool=Fal
     ]
 
 
-def if_variable(action_name: str, *args, tags: dict[str, str]={}, inverted: bool=False, codeblocks: list[CodeBlock]=[]) -> list[CodeBlock]:
+def if_variable(action_name: IF_VAR_ACTION, *args, tags: dict[str, str]={}, inverted: bool=False, codeblocks: list[CodeBlock]=[]) -> list[CodeBlock]:
     """
     Represents an If Variable codeblock.
 
@@ -543,7 +544,7 @@ def else_(codeblocks: list[CodeBlock]=[]) -> list[CodeBlock]:
     ]
 
 
-def repeat(action_name: str, *args, tags: dict[str, str]={}, sub_action: str|None=None, inverted: bool=False, codeblocks: list[CodeBlock]=[]) -> CodeBlock:
+def repeat(action_name: REPEAT_ACTION, *args, tags: dict[str, str]={}, sub_action: REPEAT_SUBACTION|None=None, inverted: bool=False, codeblocks: list[CodeBlock]=[]) -> CodeBlock:
     """
     Represents a Repeat codeblock.
 
@@ -562,7 +563,7 @@ def repeat(action_name: str, *args, tags: dict[str, str]={}, sub_action: str|Non
     ]
 
 
-def control(action_name: str, *args, tags: dict[str, str]={}) -> CodeBlock:
+def control(action_name: CONTROL_ACTION, *args, tags: dict[str, str]={}) -> CodeBlock:
     """
     Represents a Control codeblock.
 
@@ -573,7 +574,7 @@ def control(action_name: str, *args, tags: dict[str, str]={}) -> CodeBlock:
     return CodeBlock.new_action('control', action_name, args, tags)
 
 
-def select_object(action_name: str, *args, tags: dict[str, str]={}) -> CodeBlock:
+def select_object(action_name: SELECT_OBJ_ACTION, *args, tags: dict[str, str]={}) -> CodeBlock:
     """
     Represents a Select Object codeblock.
 
@@ -584,7 +585,7 @@ def select_object(action_name: str, *args, tags: dict[str, str]={}) -> CodeBlock
     return CodeBlock.new_action('select_obj', action_name, args, tags) 
 
 
-def set_variable(action_name: str, *args, tags: dict[str, str]={}) -> CodeBlock:
+def set_variable(action_name: SET_VAR_ACTION, *args, tags: dict[str, str]={}) -> CodeBlock:
     """
     Represents a Set Variable codeblock.
 
