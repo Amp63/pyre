@@ -21,8 +21,10 @@ This module works best with [CodeClient](https://modrinth.com/mod/codeclient) in
 - All code item types
 - Direct sending to DF via recode or codeclient
 - Automatic type conversion (int to num, str to text)
+- Auto completed action names (if your IDE supports type hints)
 - Warnings for unrecognized actions and tags
-- Full tag support
+- Shorthand format for variables
+- Convert existing templates into equivalent Python code (see [Script Generation](#script-generation))
 
 ## Documentation
 ## Basics
@@ -467,6 +469,21 @@ t.generate_script('my_template.py')    # generated python script will be written
 
 This feature is useful for getting a text representation of existing templates.
 
+
+### Inserting Codeblocks
+
+Use the `insert` method to insert additional codeblocks into an existing template. By default, codeblocks will be added to the end of the template.
+
+```py
+from dfpyre import *
+
+my_template = player_event('Join', [
+  player_action('SendMessage', '%default has joined!', target=Target.ALL_PLAYERS)
+])
+my_template.insert(player_action('SendMessage', 'Welcome!'))  # Add a new codeblock to the end
+```
+
+
 ### Function List
 
 - **Events / Function / Process**
@@ -482,7 +499,7 @@ This feature is useful for getting a text representation of existing templates.
   - game_action
   - entity_action
 
-- **Conditionals / Loops**
+- **Control Flow**
   - if_player
   - if_variable
   - if_game
