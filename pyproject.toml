@@ -1,13 +1,13 @@
 [tool.poetry]
 name = "dfpyre"
-version = "0.8.1"
+version = "0.8.2"
 description = "A package for creating and modifying code templates for the DiamondFire Minecraft server."
 authors = ["Amp"]
 readme = "README.md"
 license = "MIT"
 repository = "https://github.com/Amp63/pyre"
 keywords = ["diamondfire", "minecraft", "template", "item"]
-exclude = ['examples']
+exclude = ['examples', 'extra']
 
 
 [tool.poetry.dependencies]
