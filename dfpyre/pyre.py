@@ -291,6 +291,8 @@ class DFTemplate:
             else:
                 self.codeblocks[index:index+len(insert_codeblocks)] = insert_codeblocks
         elif isinstance(insert_codeblocks, CodeBlock):
+            if index == -1:
+                index = len(self.codeblocks)
             self.codeblocks.insert(index, insert_codeblocks)
         else:
             raise PyreException('Expected CodeBlock or list[CodeBlock] to insert.')
