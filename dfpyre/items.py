@@ -7,7 +7,7 @@ import re
 from typing import Literal, Any
 from dfpyre.style import is_ampersand_coded, ampersand_to_minimessage
 from dfpyre.util import PyreException, warn
-from mcitemlib.itemlib import Item as NbtItem
+from mcitemlib.itemlib import Item as NbtItem, MCItemlibException
 
 
 NUMBER_REGEX = r'^-?\d*\.?\d+$'
@@ -30,21 +30,6 @@ def convert_argument(arg: Any):
 def _add_slot(d: dict, slot: int|None):
     if slot is not None:
         d['slot'] = slot
-
-
-class Item(NbtItem):
-    """
-    Represents a Minecraft item.
-    """
-    type = 'item'
-
-    def format(self, slot: int|None):
-        formatted_dict = {"item": {"id": self.type, "data": {"item": self.get_nbt()}}}
-        _add_slot(formatted_dict, slot)
-        return formatted_dict
-
-    def __repr__(self) -> str:
-        return f'{self.__class__.__name__}({self.get_id()}, {self.get_count()})'
 
 
 class String:
@@ -105,6 +90,71 @@ class Number:
         return f'{self.__class__.__name__}({self.value})'
 
 Num = Number  # Number alias
+
+
+class Item(NbtItem):
+    """
+    Represents a Minecraft item.
+    """
+    type = 'item'
+
+    def format(self, slot: int|None):
+        formatted_dict = {"item": {"id": self.type, "data": {"item": self.get_nbt()}}}
+        _add_slot(formatted_dict, slot)
+        return formatted_dict
+
+    def __repr__(self) -> str:
+        return f'{self.__class__.__name__}({self.get_id()}, {self.get_count()})'
+    
+    def set_tag(self, tag_name: str, tag_value: str|int|float|String|Number):
+        """
+        Add a DiamondFire custom tag to this item.
+        """
+        if isinstance(tag_value, String):
+            tag_value = tag_value.value
+        elif isinstance(tag_value, Number):
+            tag_value = float(tag_value.value)
+        elif isinstance(tag_value, int):
+            tag_value = float(tag_value)
+        
+        try:
+            item_tags = self.get_custom_data('PublicBukkitValues')
+        except MCItemlibException:
+            item_tags = {}
+        
+        item_tags[f'hypercube:{tag_name}'] = tag_value
+        self.set_custom_data('PublicBukkitValues', item_tags)
+    
+    def get_tag(self, tag_name: str) -> str|float|None:
+        """
+        Get a DiamondFire custom tag from this item.
+        """
+        try:
+            item_tags = self.get_custom_data('PublicBukkitValues')
+        except MCItemlibException:
+            return None
+        
+        try:
+            return item_tags[f'hypercube:{tag_name}']
+        except KeyError:
+            return None
+    
+    def remove_tag(self, tag_name: str) -> bool:
+        """
+        Remove a DiamondFire custom tag from this item.
+
+        :return: `True` on success, `False` on fail
+        """
+        try:
+            item_tags = self.get_custom_data('PublicBukkitValues')
+        except MCItemlibException:
+            return False
+
+        try:
+            del item_tags[f'hypercube:{tag_name}']
+            return True
+        except KeyError:
+            return False
 
 
 class Location:
@@ -335,7 +385,7 @@ class Parameter:
         return f'{self.__class__.__name__}({self.name}, type: {raw_type})'
 
 
-def item_from_dict(item_dict: dict) -> object:
+def item_from_dict(item_dict: dict) -> Any:
     item_id = item_dict['id']
     item_data = item_dict['data']
 
