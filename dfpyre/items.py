@@ -23,7 +23,7 @@ def convert_argument(arg: Any):
         if shorthand_match:
             scope = VAR_SCOPES[shorthand_match.group(1)]
             return Variable(shorthand_match.group(2), scope)
-        return Text(arg)
+        return String(arg)
     return arg
 
 
