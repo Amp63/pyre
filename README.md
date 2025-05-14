@@ -20,7 +20,7 @@ This module works best with [CodeClient](https://modrinth.com/mod/codeclient) in
 - All code block types
 - All code item types
 - Direct sending to DF via recode or codeclient
-- Automatic type conversion (int to num, str to text)
+- Automatic type conversion (`int` to `Number`, `str` to `String`)
 - Auto completed action names (if your IDE supports type hints)
 - Warnings for unrecognized actions and tags
 - Shorthand format for variables
