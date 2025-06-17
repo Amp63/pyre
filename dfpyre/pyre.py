@@ -8,7 +8,7 @@ import json
 from difflib import get_close_matches
 import datetime
 from enum import Enum
-from mcitemlib.itemlib import Item as NbtItem
+from amulet_nbt import CompoundTag
 from dfpyre.util import *
 from dfpyre.items import *
 from dfpyre.scriptgen import generate_script, GeneratorFlags
@@ -162,7 +162,7 @@ def _check_applied_tags(tags: list[dict], applied_tags: dict[str, str], codebloc
 
 def _reformat_codeblock_tags(tags: list[dict], codeblock_type: str, codeblock_action: str, applied_tags: dict[str, str]):
     """
-    Turns tag objects into DiamondFire formatted tag items
+    Turns tag objects into DiamondFire formatted tag items.
     """
 
     def format_tag(option: str, name: str):
@@ -189,7 +189,7 @@ def _reformat_codeblock_tags(tags: list[dict], codeblock_type: str, codeblock_ac
 
 def _get_codeblock_tags(codeblock_type: str, codeblock_name: str, applied_tags: dict[str, str]):
     """
-    Get tags for the specified codeblock type and name
+    Get tags for the specified codeblock type and name.
     """
     action_data = CODEBLOCK_DATA[codeblock_type][codeblock_name]
     if 'deprecatedNote' in action_data:
@@ -198,10 +198,10 @@ def _get_codeblock_tags(codeblock_type: str, codeblock_name: str, applied_tags: 
     return _reformat_codeblock_tags(tags, codeblock_type, codeblock_name, applied_tags)
 
 
-def _get_template_item(template_code: str, name: str, author: str) -> NbtItem:
+def _generate_template_item(template_code: str, name: str, author: str) -> Item:
     now = datetime.datetime.now()
 
-    template_item = NbtItem('yellow_shulker_box')
+    template_item = Item('yellow_shulker_box')
     template_item.set_name(f'&x&f&f&5&c&0&0>> &x&f&f&c&7&0&0{name}')
     template_item.set_lore([
         f'&8Author: {author}',
@@ -211,11 +211,13 @@ def _get_template_item(template_code: str, name: str, author: str) -> NbtItem:
         '&7https://github.com/Amp63/pyre'
     ])
     
-    pbv_tag = {
-        'hypercube:codetemplatedata': f'{{"author":"{author}","name":"{name}","version": 1,"code":"{template_code}"}}',
-        'hypercube:pyre_creation_timestamp': now.timestamp()
-    }
-    template_item.set_custom_data('PublicBukkitValues', pbv_tag, raw=True)
+    custom_data_tag = CompoundTag({
+        'PublicBukkitValues': CompoundTag({
+            'hypercube:codetemplatedata': StringTag(f'{{"author":"{author}","name":"{name}","version": 1,"code":"{template_code}"}}'),
+            'hypercube:pyre_creation_timestamp': DoubleTag(now.timestamp())
+        })
+    })
+    template_item.set_component('minecraft:custom_data', custom_data_tag)
 
     return template_item
 
@@ -316,15 +318,15 @@ class DFTemplate:
         return df_encode(json_string)
     
 
-    def build_and_send(self, method: Literal['recode', 'codeclient'], include_tags: bool=True) -> int:
+    def build_and_send(self, include_tags: bool=True) -> int:
         """
         Builds this template and sends it to DiamondFire automatically.
         
         :param bool include_tags: If True, include item tags in code blocks. Otherwise omit them.
         """
         template_code = self.build(include_tags)
-        template_item = _get_template_item(template_code, self._get_template_name(), self.author)
-        return template_item.send_to_minecraft(method, 'pyre')
+        template_item = _generate_template_item(template_code, self._get_template_name(), self.author)
+        return template_item.send_to_minecraft()
     
     
     def generate_script(self, output_path: str, indent_size: int=4, literal_shorthand: bool=True, var_shorthand: bool=False):

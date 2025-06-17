@@ -40,13 +40,13 @@ class GeneratorFlags:
 
 
 def item_to_string(class_name: str, i: Item):
-    i.nbt.data.pop('~DF_NBT', None)
+    i.nbt.pop('DF_NBT', None)
     stripped_id = i.get_id().replace('minecraft:', '')
-    if i.nbt.key_set() == {'~id', '~count'}:
+    if set(i.nbt.keys()) == {'id', 'count'}:
         if i.get_count() == 1:
             return f'{class_name}("{stripped_id}")'
         return f'{class_name}("{stripped_id}", {i.get_count()})'
-    return f'{class_name}.from_nbt("""{i.get_nbt()}""")'
+    return f'{class_name}.from_snbt("""{i.get_snbt()}""")'
 
 
 def argument_item_to_string(flags: GeneratorFlags, arg_item: object) -> str:
@@ -56,12 +56,12 @@ def argument_item_to_string(flags: GeneratorFlags, arg_item: object) -> str:
     
     if isinstance(arg_item, String):
         value = arg_item.value.replace('\n', '\\n')
+        if flags.literal_shorthand:
+            return f'"{value}"'
         return f'{class_name}("{value}")'
     
     if isinstance(arg_item, Text):
         value = arg_item.value.replace('\n', '\\n')
-        if flags.literal_shorthand:
-            return f'"{value}"'
         return f'{class_name}("{value}")'
     
     if isinstance(arg_item, Number):

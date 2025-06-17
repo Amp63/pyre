@@ -12,7 +12,7 @@ exclude = ['examples', 'extra']
 
 [tool.poetry.dependencies]
 python = "^3.10"
-mcitemlib = "^0.3.4"
+mcitemlib = "^0.4.1"
 
 
 [build-system]

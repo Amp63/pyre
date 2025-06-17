@@ -5,14 +5,18 @@ Class definitions for code items.
 from enum import Enum
 import re
 from typing import Literal, Any
-from dfpyre.style import is_ampersand_coded, ampersand_to_minimessage
-from dfpyre.util import PyreException, warn
+import websocket
 from mcitemlib.itemlib import Item as NbtItem, MCItemlibException
+from amulet_nbt import DoubleTag, StringTag, CompoundTag
+from dfpyre.style import is_ampersand_coded, ampersand_to_minimessage
+from dfpyre.util import PyreException, warn, COL_SUCCESS, COL_WARN, COL_ERROR, COL_RESET
 
 
 NUMBER_REGEX = r'^-?\d*\.?\d+$'
 VAR_SHORTHAND_REGEX = r'^\$([gsli]) (.+)$'
 VAR_SCOPES = {'g': 'unsaved', 's': 'saved', 'l': 'local', 'i': 'line'}
+
+CODECLIENT_URL = 'ws://localhost:31375'
 
 
 def convert_argument(arg: Any):
@@ -99,7 +103,7 @@ class Item(NbtItem):
     type = 'item'
 
     def format(self, slot: int|None):
-        formatted_dict = {"item": {"id": self.type, "data": {"item": self.get_nbt()}}}
+        formatted_dict = {"item": {"id": self.type, "data": {"item": self.get_snbt()}}}
         _add_slot(formatted_dict, slot)
         return formatted_dict
 
@@ -111,50 +115,87 @@ class Item(NbtItem):
         Add a DiamondFire custom tag to this item.
         """
         if isinstance(tag_value, String):
-            tag_value = tag_value.value
+            tag = StringTag(tag_value.value)
+        elif isinstance(tag_value, str):
+            tag = StringTag(tag_value)
         elif isinstance(tag_value, Number):
-            tag_value = float(tag_value.value)
-        elif isinstance(tag_value, int):
-            tag_value = float(tag_value)
+            tag = DoubleTag(float(tag_value.value))
+        elif isinstance(tag_value, (int, float)):
+            tag = DoubleTag(float(tag_value))
         
         try:
-            item_tags = self.get_custom_data('PublicBukkitValues')
+            custom_data_tag = self.get_component('minecraft:custom_data')
+            if 'PublicBukkitValues' in custom_data_tag:
+                pbv_tag = custom_data_tag['PublicBukkitValues']
+            else:
+                pbv_tag = CompoundTag()
         except MCItemlibException:
-            item_tags = {}
+            custom_data_tag = CompoundTag()
+            pbv_tag = CompoundTag()
         
-        item_tags[f'hypercube:{tag_name}'] = tag_value
-        self.set_custom_data('PublicBukkitValues', item_tags)
+        custom_data_tag['PublicBukkitValues'] = pbv_tag
+        
+        pbv_tag[f'hypercube:{tag_name}'] = tag
+        self.set_component('minecraft:custom_data', custom_data_tag)
     
     def get_tag(self, tag_name: str) -> str|float|None:
         """
         Get a DiamondFire custom tag from this item.
         """
         try:
-            item_tags = self.get_custom_data('PublicBukkitValues')
+            custom_data_tag = self.get_component('minecraft:custom_data')
         except MCItemlibException:
             return None
         
-        try:
-            return item_tags[f'hypercube:{tag_name}']
-        except KeyError:
+        if 'PublicBukkitValues' not in custom_data_tag:
             return None
+        
+        pbv_tag = custom_data_tag['PublicBukkitValues']
+        df_tag_value = pbv_tag.get(f'hypercube:{tag_name}')
+        if df_tag_value is None:
+            return None
+        
+        if isinstance(df_tag_value, DoubleTag):
+            return float(df_tag_value)
+        if isinstance(df_tag_value, StringTag):
+            return str(df_tag_value)
     
-    def remove_tag(self, tag_name: str) -> bool:
+    def remove_tag(self, tag_name: str):
         """
         Remove a DiamondFire custom tag from this item.
+        """
+        custom_data_tag = self.get_component('minecraft:custom_data')
+        pbv_tag = custom_data_tag['PublicBukkitValues']
+        del pbv_tag[f'hypercube:{tag_name}']
 
-        :return: `True` on success, `False` on fail
+        return True
+    
+    def send_to_minecraft(self):
+        """
+        Sends this item to Minecraft automatically.
         """
         try:
-            item_tags = self.get_custom_data('PublicBukkitValues')
-        except MCItemlibException:
-            return False
+            ws = websocket.WebSocket()
+            ws.connect(CODECLIENT_URL)
+            print(f'{COL_SUCCESS}Connected.{COL_RESET}')
 
-        try:
-            del item_tags[f'hypercube:{tag_name}']
-            return True
-        except KeyError:
-            return False
+            command = f'give {self.get_snbt()}'
+            ws.send(command)
+            ws.close()
+
+            print(f'{COL_SUCCESS}Item sent to client successfully.{COL_RESET}')
+            return 0
+            
+        except Exception as e:
+            if isinstance(e, ConnectionRefusedError):
+                print(f'{COL_ERROR}Could not connect to CodeClient API. Possible problems:')
+                print(f'    - Minecraft is not open')
+                print(f'    - CodeClient is not installed (get it here: https://modrinth.com/mod/codeclient)')
+                print(f'    - CodeClient API is not enabled (enable it in CodeClient general settings)')
+                return 1
+            
+            print(f'Connection failed: {e}')
+            return 2
 
 
 class Location:
@@ -390,7 +431,7 @@ def item_from_dict(item_dict: dict) -> Any:
     item_data = item_dict['data']
 
     if item_id == 'item':
-        return Item.from_nbt(item_data['item'])
+        return Item.from_snbt(item_data['item'])
     
     elif item_id == 'txt':
         return String(item_data['name'])
