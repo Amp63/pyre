@@ -3,7 +3,7 @@ Generates `Literal` objects containing action names for each codeblock type.
 This allows action names to be autocompleted if the user's IDE supports it.
 """
 
-from dfpyre.actiondump import CODEBLOCK_DATA
+from dfpyre.actiondump import ACTIONDUMP
 
 
 OUTPUT_PATH = 'dfpyre/action_literals.py'
@@ -15,7 +15,7 @@ def omit(action_name: str, action_data: dict) -> bool:
 
 def generate_action_literals():
     generated_lines: list[str] = ['from typing import Literal\n']
-    for codeblock_type, actions in CODEBLOCK_DATA.items():
+    for codeblock_type, actions in ACTIONDUMP['codeblock_data'].items():
         if len(actions) == 1:
             continue
 
@@ -25,6 +25,9 @@ def generate_action_literals():
         generated_lines.append(literal_line)
     
     generated_lines += [
+        f'GAME_VALUE_NAME = Literal{str(ACTIONDUMP['game_value_names'])}',
+        f'SOUND_NAME = Literal{str(ACTIONDUMP['sound_names'])}',
+        f'POTION_NAME = Literal{str(ACTIONDUMP['potion_names'])}',
         'REPEAT_SUBACTION = IF_PLAYER_ACTION | IF_ENTITY_ACTION | IF_GAME_ACTION | IF_VAR_ACTION'
     ]
     

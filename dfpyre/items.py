@@ -9,7 +9,8 @@ import websocket
 from mcitemlib.itemlib import Item as NbtItem, MCItemlibException
 from amulet_nbt import DoubleTag, StringTag, CompoundTag
 from dfpyre.style import is_ampersand_coded, ampersand_to_minimessage
-from dfpyre.util import PyreException, warn, COL_SUCCESS, COL_WARN, COL_ERROR, COL_RESET
+from dfpyre.util import PyreException, warn, COL_SUCCESS, COL_ERROR, COL_RESET
+from dfpyre.action_literals import GAME_VALUE_NAME, SOUND_NAME, POTION_NAME
 
 
 NUMBER_REGEX = r'^-?\d*\.?\d+$'
@@ -274,7 +275,10 @@ class Sound:
     """
     type = 'snd'
 
-    def __init__(self, name: str, pitch: float=1.0, vol: float=2.0, slot: int | None=None):
+    def __init__(self, name: SOUND_NAME, pitch: float=1.0, vol: float=2.0, slot: int | None=None):
+        if name not in set(SOUND_NAME.__args__):
+            warn(f'Sound name "{name}" not found.')
+        
         self.name = name
         self.pitch = pitch
         self.vol = vol
@@ -315,7 +319,10 @@ class Potion:
     """
     type = 'pot'
 
-    def __init__(self, name: str, dur: int=1000000, amp: int=0, slot: int | None=None):
+    def __init__(self, name: POTION_NAME, dur: int=1000000, amp: int=0, slot: int | None=None):
+        if name not in set(POTION_NAME.__args__):
+            warn(f'Potion name "{name}" not found.')
+        
         self.name = name
         self.dur = dur
         self.amp = amp
@@ -338,7 +345,10 @@ class GameValue:
     """
     type = 'g_val'
 
-    def __init__(self, name: str, target: str='Default', slot: int | None=None):
+    def __init__(self, name: GAME_VALUE_NAME, target: str='Default', slot: int | None=None):
+        if name not in set(GAME_VALUE_NAME.__args__):
+            warn(f'Game value name "{name}" not found.')
+        
         self.name = name
         self.target = target
         self.slot = slot
