@@ -25,7 +25,7 @@ def df_encode(json_string: str) -> str:
 
 
 def df_decode(encoded_string: str) -> str:
-    return gzip.decompress(base64.b64decode(encoded_string)).decode('utf-8')
+    return gzip.decompress(base64.b64decode(encoded_string.encode('utf-8'))).decode('utf-8')
 
 
 def flatten(nested_list: list):
