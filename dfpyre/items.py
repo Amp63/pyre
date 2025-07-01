@@ -444,18 +444,21 @@ class Parameter:
         return f'{self.__class__.__name__}({self.name}, type: {raw_type})'
 
 
-def item_from_dict(item_dict: dict) -> Any:
-    item_id = item_dict['id']
-    item_data = item_dict['data']
+def item_from_dict(item_dict: dict, preserve_item_slots: bool) -> Any:
+    item_id = item_dict['item']['id']
+    item_data = item_dict['item']['data']
+    item_slot = item_dict['slot'] if preserve_item_slots else None
 
     if item_id == 'item':
-        return Item.from_snbt(item_data['item'])
+        item = Item.from_snbt(item_data['item'])
+        item.slot = item_slot
+        return item
     
     elif item_id == 'txt':
-        return String(item_data['name'])
+        return String(item_data['name'], item_slot)
     
     elif item_id == 'comp':
-        return Text(item_data['name'])
+        return Text(item_data['name'], item_slot)
     
     elif item_id == 'num':
         num_value = item_data['name']
@@ -463,30 +466,30 @@ def item_from_dict(item_dict: dict) -> Any:
             num_value = float(item_data['name'])
             if num_value % 1 == 0:
                 num_value = int(num_value)
-            return Number(num_value)
-        return Number(num_value)
+            return Number(num_value, item_slot)
+        return Number(num_value, item_slot)
     
     elif item_id == 'loc':
         item_loc = item_data['loc']
-        return Location(item_loc['x'], item_loc['y'], item_loc['z'], item_loc['pitch'], item_loc['yaw'])
+        return Location(item_loc['x'], item_loc['y'], item_loc['z'], item_loc['pitch'], item_loc['yaw'], item_slot)
     
     elif item_id == 'var':
-        return Variable(item_data['name'], item_data['scope'])
+        return Variable(item_data['name'], item_data['scope'], item_slot)
     
     elif item_id == 'snd':
-        return Sound(item_data['sound'], item_data['pitch'], item_data['vol'])
+        return Sound(item_data['sound'], item_data['pitch'], item_data['vol'], item_slot)
     
     elif item_id == 'part':
-        return Particle(item_data)
+        return Particle(item_data, item_slot)
     
     elif item_id == 'pot':
-        return Potion(item_data['pot'], item_data['dur'], item_data['amp'])
+        return Potion(item_data['pot'], item_data['dur'], item_data['amp'], item_slot)
     
     elif item_id == 'g_val':
-        return GameValue(item_data['type'], item_data['target'])
+        return GameValue(item_data['type'], item_data['target'], item_slot)
     
     elif item_id == 'vec':
-        return Vector(item_data['x'], item_data['y'], item_data['z'])
+        return Vector(item_data['x'], item_data['y'], item_data['z'], item_slot)
     
     elif item_id == 'pn_el':
         description = item_data.get('description') or ''
@@ -494,9 +497,10 @@ def item_from_dict(item_dict: dict) -> Any:
         param_type = ParameterType(PARAMETER_TYPE_LOOKUP.index(item_data['type']))
         if item_data['optional']:
             if 'default_value' in item_data:
-                return Parameter(item_data['name'], param_type, item_data['plural'], True, description, note, item_from_dict(item_data['default_value']))
-            return Parameter(item_data['name'], param_type, item_data['plural'], True, description, note)
-        return Parameter(item_data['name'], param_type, item_data['plural'], False, description, note)
+                default_value_item = item_from_dict(item_data['default_value'], preserve_item_slots)
+                return Parameter(item_data['name'], param_type, item_data['plural'], True, description, note, default_value_item, item_slot)
+            return Parameter(item_data['name'], param_type, item_data['plural'], True, description, note, slot=item_slot)
+        return Parameter(item_data['name'], param_type, item_data['plural'], False, description, note, slot=item_slot)
     
     elif item_id in {'bl_tag', 'hint'}:  # Ignore tags and hints
         return

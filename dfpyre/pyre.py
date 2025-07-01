@@ -244,9 +244,12 @@ class DFTemplate:
 
 
     @staticmethod
-    def from_code(template_code: str):
+    def from_code(template_code: str, preserve_item_slots: bool=False):
         """
         Create a template object from an existing template code.
+
+        :param str template_code: The base64 string to create a template from.
+        :param bool preserve_item_slots: If True, the positions of items within chests will be saved.
         """
         template_dict = json.loads(df_decode(template_code))
         codeblocks: list[CodeBlock] = []
@@ -258,7 +261,7 @@ class DFTemplate:
                     if item_dict['item'].get('id') == 'bl_tag':
                         tag_data = item_dict['item']['data']
                         block_tags[tag_data['tag']] = tag_data['option']
-                    parsed_item = item_from_dict(item_dict['item'])
+                    parsed_item = item_from_dict(item_dict, preserve_item_slots)
                     if parsed_item is not None:
                         block_args.append(parsed_item)
             block_target = Target(TARGETS.index(block_dict['target'])) if 'target' in block_dict else DEFAULT_TARGET
@@ -329,7 +332,7 @@ class DFTemplate:
         return template_item.send_to_minecraft()
     
     
-    def generate_script(self, output_path: str, indent_size: int=4, literal_shorthand: bool=True, var_shorthand: bool=False):
+    def generate_script(self, output_path: str, indent_size: int=4, literal_shorthand: bool=True, var_shorthand: bool=False, preserve_slots: bool=False):
         """
         Generate an equivalent python script for this template.
 
@@ -337,8 +340,9 @@ class DFTemplate:
         :param int indent_size: The multiple of spaces to add when indenting lines.
         :param bool literal_shorthand: If True, `text` and `num` items will be written as strings and ints respectively.
         :param bool var_shorthand: If True, all variables will be written using variable shorthand.
+        :param bool preserve_slots: If True, the positions of items within chests will be saved.
         """
-        flags = GeneratorFlags(indent_size, literal_shorthand, var_shorthand)
+        flags = GeneratorFlags(indent_size, literal_shorthand, var_shorthand, preserve_slots)
         with open(output_path, 'w', encoding='utf-8') as f:
             f.write(generate_script(self, flags))
 

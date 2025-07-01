@@ -37,39 +37,43 @@ class GeneratorFlags:
     indent_size: int
     literal_shorthand: bool
     var_shorthand: bool
+    preserve_slots: bool
 
 
-def item_to_string(class_name: str, i: Item):
+def item_to_string(class_name: str, i: Item, slot_argument: str):
     i.nbt.pop('DF_NBT', None)
     stripped_id = i.get_id().replace('minecraft:', '')
     if set(i.nbt.keys()) == {'id', 'count'}:
         if i.get_count() == 1:
-            return f'{class_name}("{stripped_id}")'
-        return f'{class_name}("{stripped_id}", {i.get_count()})'
+            return f'{class_name}("{stripped_id}"{slot_argument})'
+        return f'{class_name}("{stripped_id}", {i.get_count()}{slot_argument})'
     return f'{class_name}.from_snbt("""{i.get_snbt()}""")'
 
 
 def argument_item_to_string(flags: GeneratorFlags, arg_item: object) -> str:
     class_name = arg_item.__class__.__name__
+    has_slot = arg_item.slot is not None and flags.preserve_slots
+    slot_argument = f', slot={arg_item.slot}' if has_slot else ''
+
     if isinstance(arg_item, Item):
-        return item_to_string(class_name, arg_item)
+        return item_to_string(class_name, arg_item, slot_argument)
     
     if isinstance(arg_item, String):
         value = arg_item.value.replace('\n', '\\n')
-        if flags.literal_shorthand:
+        if not has_slot and flags.literal_shorthand:
             return f'"{value}"'
-        return f'{class_name}("{value}")'
+        return f'{class_name}("{value}"{slot_argument})'
     
     if isinstance(arg_item, Text):
         value = arg_item.value.replace('\n', '\\n')
-        return f'{class_name}("{value}")'
+        return f'{class_name}("{value}"{slot_argument})'
     
     if isinstance(arg_item, Number):
         if not re.match(NUMBER_REGEX, str(arg_item.value)):
-            return f'{class_name}("{arg_item.value}")' 
-        if flags.literal_shorthand:
+            return f'{class_name}("{arg_item.value}"{slot_argument})' 
+        if not has_slot and flags.literal_shorthand:
             return str(arg_item.value)
-        return f'{class_name}({arg_item.value})'
+        return f'{class_name}({arg_item.value}{slot_argument})'
     
     if isinstance(arg_item, Location):
         loc_components = [arg_item.x, arg_item.y, arg_item.z]
@@ -77,28 +81,28 @@ def argument_item_to_string(flags: GeneratorFlags, arg_item: object) -> str:
             loc_components.append(arg_item.pitch)
         if arg_item.yaw != 0:
             loc_components.append(arg_item.yaw)
-        return f'{class_name}({", ".join(str(c) for c in loc_components)})'
+        return f'{class_name}({", ".join(str(c) for c in loc_components)}{slot_argument})'
     
     if isinstance(arg_item, Variable):
-        if flags.var_shorthand:
+        if not has_slot and flags.var_shorthand:
             return f'"${VAR_SCOPES[arg_item.scope]} {arg_item.name}"'
         if arg_item.scope == 'unsaved':
-            return f'{class_name}("{arg_item.name}")'
-        return f'{class_name}("{arg_item.name}", "{arg_item.scope}")'
+            return f'{class_name}("{arg_item.name}"{slot_argument})'
+        return f'{class_name}("{arg_item.name}", "{arg_item.scope}"{slot_argument})'
     
     if isinstance(arg_item, Sound):
-        return f'{class_name}("{arg_item.name}", {arg_item.pitch}, {arg_item.vol})'
+        return f'{class_name}("{arg_item.name}", {arg_item.pitch}, {arg_item.vol}{slot_argument})'
     
     if isinstance(arg_item, Particle):
         return f'{class_name}({arg_item.particle_data})'
     
     if isinstance(arg_item, Potion):
-        return f'{class_name}("{arg_item.name}", {arg_item.dur}, {arg_item.amp})'
+        return f'{class_name}("{arg_item.name}", {arg_item.dur}, {arg_item.amp}{slot_argument})'
     
     if isinstance(arg_item, GameValue):
         if arg_item.target == 'Default':
-            return f'{class_name}("{arg_item.name}")'
-        return f'{class_name}("{arg_item.name}", "{arg_item.target}")'
+            return f'{class_name}("{arg_item.name}"{slot_argument})'
+        return f'{class_name}("{arg_item.name}", "{arg_item.target}"{slot_argument})'
     
     if isinstance(arg_item, Parameter):
         param_type_class_name = arg_item.param_type.__class__.__name__
@@ -113,10 +117,10 @@ def argument_item_to_string(flags: GeneratorFlags, arg_item: object) -> str:
             param_args.append(f'description="{arg_item.description}"')
         if arg_item.note:
             param_args.append(f'note="{arg_item.note}"')
-        return f'{class_name}({", ".join(param_args)})'
+        return f'{class_name}({", ".join(param_args)}{slot_argument})'
     
     if isinstance(arg_item, Vector):
-        return f'{class_name}({arg_item.x}, {arg_item.y}, {arg_item.z})'
+        return f'{class_name}({arg_item.x}, {arg_item.y}, {arg_item.z}{slot_argument})'
 
 
 def add_script_line(flags: GeneratorFlags, script_lines: list[str], indent_level: int, line: str, add_comma: bool=True):
