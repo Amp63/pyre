@@ -42,12 +42,13 @@ class String:
     """
     type = 'txt'
 
-    def __init__(self, value: str):
+    def __init__(self, value: str, slot: int|None=None):
         self.value = value
+        self.slot = slot
     
     def format(self, slot: int|None):
         formatted_dict = {"item": {"id": self.type, "data": {"name": self.value}}}
-        _add_slot(formatted_dict, slot)
+        _add_slot(formatted_dict, self.slot or slot)
         return formatted_dict
     
     def __repr__(self) -> str:
@@ -62,14 +63,15 @@ class Text:
     """
     type = 'comp'
 
-    def __init__(self, value: str):
+    def __init__(self, value: str, slot: int|None=None):
         if is_ampersand_coded(value):
             value = ampersand_to_minimessage(value)
         self.value = value
+        self.slot = slot
     
     def format(self, slot: int|None):
       formatted_dict = {"item": {"id": self.type, "data": {"name": self.value}}}
-      _add_slot(formatted_dict, slot)
+      _add_slot(formatted_dict, self.slot or slot)
       return formatted_dict
 
     def __repr__(self) -> str:
@@ -82,12 +84,13 @@ class Number:
     """
     type = 'num'
 
-    def __init__(self, num: int|float|str):
+    def __init__(self, num: int|float|str, slot: int|None=None):
         self.value = num
+        self.slot = slot
     
     def format(self, slot: int|None):
         formatted_dict = {"item": {"id": self.type, "data": {"name": str(self.value)}}}
-        _add_slot(formatted_dict, slot)
+        _add_slot(formatted_dict, self.slot or slot)
         return formatted_dict
 
     def __repr__(self) -> str:
@@ -102,9 +105,13 @@ class Item(NbtItem):
     """
     type = 'item'
 
+    def __init__(self, item_id: str, count: int=1, slot: int | None=None):
+        super().__init__(item_id, count)
+        self.slot = slot
+
     def format(self, slot: int|None):
         formatted_dict = {"item": {"id": self.type, "data": {"item": self.get_snbt()}}}
-        _add_slot(formatted_dict, slot)
+        _add_slot(formatted_dict, self.slot or slot)
         return formatted_dict
 
     def __repr__(self) -> str:
@@ -191,7 +198,7 @@ class Item(NbtItem):
                 print(f'{COL_ERROR}Could not connect to CodeClient API. Possible problems:')
                 print(f'    - Minecraft is not open')
                 print(f'    - CodeClient is not installed (get it here: https://modrinth.com/mod/codeclient)')
-                print(f'    - CodeClient API is not enabled (enable it in CodeClient general settings)')
+                print(f'    - CodeClient API is not enabled (enable it in CodeClient general settings){COL_RESET}')
                 return 1
             
             print(f'Connection failed: {e}')
@@ -204,12 +211,13 @@ class Location:
     """
     type = 'loc'
 
-    def __init__(self, x: float=0, y: float=0, z: float=0, pitch: float=0, yaw: float=0):
+    def __init__(self, x: float=0, y: float=0, z: float=0, pitch: float=0, yaw: float=0, slot: int | None=None):
         self.x = float(x)
         self.y = float(y)
         self.z = float(z)
         self.pitch = float(pitch)
         self.yaw = float(yaw)
+        self.slot = slot
     
     def format(self, slot: int|None):
         formatted_dict =  {"item": {
@@ -225,7 +233,7 @@ class Location:
                 }
             }
         }}
-        _add_slot(formatted_dict, slot)
+        _add_slot(formatted_dict, self.slot or slot)
         return formatted_dict
 
     def __repr__(self) -> str:
@@ -240,16 +248,18 @@ class Variable:
     """
     type = 'var'
 
-    def __init__(self, name: str, scope: Literal['unsaved', 'game', 'saved', 'local', 'line']='unsaved'):
+    def __init__(self, name: str, scope: Literal['unsaved', 'game', 'saved', 'local', 'line']='unsaved', slot: int | None=None):
         self.name = name
 
         if scope == 'game':
             scope = 'unsaved'
         self.scope = scope
+        
+        self.slot = slot
 
     def format(self, slot: int|None):
         formatted_dict = {"item": {"id": self.type,"data": {"name": self.name, "scope": self.scope}}}
-        _add_slot(formatted_dict, slot)
+        _add_slot(formatted_dict, self.slot or slot)
         return formatted_dict
 
     def __repr__(self) -> str:
@@ -264,14 +274,15 @@ class Sound:
     """
     type = 'snd'
 
-    def __init__(self, name: str, pitch: float=1.0, vol: float=2.0):
+    def __init__(self, name: str, pitch: float=1.0, vol: float=2.0, slot: int | None=None):
         self.name = name
         self.pitch = pitch
         self.vol = vol
+        self.slot = slot
 
     def format(self, slot: int|None):
         formatted_dict = {"item": {"id": self.type,"data": {"sound": self.name, "pitch": self.pitch, "vol": self.vol}}}
-        _add_slot(formatted_dict, slot)
+        _add_slot(formatted_dict, self.slot or slot)
         return formatted_dict
 
     def __repr__(self) -> str:
@@ -285,12 +296,13 @@ class Particle:
     Represents a DiamondFire particle object.
     """
     type = 'part'
-    def __init__(self, particle_data: dict):
+    def __init__(self, particle_data: dict, slot: int | None=None):
         self.particle_data = particle_data
+        self.slot = slot
     
     def format(self, slot: int|None):
         formatted_dict = {"item": {"id": self.type, "data": self.particle_data}}
-        _add_slot(formatted_dict, slot)
+        _add_slot(formatted_dict, self.slot or slot)
         return formatted_dict
 
     def __repr__(self) -> str:
@@ -303,14 +315,15 @@ class Potion:
     """
     type = 'pot'
 
-    def __init__(self, name: str, dur: int=1000000, amp: int=0):
+    def __init__(self, name: str, dur: int=1000000, amp: int=0, slot: int | None=None):
         self.name = name
         self.dur = dur
         self.amp = amp
+        self.slot = slot
     
     def format(self, slot: int|None):
         formatted_dict = {"item": {"id": self.type,"data": {"pot": self.name, "dur": self.dur, "amp": self.amp}}}
-        _add_slot(formatted_dict, slot)
+        _add_slot(formatted_dict, self.slot or slot)
         return formatted_dict
 
     def __repr__(self) -> str:
@@ -325,13 +338,14 @@ class GameValue:
     """
     type = 'g_val'
 
-    def __init__(self, name: str, target: str='Default'):
+    def __init__(self, name: str, target: str='Default', slot: int | None=None):
         self.name = name
         self.target = target
+        self.slot = slot
     
     def format(self, slot: int|None):
         formatted_dict = {"item": {"id": self.type, "data": {"type": self.name, "target": self.target}}}
-        _add_slot(formatted_dict, slot)
+        _add_slot(formatted_dict, self.slot or slot)
         return formatted_dict
 
     def __repr__(self) -> str:
@@ -344,20 +358,22 @@ class Vector:
     """
     type = 'vec'
 
-    def __init__(self, x: float=0.0, y: float=0.0, z: float=0.0):
+    def __init__(self, x: float=0.0, y: float=0.0, z: float=0.0, slot: int | None=None):
         self.x = float(x)
         self.y = float(y)
         self.z = float(z)
+        self.slot = slot
     
     def format(self, slot: int|None):
         formatted_dict = {"item": {"id": self.type, "data": {"x": self.x, "y": self.y, "z": self.z}}}
-        _add_slot(formatted_dict, slot)
+        _add_slot(formatted_dict, self.slot or slot)
         return formatted_dict
 
     def __repr__(self) -> str:
         return f'{self.__class__.__name__}({self.x}, {self.y}, {self.z})'
 
 Vec = Vector  # Vector alias
+
 
 
 PARAMETER_TYPE_LOOKUP = ['txt', 'comp', 'num', 'loc', 'vec', 'snd', 'part', 'pot', 'item', 'any', 'var', 'list', 'dict']
@@ -386,7 +402,8 @@ class Parameter:
     """
     type = 'pn_el'
 
-    def __init__(self, name: str, param_type: ParameterType, plural: bool=False, optional: bool=False, description: str="", note: str="", default_value=None):
+    def __init__(self, name: str, param_type: ParameterType, plural: bool=False, optional: bool=False, 
+                 description: str="", note: str="", default_value=None, slot: int | None=None):
         self.name = name
         self.param_type = param_type
         self.plural = plural
@@ -394,7 +411,7 @@ class Parameter:
         self.description = description
         self.note = note
         self.default_value = convert_argument(default_value)
-      
+        self.slot = slot
     
     def format(self, slot: int):
         formatted_dict = {"item": {
@@ -404,9 +421,10 @@ class Parameter:
                 "type": self.param_type.get_string_value(),
                 "plural": self.plural,
                 "optional": self.optional,
-            }},
-            "slot": slot
+            }}
         }
+        _add_slot(formatted_dict, self.slot or slot)
+
         if self.description:
             formatted_dict['item']['data']['description'] = self.description
         if self.note:
