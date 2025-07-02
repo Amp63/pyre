@@ -1,5 +1,5 @@
 amulet-nbt==2.1.5
-mcitemlib==0.4.2
+mcitemlib==0.4.3
 mutf8==1.0.6
 numpy==1.26.4
 websocket-client==1.8.0
