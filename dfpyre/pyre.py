@@ -16,7 +16,7 @@ from dfpyre.actiondump import CODEBLOCK_DATA, get_default_tags
 from dfpyre.action_literals import *
 
 
-VARIABLE_TYPES = {'txt', 'comp', 'num', 'item', 'loc', 'var', 'snd', 'part', 'pot', 'g_val', 'vec', 'pn_el'}
+VARIABLE_TYPES = {'txt', 'comp', 'num', 'item', 'loc', 'var', 'snd', 'part', 'pot', 'g_val', 'vec', 'pn_el', 'bl_tag'}
 TEMPLATE_STARTERS = {'event', 'entity_event', 'func', 'process'}
 DYNAMIC_CODEBLOCKS = {'func', 'process', 'call_func', 'start_process'}
 
@@ -118,13 +118,20 @@ class CodeBlock:
         
         # add items into args
         final_args = [arg.format(slot) for slot, arg in enumerate(self.args) if arg.type in VARIABLE_TYPES]
+        already_applied_tags: dict[str, dict] = {a['item']['data']['tag']: a for a in final_args if a['item']['id'] == 'bl_tag'}
         
         # check for unrecognized name, add tags
         if self.type not in {'bracket', 'else'}:
             if self.action_name not in CODEBLOCK_DATA[self.type]:
                 _warn_unrecognized_name(self.type, self.action_name)
+            
             elif include_tags:
                 tags = _get_codeblock_tags(self.type, self.action_name, self.tags)
+                for i, tag_data in enumerate(tags):
+                    already_applied_tag_data = already_applied_tags.get(tag_data['item']['data']['tag'])
+                    if already_applied_tag_data is not None:
+                        tags[i] = already_applied_tag_data
+                
                 if len(final_args) + len(tags) > 27:
                     final_args = final_args[:(27-len(tags))]  # trim list if over 27 elements
                 final_args.extend(tags)  # add tags to end
@@ -160,7 +167,7 @@ def _check_applied_tags(tags: list[dict], applied_tags: dict[str, str], codebloc
     return valid_tags
 
 
-def _reformat_codeblock_tags(tags: list[dict], codeblock_type: str, codeblock_action: str, applied_tags: dict[str, str]):
+def _reformat_codeblock_tags(tags: list[dict], codeblock_type: str, codeblock_action: str, applied_tags: dict[str, str]) -> list[dict]:
     """
     Turns tag objects into DiamondFire formatted tag items.
     """
@@ -187,7 +194,7 @@ def _reformat_codeblock_tags(tags: list[dict], codeblock_type: str, codeblock_ac
     return reformatted_tags
 
 
-def _get_codeblock_tags(codeblock_type: str, codeblock_name: str, applied_tags: dict[str, str]):
+def _get_codeblock_tags(codeblock_type: str, codeblock_name: str, applied_tags: dict[str, str]) -> list[dict]:
     """
     Get tags for the specified codeblock type and name.
     """
@@ -244,7 +251,7 @@ class DFTemplate:
 
 
     @staticmethod
-    def from_code(template_code: str, preserve_item_slots: bool=False):
+    def from_code(template_code: str, preserve_item_slots: bool=True):
         """
         Create a template object from an existing template code.
 

@@ -454,6 +454,25 @@ class Parameter:
         return f'{self.__class__.__name__}({self.name}, type: {raw_type})'
 
 
+class _Tag:
+    """
+    Represents a CodeBlock action tag.
+    """
+    type = 'bl_tag'
+
+    def __init__(self, tag_data: dict, slot: int | None=None):
+        self.tag_data = tag_data
+        self.slot = slot
+    
+    def format(self, slot: int|None):
+        formatted_dict = {"item": {"id": self.type, "data": self.tag_data}}
+        _add_slot(formatted_dict, self.slot or slot)
+        return formatted_dict
+
+    def __repr__(self) -> str:
+        return f'{self.__class__.__name__}({self.tag_data})'
+
+
 def item_from_dict(item_dict: dict, preserve_item_slots: bool) -> Any:
     item_id = item_dict['item']['id']
     item_data = item_dict['item']['data']
@@ -507,12 +526,17 @@ def item_from_dict(item_dict: dict, preserve_item_slots: bool) -> Any:
         param_type = ParameterType(PARAMETER_TYPE_LOOKUP.index(item_data['type']))
         if item_data['optional']:
             if 'default_value' in item_data:
-                default_value_item = item_from_dict(item_data['default_value'], preserve_item_slots)
+                default_value_dict = {'item': item_data['default_value'], 'slot': None}
+                default_value_item = item_from_dict(default_value_dict, preserve_item_slots)
                 return Parameter(item_data['name'], param_type, item_data['plural'], True, description, note, default_value_item, item_slot)
             return Parameter(item_data['name'], param_type, item_data['plural'], True, description, note, slot=item_slot)
         return Parameter(item_data['name'], param_type, item_data['plural'], False, description, note, slot=item_slot)
     
-    elif item_id in {'bl_tag', 'hint'}:  # Ignore tags and hints
+    elif item_id == 'bl_tag':
+        if 'variable' in item_data:
+            return _Tag(item_data, item_slot)
+    
+    elif item_id == 'hint':  # Ignore hints
         return
     
     else:
