@@ -52,19 +52,21 @@ def parse_actiondump() -> ActiondumpResult:
     codeblock_data = {n: {} for n in CODEBLOCK_NAME_LOOKUP.values()}
     codeblock_data['else'] = {'tags': []}
 
-
     if not os.path.exists(ACTIONDUMP_PATH):
         warn('data.json not found -- Item tags and error checking will not work.')
         return {}, set()
     
     with open(ACTIONDUMP_PATH, 'r', encoding='utf-8') as f:
         actiondump = json.loads(f.read())
-    
     for action_data in actiondump['actions']:
         action_tags = get_action_tags(action_data)
-        parsed_action_data = {'tags': action_tags}
+        parsed_action_data = {'tags': action_tags, 'required_rank': 'None'}
         if dep_note := action_data['icon']['deprecatedNote']:
             parsed_action_data['deprecatedNote'] = ' '.join(dep_note)
+        
+        required_rank = action_data['icon']['requiredRank']
+        if required_rank:
+            parsed_action_data['required_rank'] = required_rank
         
         codeblock_name = CODEBLOCK_NAME_LOOKUP[action_data['codeblockName']]
         codeblock_data[codeblock_name][action_data['name']] = parsed_action_data
