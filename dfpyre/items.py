@@ -9,18 +9,26 @@ import websocket
 from mcitemlib.itemlib import Item as NbtItem, MCItemlibException
 from amulet_nbt import DoubleTag, StringTag, CompoundTag
 from dfpyre.style import is_ampersand_coded, ampersand_to_minimessage
-from dfpyre.util import PyreException, warn, COL_SUCCESS, COL_ERROR, COL_RESET
+from dfpyre.util import PyreException, warn, is_number, COL_SUCCESS, COL_ERROR, COL_RESET
 from dfpyre.action_literals import GAME_VALUE_NAME, SOUND_NAME, POTION_NAME
 
 
-NUMBER_REGEX = r'^-?\d*\.?\d+$'
+VAR_ITEM_TYPES = [
+    'String', 'Str', 'Text', 'Number', 'Num', 'Item', 'Location', 'Loc', 
+    'Variable', 'Var', 'Sound', 'Snd', 'Particle', 'Potion', 'Pot', 'GameValue',
+    'Vector', 'Vec', 'ParameterType', 'Parameter'
+]
+
+__all__ = ['convert_literals', 'item_from_dict', 'VAR_ITEM_TYPES'] + VAR_ITEM_TYPES
+
+
 VAR_SHORTHAND_REGEX = r'^\$([gsli]) (.+)$'
 VAR_SCOPES = {'g': 'unsaved', 's': 'saved', 'l': 'local', 'i': 'line'}
 
 CODECLIENT_URL = 'ws://localhost:31375'
 
 
-def convert_argument(arg: Any):
+def convert_literals(arg: Any):
     if type(arg) in {int, float}:
         return Number(arg)
     elif isinstance(arg, str):
@@ -420,7 +428,7 @@ class Parameter:
         self.optional = optional
         self.description = description
         self.note = note
-        self.default_value = convert_argument(default_value)
+        self.default_value = convert_literals(default_value)
         self.slot = slot
     
     def format(self, slot: int):
@@ -473,7 +481,7 @@ class _Tag:
         return f'{self.__class__.__name__}({self.tag_data})'
 
 
-def item_from_dict(item_dict: dict, preserve_item_slots: bool) -> Any:
+def item_from_dict(item_dict: dict, preserve_item_slots: bool):
     item_id = item_dict['item']['id']
     item_data = item_dict['item']['data']
     item_slot = item_dict['slot'] if preserve_item_slots else None
@@ -491,7 +499,7 @@ def item_from_dict(item_dict: dict, preserve_item_slots: bool) -> Any:
     
     elif item_id == 'num':
         num_value = item_data['name']
-        if re.match(NUMBER_REGEX, num_value):
+        if is_number(num_value):
             num_value = float(item_data['name'])
             if num_value % 1 == 0:
                 num_value = int(num_value)

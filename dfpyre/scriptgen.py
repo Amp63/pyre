@@ -1,5 +1,6 @@
 import dataclasses
 import re
+from dfpyre.util import is_number
 from dfpyre.items import *
 from dfpyre.actiondump import get_default_tags
 
@@ -72,7 +73,7 @@ def argument_item_to_string(flags: GeneratorFlags, arg_item: object) -> str:
         return f'{class_name}("{value}"{slot_argument})'
     
     if isinstance(arg_item, Number):
-        if not re.match(NUMBER_REGEX, str(arg_item.value)):
+        if not is_number(str(arg_item.value)):  # Probably a math expression
             return f'{class_name}("{arg_item.value}"{slot_argument})' 
         if not has_slot and flags.literal_shorthand:
             return str(arg_item.value)

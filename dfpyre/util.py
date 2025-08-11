@@ -1,11 +1,14 @@
 import base64
 import gzip
+import re
 
 
 COL_WARN = '\x1b[33m'
 COL_RESET = '\x1b[0m'
 COL_SUCCESS = '\x1b[32m'
 COL_ERROR = '\x1b[31m'
+
+NUMBER_REGEX = re.compile(r'^-?\d*\.?\d+$')
 
 
 class PyreException(Exception):
@@ -14,6 +17,10 @@ class PyreException(Exception):
 
 def warn(message: str):
     print(f'{COL_WARN}! WARNING ! {message}{COL_RESET}')
+
+
+def is_number(s: str) -> bool:
+    return bool(NUMBER_REGEX.match(s))
 
 
 def df_encode(json_string: str) -> str:
