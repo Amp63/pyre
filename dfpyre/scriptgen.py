@@ -49,9 +49,11 @@ def item_to_string(class_name: str, i: Item, slot_argument: str):
     stripped_id = i.get_id().replace('minecraft:', '')
     if set(i.nbt.keys()) == {'id', 'count'}:
         if i.get_count() == 1:
-            return f'{class_name}("{stripped_id}"{slot_argument})'
-        return f'{class_name}("{stripped_id}", {i.get_count()}{slot_argument})'
-    return f'{class_name}.from_snbt("""{i.get_snbt()}""")'
+            return f"{class_name}('{stripped_id}'{slot_argument})"
+        return f"{class_name}('{stripped_id}', {i.get_count()}{slot_argument})"
+    
+    snbt_string = i.get_snbt().replace('\\"', '\\\\"')
+    return f'{class_name}.from_snbt("""{snbt_string}""")'
 
 
 def argument_item_to_string(flags: GeneratorFlags, arg_item: object) -> str:
@@ -65,16 +67,16 @@ def argument_item_to_string(flags: GeneratorFlags, arg_item: object) -> str:
     if isinstance(arg_item, String):
         value = arg_item.value.replace('\n', '\\n')
         if not has_slot and flags.literal_shorthand:
-            return f'"{value}"'
-        return f'{class_name}("{value}"{slot_argument})'
+            return f"'{value}'"
+        return f"{class_name}('{value}'{slot_argument})"
     
     if isinstance(arg_item, Text):
         value = arg_item.value.replace('\n', '\\n')
-        return f'{class_name}("{value}"{slot_argument})'
+        return f"{class_name}('{value}'{slot_argument})"
     
     if isinstance(arg_item, Number):
         if not is_number(str(arg_item.value)):  # Probably a math expression
-            return f'{class_name}("{arg_item.value}"{slot_argument})' 
+            return f"{class_name}('{arg_item.value}'{slot_argument})"
         if not has_slot and flags.literal_shorthand:
             return str(arg_item.value)
         return f'{class_name}({arg_item.value}{slot_argument})'
@@ -89,28 +91,28 @@ def argument_item_to_string(flags: GeneratorFlags, arg_item: object) -> str:
     
     if isinstance(arg_item, Variable):
         if not has_slot and flags.var_shorthand:
-            return f'"${VAR_SCOPES[arg_item.scope]} {arg_item.name}"'
+            return f"'${VAR_SCOPES[arg_item.scope]} {arg_item.name}'"
         if arg_item.scope == 'unsaved':
-            return f'{class_name}("{arg_item.name}"{slot_argument})'
-        return f'{class_name}("{arg_item.name}", "{arg_item.scope}"{slot_argument})'
+            return f"{class_name}('{arg_item.name}'{slot_argument})"
+        return f"{class_name}('{arg_item.name}', '{arg_item.scope}'{slot_argument})"
     
     if isinstance(arg_item, Sound):
-        return f'{class_name}("{arg_item.name}", {arg_item.pitch}, {arg_item.vol}{slot_argument})'
+        return f"{class_name}('{arg_item.name}', {arg_item.pitch}, {arg_item.vol}{slot_argument})"
     
     if isinstance(arg_item, Particle):
         return f'{class_name}({arg_item.particle_data})'
     
     if isinstance(arg_item, Potion):
-        return f'{class_name}("{arg_item.name}", {arg_item.dur}, {arg_item.amp}{slot_argument})'
+        return f"{class_name}('{arg_item.name}', {arg_item.dur}, {arg_item.amp}{slot_argument})"
     
     if isinstance(arg_item, GameValue):
         if arg_item.target == 'Default':
-            return f'{class_name}("{arg_item.name}"{slot_argument})'
-        return f'{class_name}("{arg_item.name}", "{arg_item.target}"{slot_argument})'
+            return f"{class_name}('{arg_item.name}'{slot_argument})"
+        return f"{class_name}('{arg_item.name}', '{arg_item.target}'{slot_argument})"
     
     if isinstance(arg_item, Parameter):
         param_type_class_name = arg_item.param_type.__class__.__name__
-        param_args = [f'"{arg_item.name}"', f'{param_type_class_name}.{arg_item.param_type.name}']
+        param_args = [f"'{arg_item.name}'", f'{param_type_class_name}.{arg_item.param_type.name}']
         if arg_item.plural:
             param_args.append('plural=True')
         if arg_item.optional:
@@ -118,9 +120,9 @@ def argument_item_to_string(flags: GeneratorFlags, arg_item: object) -> str:
             if arg_item.default_value is not None:
                 param_args.append(f'default_value={argument_item_to_string(flags, arg_item.default_value)}')
         if arg_item.description:
-            param_args.append(f'description="{arg_item.description}"')
+            param_args.append(f"description='{arg_item.description}'")
         if arg_item.note:
-            param_args.append(f'note="{arg_item.note}"')
+            param_args.append(f"note='{arg_item.note}'")
         return f'{class_name}({", ".join(param_args)}{slot_argument})'
     
     if isinstance(arg_item, Vector):
@@ -174,7 +176,7 @@ def generate_script(template, flags: GeneratorFlags) -> str:
 
         # Get codeblock function and start its arguments with the action
         function_name = TEMPLATE_FUNCTION_LOOKUP[codeblock.type]
-        function_args = [f'"{codeblock.action_name}"']
+        function_args = [f"'{codeblock.action_name}'"]
 
         # Add variable assignment if necessary
         var_assignment_snippet = ''
@@ -184,7 +186,7 @@ def generate_script(template, flags: GeneratorFlags) -> str:
 
         # Set function or process name if necessary
         if codeblock.action_name == 'dynamic':
-            function_args[0] = f'"{codeblock.data["data"]}"'
+            function_args[0] = f"'{codeblock.data["data"]}'"
         
         # Convert argument objects to valid Python strings
         codeblock_args = [argument_item_to_string(flags, i) for i in codeblock.args]
@@ -204,7 +206,7 @@ def generate_script(template, flags: GeneratorFlags) -> str:
         
         # Add sub-action for repeat
         if codeblock.data.get('subAction'):
-            function_args.append(f'sub_action="{codeblock.data["subAction"]}"')
+            function_args.append(f"sub_action='{codeblock.data["subAction"]}'")
         
         # Add inversion for NOT
         if codeblock.data.get('attribute') == 'NOT':
@@ -215,7 +217,7 @@ def generate_script(template, flags: GeneratorFlags) -> str:
             if codeblock.type == 'else':
                 line = f'{function_name}(['
             elif codeblock.type in {'event', 'entity_event'}:
-                line = f'{function_name}({", ".join(function_args)}, ['  # omit `codeblocks=` when we don't need it
+                line = f'{var_assignment_snippet}{function_name}({", ".join(function_args)}, ['  # omit `codeblocks=` when we don't need it
             else:
                 line = f'{var_assignment_snippet}{function_name}({", ".join(function_args)}, codeblocks=['
             add_script_line(flags, script_lines, indent_level, line, False)
