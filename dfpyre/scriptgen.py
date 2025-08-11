@@ -80,7 +80,7 @@ def argument_item_to_string(flags: GeneratorFlags, arg_item: object) -> str:
     
     if isinstance(arg_item, Text):
         literal = str_literal(arg_item.value)
-        return f"{class_name}('{literal}'{slot_argument})"
+        return f"{class_name}({literal}{slot_argument})"
     
     if isinstance(arg_item, Number):
         if not is_number(str(arg_item.value)):  # Probably a math expression
@@ -187,7 +187,7 @@ def generate_script(template, flags: GeneratorFlags) -> str:
 
         # Get codeblock function and start its arguments with the action
         function_name = TEMPLATE_FUNCTION_LOOKUP[codeblock.type]
-        function_args = [f"'{codeblock.action_name}'"]
+        function_args = [str_literal(codeblock.action_name)]
 
         # Add variable assignment if necessary
         var_assignment_snippet = ''
