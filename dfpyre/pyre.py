@@ -26,6 +26,7 @@ __all__ = [
 VARIABLE_TYPES = {'txt', 'comp', 'num', 'item', 'loc', 'var', 'snd', 'part', 'pot', 'g_val', 'vec', 'pn_el', 'bl_tag'}
 TEMPLATE_STARTERS = {'event', 'entity_event', 'func', 'process'}
 DYNAMIC_CODEBLOCKS = {'func', 'process', 'call_func', 'start_process'}
+CONDITIONAL_CODEBLOCKS = {'if_player', 'if_var', 'if_game', 'if_entity'}
 
 TARGETS = ['Selection', 'Default', 'Killer', 'Damager', 'Shooter', 'Victim', 'AllPlayers', 'Projectile', 'AllEntities', 'AllMobs', 'LastEntity']
 TARGET_CODEBLOCKS = {'player_action', 'entity_action', 'if_player', 'if_entity'}
@@ -87,14 +88,14 @@ class CodeBlock:
         return cls(codeblock_type, action_name, args=args, data=data, tags=tags, target=target)
 
     @classmethod
-    def new_repeat(cls, action_name: str, args: tuple, tags: dict[str, str], sub_action: str|None, inverted: bool) -> "CodeBlock":
+    def new_subaction_block(cls, codeblock_type: str, action_name: str, args: tuple, tags: dict[str, str], sub_action: str|None, inverted: bool) -> "CodeBlock":
         args = _convert_args(args)
-        data = {'id': 'block', 'block': 'repeat', 'action': action_name}
-        if inverted:
-            data['attribute'] = 'NOT'
+        data = {'id': 'block', 'block': codeblock_type, 'action': action_name}
         if sub_action is not None:
             data['subAction'] = sub_action
-        return cls('repeat', action_name, args=args, data=data, tags=tags)
+            if inverted:
+                data['attribute'] = 'NOT'
+        return cls(codeblock_type, action_name, args=args, data=data, tags=tags)
 
     @classmethod
     def new_else(cls) -> "CodeBlock":
@@ -256,8 +257,8 @@ class DFTemplate:
                     parsed_item = item_from_dict(item_dict, preserve_item_slots)
                     if parsed_item is not None:
                         block_args.append(parsed_item)
-            block_target = Target(TARGETS.index(block_dict['target'])) if 'target' in block_dict else DEFAULT_TARGET
 
+            codeblock_target = Target(TARGETS.index(block_dict['target'])) if 'target' in block_dict else DEFAULT_TARGET
             codeblock_type = block_dict.get('block')
 
             if codeblock_type is None:
@@ -267,7 +268,15 @@ class DFTemplate:
             elif codeblock_type in DYNAMIC_CODEBLOCKS:
                 codeblock = CodeBlock.new_data(codeblock_type, block_dict['data'], block_args, block_tags)
             elif 'action' in block_dict:
-                codeblock = CodeBlock.new_action(codeblock_type, block_dict['action'], block_args, block_tags, block_target)
+                codeblock_action = block_dict['action']
+                inverted = block_dict.get('attribute') == 'NOT'
+                sub_action = block_dict.get('subAction')
+                if sub_action is not None:
+                    codeblock = CodeBlock.new_subaction_block(codeblock_type, codeblock_action, block_args, block_tags, sub_action, inverted)
+                elif codeblock_type in CONDITIONAL_CODEBLOCKS:
+                    codeblock = CodeBlock.new_conditional(codeblock_type, codeblock_action, block_args, block_tags, inverted, codeblock_target)
+                else:
+                    codeblock = CodeBlock.new_action(codeblock_type, codeblock_action, block_args, block_tags, codeblock_target)
             codeblocks.append(codeblock)
         
         return DFTemplate(codeblocks, author)
@@ -570,7 +579,7 @@ def else_(codeblocks: list[CodeBlock]=[]) -> list[CodeBlock]:
     ]
 
 
-def repeat(action_name: REPEAT_ACTION, *args, tags: dict[str, str]={}, sub_action: REPEAT_SUBACTION|None=None, inverted: bool=False, codeblocks: list[CodeBlock]=[]) -> CodeBlock:
+def repeat(action_name: REPEAT_ACTION, *args, tags: dict[str, str]={}, sub_action: SUBACTION|None=None, inverted: bool=False, codeblocks: list[CodeBlock]=[]) -> CodeBlock:
     """
     Represents a Repeat codeblock.
 
@@ -582,7 +591,7 @@ def repeat(action_name: REPEAT_ACTION, *args, tags: dict[str, str]={}, sub_actio
     :param list[CodeBlock] codeblocks: The list of codeblocks inside the brackets.
     """
     return [
-        CodeBlock.new_repeat(action_name, args, tags, sub_action, inverted),
+        CodeBlock.new_subaction_block('repeat', action_name, args, tags, sub_action, inverted),
         CodeBlock.new_bracket('open', 'repeat')
     ] + list(codeblocks) + [
         CodeBlock.new_bracket('close', 'repeat')
@@ -600,15 +609,17 @@ def control(action_name: CONTROL_ACTION, *args, tags: dict[str, str]={}) -> Code
     return CodeBlock.new_action('control', action_name, args, tags)
 
 
-def select_object(action_name: SELECT_OBJ_ACTION, *args, tags: dict[str, str]={}) -> CodeBlock:
+def select_object(action_name: SELECT_OBJ_ACTION, *args, tags: dict[str, str]={}, sub_action: SUBACTION|None=None, inverted: bool=False) -> CodeBlock:
     """
     Represents a Select Object codeblock.
 
     :param str action_name: The name of the action.
     :param tuple args: The argument items to include.
     :param dict[str, str] tags: The tags to include.
+    :param str|None sub_action: The sub-action to use. (Not relevant for all actions)
+    :param bool inverted: Whether the sub-action condition should be inverted.
     """
-    return CodeBlock.new_action('select_obj', action_name, args, tags) 
+    return CodeBlock.new_subaction_block('select_obj', action_name, args, tags, sub_action, inverted) 
 
 
 def set_variable(action_name: SET_VAR_ACTION, *args, tags: dict[str, str]={}) -> CodeBlock:

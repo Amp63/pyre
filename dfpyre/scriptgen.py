@@ -30,6 +30,7 @@ TEMPLATE_FUNCTION_LOOKUP = {
 
 TARGET_CODEBLOCKS = {'player_action', 'entity_action', 'if_player', 'if_entity'}
 CONTAINER_CODEBLOCKS = {'event', 'entity_event', 'func', 'process', 'if_player', 'if_entity', 'if_game', 'if_var', 'else', 'repeat'}
+CONDITIONAL_CODEBLOCKS = {'if_player', 'if_var', 'if_game', 'if_entity'}
 VAR_SCOPES = {'unsaved': 'g', 'saved': 's', 'local': 'l', 'line': 'i'}
 
 
@@ -208,16 +209,25 @@ def generate_script(template, flags: GeneratorFlags) -> str:
         if function_name in TARGET_CODEBLOCKS and codeblock.target.name != 'SELECTION':
             function_args.append(f'target=Target.{codeblock.target.name}')
         
+        # Add sub-action for repeat and select object
+        sub_action = codeblock.data.get('subAction')
+        if sub_action is not None:
+            function_args.append(f"sub_action='{sub_action}'")
+        
         # Add tags
         if codeblock.tags:
-            default_tags = get_default_tags(codeblock.data.get('block'), codeblock.action_name)
+            default_tags = codeblock.tags
+            if sub_action is not None:
+                for conditional_block_type in CONDITIONAL_CODEBLOCKS:
+                    default_tags = get_default_tags(conditional_block_type, sub_action)
+                    if default_tags:
+                        break
+            else:
+                default_tags = get_default_tags(codeblock.data.get('block'), codeblock.action_name)
+            
             written_tags = {t: o for t, o in codeblock.tags.items() if default_tags[t] != o}
             if written_tags:
                 function_args.append(f'tags={str(written_tags)}')
-        
-        # Add sub-action for repeat
-        if codeblock.data.get('subAction'):
-            function_args.append(f"sub_action='{codeblock.data["subAction"]}'")
         
         # Add inversion for NOT
         if codeblock.data.get('attribute') == 'NOT':
