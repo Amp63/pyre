@@ -56,7 +56,15 @@ def item_to_string(class_name: str, i: Item, slot_argument: str):
     return f'{class_name}.from_snbt("""{snbt_string}""")'
 
 
-def argument_item_to_string(flags: GeneratorFlags, arg_item: object) -> str:
+def escape(s: str) -> str:
+    return s.replace('\n', '\\n').replace("\'", "\\'")
+
+
+def str_literal(s: str) -> str:
+    return "'" + escape(s) + "'"
+
+
+def argument_item_to_string(flags: GeneratorFlags, arg_item: object) -> str: 
     class_name = arg_item.__class__.__name__
     has_slot = arg_item.slot is not None and flags.preserve_slots
     slot_argument = f', slot={arg_item.slot}' if has_slot else ''
@@ -65,18 +73,18 @@ def argument_item_to_string(flags: GeneratorFlags, arg_item: object) -> str:
         return item_to_string(class_name, arg_item, slot_argument)
     
     if isinstance(arg_item, String):
-        value = arg_item.value.replace('\n', '\\n')
+        literal = str_literal(arg_item.value)
         if not has_slot and flags.literal_shorthand:
-            return f"'{value}'"
-        return f"{class_name}('{value}'{slot_argument})"
+            return literal
+        return f"{class_name}({literal}{slot_argument})"
     
     if isinstance(arg_item, Text):
-        value = arg_item.value.replace('\n', '\\n')
-        return f"{class_name}('{value}'{slot_argument})"
+        literal = str_literal(arg_item.value)
+        return f"{class_name}('{literal}'{slot_argument})"
     
     if isinstance(arg_item, Number):
         if not is_number(str(arg_item.value)):  # Probably a math expression
-            return f"{class_name}('{arg_item.value}'{slot_argument})"
+            return f"{class_name}({str_literal(arg_item.value)}{slot_argument})"
         if not has_slot and flags.literal_shorthand:
             return str(arg_item.value)
         return f'{class_name}({arg_item.value}{slot_argument})'
@@ -90,29 +98,31 @@ def argument_item_to_string(flags: GeneratorFlags, arg_item: object) -> str:
         return f'{class_name}({", ".join(str(c) for c in loc_components)}{slot_argument})'
     
     if isinstance(arg_item, Variable):
+        name = escape(arg_item.name)
         if not has_slot and flags.var_shorthand:
-            return f"'${VAR_SCOPES[arg_item.scope]} {arg_item.name}'"
+            return f"'${VAR_SCOPES[arg_item.scope]} {name}'"
         if arg_item.scope == 'unsaved':
-            return f"{class_name}('{arg_item.name}'{slot_argument})"
-        return f"{class_name}('{arg_item.name}', '{arg_item.scope}'{slot_argument})"
+            return f"{class_name}('{name}'{slot_argument})"
+        return f"{class_name}('{name}', '{arg_item.scope}'{slot_argument})"
     
     if isinstance(arg_item, Sound):
-        return f"{class_name}('{arg_item.name}', {arg_item.pitch}, {arg_item.vol}{slot_argument})"
+        return f"{class_name}({str_literal(arg_item.name)}, {arg_item.pitch}, {arg_item.vol}{slot_argument})"
     
     if isinstance(arg_item, Particle):
         return f'{class_name}({arg_item.particle_data})'
     
     if isinstance(arg_item, Potion):
-        return f"{class_name}('{arg_item.name}', {arg_item.dur}, {arg_item.amp}{slot_argument})"
+        return f"{class_name}({str_literal(arg_item.name)}, {arg_item.dur}, {arg_item.amp}{slot_argument})"
     
     if isinstance(arg_item, GameValue):
+        name = str_literal(arg_item.name)
         if arg_item.target == 'Default':
-            return f"{class_name}('{arg_item.name}'{slot_argument})"
-        return f"{class_name}('{arg_item.name}', '{arg_item.target}'{slot_argument})"
+            return f"{class_name}({name}{slot_argument})"
+        return f"{class_name}({name}, '{arg_item.target}'{slot_argument})"
     
     if isinstance(arg_item, Parameter):
         param_type_class_name = arg_item.param_type.__class__.__name__
-        param_args = [f"'{arg_item.name}'", f'{param_type_class_name}.{arg_item.param_type.name}']
+        param_args = [str_literal(arg_item.name), f'{param_type_class_name}.{arg_item.param_type.name}']
         if arg_item.plural:
             param_args.append('plural=True')
         if arg_item.optional:
@@ -120,9 +130,9 @@ def argument_item_to_string(flags: GeneratorFlags, arg_item: object) -> str:
             if arg_item.default_value is not None:
                 param_args.append(f'default_value={argument_item_to_string(flags, arg_item.default_value)}')
         if arg_item.description:
-            param_args.append(f"description='{arg_item.description}'")
+            param_args.append(f"description={str_literal(arg_item.description)}")
         if arg_item.note:
-            param_args.append(f"note='{arg_item.note}'")
+            param_args.append(f"note={str_literal(arg_item.note)}")
         return f'{class_name}({", ".join(param_args)}{slot_argument})'
     
     if isinstance(arg_item, Vector):
@@ -153,7 +163,8 @@ def generate_script(template, flags: GeneratorFlags) -> str:
         script_lines.append(IMPORT_STATEMENT + '\n')
         
     def remove_comma_from_last_line():
-        script_lines[-1] = script_lines[-1][:-1]
+        if script_lines[-1].endswith(','):
+            script_lines[-1] = script_lines[-1][:-1]
     
     def get_var_assignment_snippet() -> str:
         first_block_data = template.codeblocks[0].data
@@ -186,7 +197,7 @@ def generate_script(template, flags: GeneratorFlags) -> str:
 
         # Set function or process name if necessary
         if codeblock.action_name == 'dynamic':
-            function_args[0] = f"'{codeblock.data["data"]}'"
+            function_args[0] = str_literal(codeblock.data["data"])
         
         # Convert argument objects to valid Python strings
         codeblock_args = [argument_item_to_string(flags, i) for i in codeblock.args]
@@ -212,7 +223,7 @@ def generate_script(template, flags: GeneratorFlags) -> str:
         if codeblock.data.get('attribute') == 'NOT':
             function_args.append('inverted=True')
 
-        # Create and add the final line
+        # Create and add the line
         if codeblock.type in CONTAINER_CODEBLOCKS:
             if codeblock.type == 'else':
                 line = f'{function_name}(['
