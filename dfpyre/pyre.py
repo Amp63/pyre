@@ -339,19 +339,22 @@ class DFTemplate:
         return template_item.send_to_minecraft()
     
     
-    def generate_script(self, output_path: str, indent_size: int=4, literal_shorthand: bool=True, var_shorthand: bool=False, preserve_slots: bool=False):
+    def generate_script(self, indent_size: int=4, literal_shorthand: bool=True, var_shorthand: bool=False, 
+                        preserve_slots: bool=False, assign_variable: bool=False, include_import: bool=True, 
+                        build_and_send: bool=False) -> str:
         """
         Generate an equivalent python script for this template.
-
-        :param str output_path: The file path to write the script to.
+        
         :param int indent_size: The multiple of spaces to add when indenting lines.
-        :param bool literal_shorthand: If True, `text` and `num` items will be written as strings and ints respectively.
+        :param bool literal_shorthand: If True, `Text` and `Number` items will be written as strings and ints respectively.
         :param bool var_shorthand: If True, all variables will be written using variable shorthand.
         :param bool preserve_slots: If True, the positions of items within chests will be saved.
+        :param bool assign_variable: If True, the generated template will be assigned to a variable.
+        :param bool include_import: If True, the `dfpyre` import statement will be added.
+        :param bool build_and_send: If True, `.build_and_send()` will be added to the end of the generated template.
         """
-        flags = GeneratorFlags(indent_size, literal_shorthand, var_shorthand, preserve_slots)
-        with open(output_path, 'w', encoding='utf-8') as f:
-            f.write(generate_script(self, flags))
+        flags = GeneratorFlags(indent_size, literal_shorthand, var_shorthand, preserve_slots, assign_variable, include_import, build_and_send)
+        return generate_script(self, flags)
 
 
 def _assemble_template(starting_block: CodeBlock, codeblocks: list[CodeBlock], author: str|None) -> DFTemplate:

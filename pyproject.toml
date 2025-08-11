@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "dfpyre"
-version = "0.8.14"
+version = "0.8.15"
 description = "A package for creating and modifying code templates for the DiamondFire Minecraft server."
 authors = ["Amp"]
 readme = "README.md"

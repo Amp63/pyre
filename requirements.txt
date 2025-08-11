@@ -1,5 +1,10 @@
 amulet-nbt==2.1.5
+iniconfig==2.1.0
 mcitemlib==0.4.3
 mutf8==1.0.6
 numpy==1.26.4
+packaging==25.0
+pluggy==1.6.0
+Pygments==2.19.2
+pytest==8.4.1
 websocket-client==1.8.0

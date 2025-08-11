@@ -4,7 +4,7 @@ from dfpyre.items import *
 from dfpyre.actiondump import get_default_tags
 
 
-SCRIPT_START = '''from dfpyre import *\n\n'''
+IMPORT_STATEMENT = 'from dfpyre import *'
 
 TEMPLATE_FUNCTION_LOOKUP = {
     'event': 'player_event',
@@ -38,6 +38,9 @@ class GeneratorFlags:
     literal_shorthand: bool
     var_shorthand: bool
     preserve_slots: bool
+    assign_variable: bool
+    include_import: bool
+    build_and_send: bool
 
 
 def item_to_string(class_name: str, i: Item, slot_argument: str):
@@ -123,6 +126,14 @@ def argument_item_to_string(flags: GeneratorFlags, arg_item: object) -> str:
         return f'{class_name}({arg_item.x}, {arg_item.y}, {arg_item.z}{slot_argument})'
 
 
+def string_to_python_name(string: str) -> str:
+    """Converts `string` into a valid python identifier."""
+    string = string.strip()
+    if string[0].isnumeric():
+        string = '_' + string
+    return ''.join(c if c.isalnum() else '_' for c in string)
+
+
 def add_script_line(flags: GeneratorFlags, script_lines: list[str], indent_level: int, line: str, add_comma: bool=True):
     added_line = ' '*flags.indent_size*indent_level + line
     if add_comma and indent_level > 0:
@@ -133,9 +144,23 @@ def add_script_line(flags: GeneratorFlags, script_lines: list[str], indent_level
 def generate_script(template, flags: GeneratorFlags) -> str:
     indent_level = 0
     script_lines = []
+    variable_assigned = False
 
+    if flags.include_import:
+        script_lines.append(IMPORT_STATEMENT + '\n')
+        
     def remove_comma_from_last_line():
         script_lines[-1] = script_lines[-1][:-1]
+    
+    def get_var_assignment_snippet() -> str:
+        first_block_data = template.codeblocks[0].data
+        if 'data' in first_block_data:
+            name = first_block_data['data']
+            var_name = name if name else 'unnamed_template'
+        else:
+            var_name = first_block_data['block'] + '_' + first_block_data['action']
+        return f'{string_to_python_name(var_name)} = '
+
 
     for codeblock in template.codeblocks:
         # Handle closing brackets
@@ -149,6 +174,12 @@ def generate_script(template, flags: GeneratorFlags) -> str:
         # Get codeblock function and start its arguments with the action
         function_name = TEMPLATE_FUNCTION_LOOKUP[codeblock.type]
         function_args = [f'"{codeblock.action_name}"']
+
+        # Add variable assignment if necessary
+        var_assignment_snippet = ''
+        if flags.assign_variable and not variable_assigned:
+            var_assignment_snippet = get_var_assignment_snippet()
+            variable_assigned = True
 
         # Set function or process name if necessary
         if codeblock.action_name == 'dynamic':
@@ -178,13 +209,14 @@ def generate_script(template, flags: GeneratorFlags) -> str:
         if codeblock.data.get('attribute') == 'NOT':
             function_args.append('inverted=True')
 
+        # Create and add the final line
         if codeblock.type in CONTAINER_CODEBLOCKS:
             if codeblock.type == 'else':
                 line = f'{function_name}(['
             elif codeblock.type in {'event', 'entity_event'}:
                 line = f'{function_name}({", ".join(function_args)}, ['  # omit `codeblocks=` when we don't need it
             else:
-                line = f'{function_name}({", ".join(function_args)}, codeblocks=['
+                line = f'{var_assignment_snippet}{function_name}({", ".join(function_args)}, codeblocks=['
             add_script_line(flags, script_lines, indent_level, line, False)
             indent_level += 1
         else:
@@ -194,4 +226,9 @@ def generate_script(template, flags: GeneratorFlags) -> str:
     remove_comma_from_last_line()
     indent_level -= 1
     add_script_line(flags, script_lines, indent_level, '])')  # add final closing brackets
-    return SCRIPT_START + '\n'.join(script_lines)
+
+    # Add `.build_and_send()` if necessary
+    if flags.build_and_send:
+        script_lines[-1] += '.build_and_send()'
+    
+    return '\n'.join(script_lines)
