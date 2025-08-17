@@ -1,8 +1,8 @@
 import dataclasses
-import re
 from dfpyre.util import is_number
 from dfpyre.items import *
 from dfpyre.actiondump import get_default_tags
+from dfpyre.codeblock import CodeBlock
 
 
 IMPORT_STATEMENT = 'from dfpyre import *'
@@ -155,7 +155,7 @@ def add_script_line(flags: GeneratorFlags, script_lines: list[str], indent_level
     script_lines.append(added_line)
 
 
-def generate_script(template, flags: GeneratorFlags) -> str:
+def generate_script(codeblocks: list[CodeBlock], flags: GeneratorFlags) -> str:
     indent_level = 0
     script_lines = []
     variable_assigned = False
@@ -168,7 +168,7 @@ def generate_script(template, flags: GeneratorFlags) -> str:
             script_lines[-1] = script_lines[-1][:-1]
     
     def get_var_assignment_snippet() -> str:
-        first_block_data = template.codeblocks[0].data
+        first_block_data = codeblocks[0].data
         if 'data' in first_block_data:
             name = first_block_data['data']
             var_name = name if name else 'unnamed_template'
@@ -177,7 +177,7 @@ def generate_script(template, flags: GeneratorFlags) -> str:
         return f'{string_to_python_name(var_name)} = '
 
 
-    for codeblock in template.codeblocks:
+    for codeblock in codeblocks:
         # Handle closing brackets
         if codeblock.type == 'bracket':
             if codeblock.data['direct'] == 'close':
