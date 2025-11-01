@@ -10,10 +10,11 @@ import platform
 from amulet_nbt import CompoundTag, StringTag, DoubleTag
 from dfpyre.util import df_encode, df_decode, flatten
 from dfpyre.items import *
-from dfpyre.codeblock import CodeBlock, Target, TARGETS, DEFAULT_TARGET
+from dfpyre.codeblock import CodeBlock, Target, TARGETS, DEFAULT_TARGET, CONDITIONAL_CODEBLOCKS, TEMPLATE_STARTERS
 from dfpyre.actiondump import get_default_tags
 from dfpyre.action_literals import *
 from dfpyre.scriptgen import generate_script, GeneratorFlags
+from dfpyre.slice import slice_template
 
 __all__ = [
     'Target', 'CodeBlock', 'DFTemplate',
@@ -22,9 +23,7 @@ __all__ = [
 ] + VAR_ITEM_TYPES
 
 
-TEMPLATE_STARTERS = {'event', 'entity_event', 'func', 'process'}
 DYNAMIC_CODEBLOCKS = {'func', 'process', 'call_func', 'start_process'}
-CONDITIONAL_CODEBLOCKS = {'if_player', 'if_var', 'if_game', 'if_entity'}
 
 CODECLIENT_URL = 'ws://localhost:31375'
 
@@ -189,6 +188,11 @@ class DFTemplate:
         """
         flags = GeneratorFlags(indent_size, literal_shorthand, var_shorthand, preserve_slots, assign_variable, include_import, build_and_send)
         return generate_script(self.codeblocks, flags)
+    
+    
+    def slice(self, target_length: int) -> list['DFTemplate']:
+        sliced_templates = slice_template(self.codeblocks, target_length, self._get_template_name())
+        return [DFTemplate(t, self.author) for t in sliced_templates]
 
 
 def _assemble_template(starting_block: CodeBlock, codeblocks: list[CodeBlock], author: str|None) -> DFTemplate:

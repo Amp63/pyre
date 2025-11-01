@@ -7,6 +7,8 @@ from dfpyre.actiondump import CODEBLOCK_DATA
 
 
 VARIABLE_TYPES = {'txt', 'comp', 'num', 'item', 'loc', 'var', 'snd', 'part', 'pot', 'g_val', 'vec', 'pn_el', 'bl_tag'}
+TEMPLATE_STARTERS = {'event', 'entity_event', 'func', 'process'}
+CONDITIONAL_CODEBLOCKS = {'if_player', 'if_var', 'if_game', 'if_entity'}
 TARGET_CODEBLOCKS = {'player_action', 'entity_action', 'if_player', 'if_entity'}
 TARGETS = ['Selection', 'Default', 'Killer', 'Damager', 'Shooter', 'Victim', 'AllPlayers', 'Projectile', 'AllEntities', 'AllMobs', 'LastEntity']
 
@@ -154,6 +156,17 @@ class CodeBlock:
         if 'block' in self.data:
             return f'CodeBlock({self.data["block"]}, {self.action_name})'
         return f'CodeBlock(bracket, {self.data["type"]}, {self.data["direct"]})'
+
+    
+    def get_length(self) -> int:
+        """
+        Returns the width of this codeblock in Minecraft blocks.
+        """
+        if self.type in CONDITIONAL_CODEBLOCKS or self.type in {'repeat', 'else'}:
+            return 1
+        if self.type == 'bracket' and self.data['direct'] == 'open':
+            return 1
+        return 2
 
 
     def build(self) -> dict:
