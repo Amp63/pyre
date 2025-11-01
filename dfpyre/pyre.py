@@ -191,6 +191,12 @@ class DFTemplate:
     
     
     def slice(self, target_length: int) -> list['DFTemplate']:
+        """
+        Slice the current template into multiple other templates.
+        Useful for compressing a template to fit on a smaller plot.
+
+        :param int target_length: The maximum allowed length of each sliced template.
+        """
         sliced_templates = slice_template(self.codeblocks, target_length, self._get_template_name())
         return [DFTemplate(t, self.author) for t in sliced_templates]
 

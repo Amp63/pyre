@@ -28,7 +28,7 @@ def generate_action_literals():
         f'GAME_VALUE_NAME = Literal{str(ACTIONDUMP['game_value_names'])}',
         f'SOUND_NAME = Literal{str(ACTIONDUMP['sound_names'])}',
         f'POTION_NAME = Literal{str(ACTIONDUMP['potion_names'])}',
-        'REPEAT_SUBACTION = IF_PLAYER_ACTION | IF_ENTITY_ACTION | IF_GAME_ACTION | IF_VAR_ACTION'
+        'SUBACTION = IF_PLAYER_ACTION | IF_ENTITY_ACTION | IF_GAME_ACTION | IF_VAR_ACTION'
     ]
     
     with open(OUTPUT_PATH, 'w') as f:
