@@ -51,7 +51,7 @@ class ActionData(TypedDict):
 
 class ActiondumpResult(TypedDict):
     codeblock_data: dict[str, dict[str, ActionData]]
-    game_value_names: list[str]
+    game_values: dict[str, VariableType]
     sound_names: list[str]
     potion_names: list[str]
 
@@ -110,7 +110,7 @@ def parse_actiondump() -> ActiondumpResult:
 
     if not os.path.exists(ACTIONDUMP_PATH):
         warn('Actiondump not found -- Item tags and error checking will not work.')
-        return ActiondumpResult(codeblock_data={}, game_value_names=[], sound_names=[], potion_names=[])
+        return ActiondumpResult(codeblock_data={}, game_values=[], sound_names=[], potion_names=[])
     
     with open(ACTIONDUMP_PATH, 'r', encoding='utf-8') as f:
         actiondump = json.loads(f.read())
@@ -140,9 +140,10 @@ def parse_actiondump() -> ActiondumpResult:
             for alias in aliases:
                 codeblock_data[codeblock_type][alias] = alias_data
 
-    game_value_names: list[str] = []
+    game_values: dict[str, VariableType] = {}
     for game_value in actiondump['gameValues']:
-        game_value_names.append(game_value['icon']['name'])
+        icon = game_value['icon']
+        game_values[icon['name']] = icon['returnType']
 
     sound_names: list[str] = []
     for sound in actiondump['sounds']:
@@ -154,7 +155,7 @@ def parse_actiondump() -> ActiondumpResult:
     
     return ActiondumpResult(
         codeblock_data=codeblock_data,
-        game_value_names=game_value_names,
+        game_values=game_values,
         sound_names=sound_names,
         potion_names=potion_names
     )
