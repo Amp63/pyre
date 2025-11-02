@@ -1,12 +1,12 @@
 import os
 import json
-from typing import TypedDict
+from typing import TypedDict, Literal
 from dfpyre.util import warn
 
 
 ACTIONDUMP_PATH = os.path.join(os.path.dirname(__file__), 'data/actiondump_min.json')
 
-CODEBLOCK_NAME_LOOKUP = {
+CODEBLOCK_TYPE_LOOKUP = {
     'PLAYER ACTION': 'player_action',
     'ENTITY ACTION': 'entity_action',
     'GAME ACTION': 'game_action',
@@ -27,55 +27,119 @@ CODEBLOCK_NAME_LOOKUP = {
 }
 
 
+VariableType = Literal['VARIABLE', 'NUMBER', 'TEXT', 'COMPONENT', 'ANY_TYPE', 'DICT', 'LIST', 'LOCATION', 'NONE', 'SOUND', 'PARTICLE', 'VECTOR', 'POTION', 'ITEM']
+
+class ActionTag(TypedDict):
+    name: str
+    options: list[str]
+    default: str
+    slot: int
+
+
+class ActionArgument(TypedDict):
+    type: VariableType
+    plural: bool
+    optional: bool
+
+
+class ActionData(TypedDict):
+    tags: list[ActionTag]
+    required_rank = Literal['None', 'Noble', 'Emperor', 'Mythic', 'Overlord']
+    arguments: list[ActionArgument]
+    return_values: list[VariableType]
+
+
 class ActiondumpResult(TypedDict):
-    codeblock_data: dict[str, dict]
+    codeblock_data: dict[str, dict[str, ActionData]]
     game_value_names: list[str]
     sound_names: list[str]
     potion_names: list[str]
 
 
-def get_action_tags(action_data: dict) -> list[dict]:
+def get_action_tags(action_data: dict) -> list[ActionTag]:
     action_tags = []
     for tag_data in action_data['tags']:
         options = [o['name'] for o in tag_data['options']]
-        converted_tag_data = {
-            'name': tag_data['name'],
-            'options': options,
-            'default': tag_data['defaultOption'],
-            'slot': tag_data['slot']
-        }
-        action_tags.append(converted_tag_data)
+        converted_tag = ActionTag(
+            name=tag_data['name'],
+            options=options,
+            default=tag_data['defaultOption'],
+            slot=tag_data['slot']
+        )
+        action_tags.append(converted_tag)
     return action_tags
 
 
+def get_action_args(action_data: dict) -> list[ActionArgument]:
+    icon = action_data['icon']
+    if 'arguments' not in icon:
+        return []
+    
+    parsed_arguments: list[ActionArgument] = []
+    arguments = icon['arguments']
+    for arg_data in arguments:
+        if 'type' not in arg_data:
+            continue
+        parsed_arguments.append(ActionArgument(
+            type=arg_data['type'],
+            plural=arg_data['plural'],
+            optional=arg_data['optional']
+        ))
+    
+    return parsed_arguments
+
+
+def get_action_return_values(action_data: dict) -> list[VariableType]:
+    icon = action_data['icon']
+    if 'arguments' not in icon:
+        return []
+    
+    parsed_return_values: list[VariableType] = []
+    return_values = icon['returnValues']
+    for value_data in return_values:
+        if 'type' not in value_data:
+            continue
+        parsed_return_values.append(value_data['type'])
+
+    return parsed_return_values
+
+
 def parse_actiondump() -> ActiondumpResult:
-    codeblock_data = {n: {} for n in CODEBLOCK_NAME_LOOKUP.values()}
+    codeblock_data = {n: {} for n in CODEBLOCK_TYPE_LOOKUP.values()}
     codeblock_data['else'] = {'tags': []}
 
     if not os.path.exists(ACTIONDUMP_PATH):
-        warn('data.json not found -- Item tags and error checking will not work.')
-        return {}, set()
+        warn('Actiondump not found -- Item tags and error checking will not work.')
+        return ActiondumpResult(codeblock_data={}, game_value_names=[], sound_names=[], potion_names=[])
     
     with open(ACTIONDUMP_PATH, 'r', encoding='utf-8') as f:
         actiondump = json.loads(f.read())
+    
     for action_data in actiondump['actions']:
         action_tags = get_action_tags(action_data)
-        parsed_action_data = {'tags': action_tags, 'required_rank': 'None'}
         if dep_note := action_data['icon']['deprecatedNote']:
             parsed_action_data['deprecatedNote'] = ' '.join(dep_note)
         
         required_rank = action_data['icon']['requiredRank']
-        if required_rank:
-            parsed_action_data['required_rank'] = required_rank
         
-        codeblock_name = CODEBLOCK_NAME_LOOKUP[action_data['codeblockName']]
-        codeblock_data[codeblock_name][action_data['name']] = parsed_action_data
+        action_arguments = get_action_args(action_data)
+        action_return_values = get_action_return_values(action_data)
+        
+        parsed_action_data = ActionData(
+            tags=action_tags,
+            required_rank=required_rank,
+            arguments=action_arguments,
+            return_values=action_return_values
+        )
+        codeblock_type = CODEBLOCK_TYPE_LOOKUP[action_data['codeblockName']]
+        codeblock_data[codeblock_type][action_data['name']] = parsed_action_data
+
         if aliases := action_data['aliases']:
             alias_data = parsed_action_data.copy()
             alias_data['alias'] = action_data['name']
             for alias in aliases:
-                codeblock_data[codeblock_name][alias] = alias_data
-    
+                codeblock_data[codeblock_type][alias] = alias_data
+
     game_value_names: list[str] = []
     for game_value in actiondump['gameValues']:
         game_value_names.append(game_value['icon']['name'])
