@@ -52,7 +52,7 @@ def find_closing_bracket(codeblocks: list[CodeBlock], start_index: int) -> int:
 def get_bracket_ranges(codeblocks: list[CodeBlock], start_index: int):
     bracket_range_end = find_closing_bracket(codeblocks, start_index)
 
-    if len(codeblocks) >= bracket_range_end and codeblocks[bracket_range_end+1].type == 'else':
+    if len(codeblocks) > bracket_range_end+1 and codeblocks[bracket_range_end+1].type == 'else':
         else_range_start = bracket_range_end+3  # Add 3 to move inside `else` brackets
         else_range_end = find_closing_bracket(codeblocks, else_range_start)
         else_range = (else_range_start, else_range_end)
