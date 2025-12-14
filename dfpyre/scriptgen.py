@@ -46,7 +46,7 @@ class GeneratorFlags:
 
 
 def item_to_string(class_name: str, i: Item, slot_argument: str):
-    i.nbt.pop('DF_NBT', None)
+    i.nbt.pop('DF_NBT')
     stripped_id = i.get_id().replace('minecraft:', '')
     if set(i.nbt.keys()) == {'id', 'count'}:
         if i.get_count() == 1:

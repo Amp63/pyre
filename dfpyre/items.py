@@ -7,7 +7,7 @@ import re
 from typing import Literal, Any
 import websocket
 from mcitemlib.itemlib import Item as NbtItem, MCItemlibException
-from amulet_nbt import DoubleTag, StringTag, CompoundTag
+from rapidnbt import DoubleTag, StringTag, CompoundTag
 from dfpyre.style import is_ampersand_coded, ampersand_to_minimessage
 from dfpyre.util import PyreException, warn, is_number, COL_SUCCESS, COL_ERROR, COL_RESET
 from dfpyre.action_literals import GAME_VALUE_NAME, SOUND_NAME, POTION_NAME
@@ -202,14 +202,14 @@ class Item(NbtItem):
             print(f'{COL_SUCCESS}Item sent to client successfully.{COL_RESET}')
             return 0
             
+        except ConnectionRefusedError as e:
+            print(f'{COL_ERROR}Could not connect to CodeClient API. Possible problems:')
+            print(f'    - Minecraft is not open')
+            print(f'    - CodeClient is not installed (get it here: https://modrinth.com/mod/codeclient)')
+            print(f'    - CodeClient API is not enabled (enable it in CodeClient general settings){COL_RESET}')
+            return 1
+
         except Exception as e:
-            if isinstance(e, ConnectionRefusedError):
-                print(f'{COL_ERROR}Could not connect to CodeClient API. Possible problems:')
-                print(f'    - Minecraft is not open')
-                print(f'    - CodeClient is not installed (get it here: https://modrinth.com/mod/codeclient)')
-                print(f'    - CodeClient API is not enabled (enable it in CodeClient general settings){COL_RESET}')
-                return 1
-            
             print(f'Connection failed: {e}')
             return 2
 

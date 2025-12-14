@@ -1,18 +1,34 @@
-[tool.poetry]
+[project]
 name = "dfpyre"
-version = "0.9.3"
+version = "0.9.4"
 description = "A package for creating and modifying code templates for the DiamondFire Minecraft server."
-authors = ["Amp"]
-readme = "README.md"
+authors = [
+    {name = "Amp"}
+]
 license = "MIT"
-repository = "https://github.com/Amp63/pyre"
+readme = "README.md"
 keywords = ["diamondfire", "minecraft", "template", "item"]
-exclude = ['examples', 'extra']
+
+requires-python = ">=3.10"
+dependencies = [
+    "mcitemlib>=0.5.2",
+    "rapidnbt>=1.3.3",
+    "websocket-client>=1.9.0"
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=9.0.2",
+    "twine>=6.2.0"
+]
 
 
-[tool.poetry.dependencies]
-python = "^3.10"
-mcitemlib = "^0.4.5"
+[project.urls]
+Repository = "https://github.com/Amp63/pyre"
+
+
+[tool.poetry]
+exclude = ['examples', 'scripts']
 
 
 [build-system]

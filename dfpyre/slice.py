@@ -1,4 +1,3 @@
-from typing import Iterator
 from dataclasses import dataclass
 from collections import deque
 from dfpyre.codeblock import CodeBlock, CONDITIONAL_CODEBLOCKS, TEMPLATE_STARTERS

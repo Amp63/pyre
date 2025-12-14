@@ -7,7 +7,7 @@ By Amp
 import json
 import datetime
 import platform
-from amulet_nbt import CompoundTag, StringTag, DoubleTag
+from rapidnbt import CompoundTag, StringTag, DoubleTag
 from dfpyre.util import df_encode, df_decode, flatten
 from dfpyre.items import *
 from dfpyre.codeblock import CodeBlock, Target, TARGETS, DEFAULT_TARGET, CONDITIONAL_CODEBLOCKS, TEMPLATE_STARTERS
