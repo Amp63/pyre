@@ -10,7 +10,7 @@ import platform
 from rapidnbt import CompoundTag, StringTag, DoubleTag
 from dfpyre.util import df_encode, df_decode, flatten
 from dfpyre.items import *
-from dfpyre.codeblock import CodeBlock, Target, TARGETS, DEFAULT_TARGET, CONDITIONAL_CODEBLOCKS, TEMPLATE_STARTERS
+from dfpyre.codeblock import CodeBlock, Target, TARGETS, DEFAULT_TARGET, CONDITIONAL_CODEBLOCKS, TEMPLATE_STARTERS, EVENT_CODEBLOCKS
 from dfpyre.actiondump import get_default_tags
 from dfpyre.action_literals import *
 from dfpyre.scriptgen import generate_script, GeneratorFlags
@@ -79,20 +79,28 @@ class DFTemplate:
 
             if codeblock_type is None:
                 codeblock = CodeBlock.new_bracket(block_dict['direct'], block_dict['type'])
-            if codeblock_type == 'else':
+            
+            elif codeblock_type == 'else':
                 codeblock = CodeBlock.new_else()
+            
             elif codeblock_type in DYNAMIC_CODEBLOCKS:
                 codeblock = CodeBlock.new_data(codeblock_type, block_dict['data'], block_args, block_tags)
+            
             elif 'action' in block_dict:
                 codeblock_action = block_dict['action']
-                inverted = block_dict.get('attribute') == 'NOT'
+                attribute = block_dict.get('attribute')
+                inverted = attribute == 'NOT'
                 sub_action = block_dict.get('subAction')
                 if sub_action is not None:
                     codeblock = CodeBlock.new_subaction_block(codeblock_type, codeblock_action, block_args, block_tags, sub_action, inverted)
+                elif codeblock_type in EVENT_CODEBLOCKS:
+                    ls_cancel = attribute == 'LS-CANCEL'
+                    codeblock = CodeBlock.new_event(codeblock_type, codeblock_action, ls_cancel)
                 elif codeblock_type in CONDITIONAL_CODEBLOCKS:
                     codeblock = CodeBlock.new_conditional(codeblock_type, codeblock_action, block_args, block_tags, inverted, codeblock_target)
                 else:
                     codeblock = CodeBlock.new_action(codeblock_type, codeblock_action, block_args, block_tags, codeblock_target)
+            
             codeblocks.append(codeblock)
         
         return DFTemplate(codeblocks, author)
@@ -212,7 +220,7 @@ def _assemble_template(starting_block: CodeBlock, codeblocks: list[CodeBlock], a
     return DFTemplate(template_codeblocks, author)
 
 
-def player_event(event_name: EVENT_ACTION, codeblocks: list[CodeBlock]=(), author: str|None=None) -> DFTemplate:
+def player_event(event_name: EVENT_ACTION, codeblocks: list[CodeBlock]=(), ls_cancel: bool=False, author: str|None=None) -> DFTemplate:
     """
     Represents a Player Event codeblock.
 
@@ -220,11 +228,11 @@ def player_event(event_name: EVENT_ACTION, codeblocks: list[CodeBlock]=(), autho
     :param list[CodeBlock] codeblocks: The list of codeblocks in this template.
     :param str|None author: The author of this template.
     """
-    starting_block = CodeBlock.new_action('event', event_name, (), {})
+    starting_block = CodeBlock.new_event('event', event_name, ls_cancel)
     return _assemble_template(starting_block, codeblocks, author)
 
 
-def entity_event(event_name: ENTITY_EVENT_ACTION, codeblocks: list[CodeBlock]=[], author: str|None=None) -> DFTemplate:
+def entity_event(event_name: ENTITY_EVENT_ACTION, codeblocks: list[CodeBlock]=[], ls_cancel: bool=False, author: str|None=None) -> DFTemplate:
     """
     Represents an Entity Event codeblock.
 
@@ -232,7 +240,7 @@ def entity_event(event_name: ENTITY_EVENT_ACTION, codeblocks: list[CodeBlock]=[]
     :param list[CodeBlock] codeblocks: The list of codeblocks in this template.
     :param str|None author: The author of this template.
     """
-    starting_block = CodeBlock.new_action('entity_event', event_name, (), {})
+    starting_block = CodeBlock.new_event('entity_event', event_name, ls_cancel)
     return _assemble_template(starting_block, codeblocks, author)
 
 

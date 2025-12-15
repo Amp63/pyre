@@ -2,7 +2,7 @@ import dataclasses
 from dfpyre.util import is_number
 from dfpyre.items import *
 from dfpyre.actiondump import get_default_tags
-from dfpyre.codeblock import CodeBlock
+from dfpyre.codeblock import CodeBlock, CONDITIONAL_CODEBLOCKS, TARGET_CODEBLOCKS, EVENT_CODEBLOCKS
 
 
 IMPORT_STATEMENT = 'from dfpyre import *'
@@ -28,9 +28,7 @@ TEMPLATE_FUNCTION_LOOKUP = {
     'set_var': 'set_variable'
 }
 
-TARGET_CODEBLOCKS = {'player_action', 'entity_action', 'if_player', 'if_entity'}
 CONTAINER_CODEBLOCKS = {'event', 'entity_event', 'func', 'process', 'if_player', 'if_entity', 'if_game', 'if_var', 'else', 'repeat'}
-CONDITIONAL_CODEBLOCKS = {'if_player', 'if_var', 'if_game', 'if_entity'}
 VAR_SCOPES = {'unsaved': 'g', 'saved': 's', 'local': 'l', 'line': 'i'}
 
 
@@ -229,15 +227,20 @@ def generate_script(codeblocks: list[CodeBlock], flags: GeneratorFlags) -> str:
             if written_tags:
                 function_args.append(f'tags={str(written_tags)}')
         
+        codeblock_attribute = codeblock.data.get('attribute')
         # Add inversion for NOT
-        if codeblock.data.get('attribute') == 'NOT':
+        if codeblock_attribute == 'NOT':
             function_args.append('inverted=True')
+        
+        # Add LS Cancel
+        elif codeblock_attribute == 'LS-CANCEL':
+            function_args.append('ls_cancel=True')
 
         # Create and add the line
         if codeblock.type in CONTAINER_CODEBLOCKS:
             if codeblock.type == 'else':
                 line = f'{function_name}(['
-            elif codeblock.type in {'event', 'entity_event'}:
+            elif codeblock.type in EVENT_CODEBLOCKS and codeblock_attribute is None:
                 line = f'{var_assignment_snippet}{function_name}({", ".join(function_args)}, ['  # omit `codeblocks=` when we don't need it
             else:
                 line = f'{var_assignment_snippet}{function_name}({", ".join(function_args)}, codeblocks=['

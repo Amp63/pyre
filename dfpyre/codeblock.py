@@ -8,6 +8,7 @@ from dfpyre.actiondump import CODEBLOCK_DATA
 
 VARIABLE_TYPES = {'txt', 'comp', 'num', 'item', 'loc', 'var', 'snd', 'part', 'pot', 'g_val', 'vec', 'pn_el', 'bl_tag'}
 TEMPLATE_STARTERS = {'event', 'entity_event', 'func', 'process'}
+EVENT_CODEBLOCKS = {'event', 'entity_event'}
 CONDITIONAL_CODEBLOCKS = {'if_player', 'if_var', 'if_game', 'if_entity'}
 TARGET_CODEBLOCKS = {'player_action', 'entity_action', 'if_player', 'if_entity'}
 TARGETS = ['Selection', 'Default', 'Killer', 'Damager', 'Shooter', 'Victim', 'AllPlayers', 'Projectile', 'AllEntities', 'AllMobs', 'LastEntity']
@@ -120,6 +121,13 @@ class CodeBlock:
     def new_data(cls, codeblock_type: str, data_value: str, args: tuple, tags: dict[str, str]) -> "CodeBlock":
         args = _convert_args(args)
         return cls(codeblock_type, 'dynamic', args=args, data={'id': 'block', 'block': codeblock_type, 'data': data_value}, tags=tags)
+
+    @classmethod
+    def new_event(cls, codeblock_type: str, action_name: str, ls_cancel: bool):
+        data = {'id': 'block', 'block': codeblock_type, 'action': action_name}
+        if ls_cancel:
+            data['attribute'] = 'LS-CANCEL'
+        return cls(codeblock_type, action_name, data=data)
 
     @classmethod
     def new_conditional(cls, codeblock_type: str, action_name: str, args: tuple, tags: dict[str, str], inverted: bool, target: Target=DEFAULT_TARGET) -> "CodeBlock":
