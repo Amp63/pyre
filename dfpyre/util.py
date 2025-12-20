@@ -1,6 +1,8 @@
 import base64
 import gzip
 import re
+import warnings
+from functools import wraps
 
 
 COL_WARN = '\x1b[33m'
@@ -17,6 +19,20 @@ class PyreException(Exception):
 
 def warn(message: str):
     print(f'{COL_WARN}! WARNING ! {message}{COL_RESET}')
+
+
+def deprecated(message="This function is deprecated"):
+    def decorator(func):
+        @wraps(func)
+        def wrapper(*args, **kwargs):
+            warnings.warn(
+                f"{func.__name__} is deprecated. {message}",
+                category=DeprecationWarning,
+                stacklevel=2
+            )
+            return func(*args, **kwargs)
+        return wrapper
+    return decorator
 
 
 def is_number(s: str) -> bool:

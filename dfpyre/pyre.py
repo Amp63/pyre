@@ -8,7 +8,7 @@ import json
 import datetime
 import platform
 from rapidnbt import CompoundTag, StringTag, DoubleTag
-from dfpyre.util import df_encode, df_decode, flatten
+from dfpyre.util import df_encode, df_decode, flatten, deprecated
 from dfpyre.items import *
 from dfpyre.codeblock import CodeBlock, Target, TARGETS, DEFAULT_TARGET, CONDITIONAL_CODEBLOCKS, TEMPLATE_STARTERS, EVENT_CODEBLOCKS
 from dfpyre.actiondump import get_default_tags
@@ -25,8 +25,6 @@ __all__ = [
 
 DYNAMIC_CODEBLOCKS = {'func', 'process', 'call_func', 'start_process'}
 
-CODECLIENT_URL = 'ws://localhost:31375'
-
 DATE_FORMAT_STR = "%b %#d, %Y" if platform.system() == "Windows" else "%b %-d, %Y"
 
 
@@ -39,7 +37,7 @@ class DFTemplate:
         self.author = author
     
 
-    def _get_template_name(self):
+    def get_template_name(self):
         first_block_data = self.codeblocks[0].data
         if 'data' in first_block_data:
             name = first_block_data['data']
@@ -47,8 +45,13 @@ class DFTemplate:
         return first_block_data['block'] + '_' + first_block_data['action']
 
 
+    @deprecated('Use get_template_name instead')
+    def _get_template_name(self):
+        return self.get_template_name()
+
+
     def __repr__(self) -> str:
-        return f'DFTemplate(name: "{self._get_template_name()}", author: "{self.author}", codeblocks: {len(self.codeblocks)})'
+        return f'DFTemplate(name: "{self.get_template_name()}", author: "{self.author}", codeblocks: {len(self.codeblocks)})'
 
 
     @staticmethod
@@ -110,7 +113,7 @@ class DFTemplate:
         template_code = self.build()
 
         now = datetime.datetime.now()
-        name = self._get_template_name()
+        name = self.get_template_name()
         
         template_item = Item('yellow_shulker_box')
         template_item.set_name(f'&x&f&f&5&c&0&0>> &x&f&f&c&7&0&0{name}')
@@ -205,7 +208,7 @@ class DFTemplate:
 
         :param int target_length: The maximum allowed length of each sliced template.
         """
-        sliced_templates = slice_template(self.codeblocks, target_length, self._get_template_name())
+        sliced_templates = slice_template(self.codeblocks, target_length, self.get_template_name())
         return [DFTemplate(t, self.author) for t in sliced_templates]
 
 
