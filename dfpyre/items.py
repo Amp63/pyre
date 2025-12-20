@@ -20,13 +20,13 @@ VAR_ITEM_TYPES = [
     'Vector', 'Vec', 'ParameterType', 'Parameter'
 ]
 
-__all__ = ['convert_literals', 'item_from_dict', 'VAR_ITEM_TYPES'] + VAR_ITEM_TYPES
+__all__ = ['convert_literals', 'item_from_dict', 'CodeItem', 'VAR_ITEM_TYPES'] + VAR_ITEM_TYPES
 
 
 PARAMETER_TYPE_LOOKUP = ['txt', 'comp', 'num', 'loc', 'vec', 'snd', 'part', 'pot', 'item', 'any', 'var', 'list', 'dict']
 
 VAR_SHORTHAND_REGEX = r'^\$([gsli]) (.+)$'
-VAR_SCOPES = {'g': 'unsaved', 's': 'saved', 'l': 'local', 'i': 'line'}
+VAR_SCOPE_LOOKUP = {'g': 'unsaved', 's': 'saved', 'l': 'local', 'i': 'line'}
 
 CODECLIENT_URL = 'ws://localhost:31375'
 
@@ -47,7 +47,10 @@ class CodeItem(ABC):
 
     @abstractmethod
     def format(self, slot: int|None) -> dict[str, dict[str, Any]]:
-        pass
+        """
+        Returns a dictionary containing this code item's data formatted
+        for a DF template JSON.
+        """
 
 
 def convert_literals(arg: ArgValue) -> CodeItem:
@@ -57,7 +60,7 @@ def convert_literals(arg: ArgValue) -> CodeItem:
     elif isinstance(arg, str):
         shorthand_match: re.Match = re.match(VAR_SHORTHAND_REGEX, arg)
         if shorthand_match:
-            scope = VAR_SCOPES[shorthand_match.group(1)]
+            scope = VAR_SCOPE_LOOKUP[shorthand_match.group(1)]
             return Variable(shorthand_match.group(2), scope)
         
         return String(arg)

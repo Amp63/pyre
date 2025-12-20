@@ -7,7 +7,7 @@ from dfpyre.codeblock import CodeBlock, CONDITIONAL_CODEBLOCKS, TARGET_CODEBLOCK
 
 IMPORT_STATEMENT = 'from dfpyre import *'
 
-TEMPLATE_FUNCTION_LOOKUP = {
+CODEBLOCK_FUNCTION_LOOKUP = {
     'event': 'player_event',
     'entity_event': 'entity_event',
     'func': 'function',
@@ -29,7 +29,7 @@ TEMPLATE_FUNCTION_LOOKUP = {
 }
 
 CONTAINER_CODEBLOCKS = {'event', 'entity_event', 'func', 'process', 'if_player', 'if_entity', 'if_game', 'if_var', 'else', 'repeat'}
-VAR_SCOPES = {'unsaved': 'g', 'saved': 's', 'local': 'l', 'line': 'i'}
+VAR_SCOPE_LOOKUP = {'unsaved': 'g', 'saved': 's', 'local': 'l', 'line': 'i'}
 
 
 @dataclasses.dataclass
@@ -63,7 +63,7 @@ def str_literal(s: str) -> str:
     return "'" + escape(s) + "'"
 
 
-def argument_item_to_string(flags: GeneratorFlags, arg_item: object) -> str: 
+def argument_item_to_string(flags: GeneratorFlags, arg_item: CodeItem) -> str: 
     class_name = arg_item.__class__.__name__
     has_slot = arg_item.slot is not None and flags.preserve_slots
     slot_argument = f', slot={arg_item.slot}' if has_slot else ''
@@ -99,7 +99,7 @@ def argument_item_to_string(flags: GeneratorFlags, arg_item: object) -> str:
     if isinstance(arg_item, Variable):
         name = escape(arg_item.name)
         if not has_slot and flags.var_shorthand:
-            return f"'${VAR_SCOPES[arg_item.scope]} {name}'"
+            return f"'${VAR_SCOPE_LOOKUP[arg_item.scope]} {name}'"
         if arg_item.scope == 'unsaved':
             return f"{class_name}('{name}'{slot_argument})"
         return f"{class_name}('{name}', '{arg_item.scope}'{slot_argument})"
@@ -185,7 +185,7 @@ def generate_script(codeblocks: list[CodeBlock], flags: GeneratorFlags) -> str:
             continue
 
         # Get codeblock function and start its arguments with the action
-        function_name = TEMPLATE_FUNCTION_LOOKUP[codeblock.type]
+        function_name = CODEBLOCK_FUNCTION_LOOKUP[codeblock.type]
         function_args = [str_literal(codeblock.action_name)]
 
         # Add variable assignment if necessary
