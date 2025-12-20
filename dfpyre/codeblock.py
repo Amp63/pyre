@@ -33,10 +33,6 @@ class Target(Enum):
 DEFAULT_TARGET = Target.SELECTION
 
 
-def _convert_args(args):
-    return tuple(map(convert_literals, args))
-
-
 def _warn_unrecognized_name(codeblock_type: str, codeblock_name: str):
     close = get_close_matches(codeblock_name, CODEBLOCK_DATA[codeblock_type].keys())
     if close:
@@ -106,7 +102,7 @@ class CodeBlock:
     def __init__(self, codeblock_type: str, action_name: str, args: tuple=(), target: Target=DEFAULT_TARGET, data: dict={}, tags: dict[str, str]={}):
         self.type = codeblock_type
         self.action_name = action_name
-        self.args = args
+        self.args = tuple(map(convert_literals, args))
         self.target = target
         self.data = data
         self.tags = tags
@@ -114,12 +110,10 @@ class CodeBlock:
 
     @classmethod
     def new_action(cls, codeblock_type: str, action_name: str, args: tuple, tags: dict[str, str], target: Target=DEFAULT_TARGET) -> "CodeBlock":
-        args = _convert_args(args)
         return cls(codeblock_type, action_name, args=args, data={'id': 'block', 'block': codeblock_type, 'action': action_name}, tags=tags, target=target)
 
     @classmethod
     def new_data(cls, codeblock_type: str, data_value: str, args: tuple, tags: dict[str, str]) -> "CodeBlock":
-        args = _convert_args(args)
         return cls(codeblock_type, 'dynamic', args=args, data={'id': 'block', 'block': codeblock_type, 'data': data_value}, tags=tags)
 
     @classmethod
@@ -131,7 +125,6 @@ class CodeBlock:
 
     @classmethod
     def new_conditional(cls, codeblock_type: str, action_name: str, args: tuple, tags: dict[str, str], inverted: bool, target: Target=DEFAULT_TARGET) -> "CodeBlock":
-        args = _convert_args(args)
         data = {'id': 'block', 'block': codeblock_type, 'action': action_name}
         if inverted:
             data['attribute'] = 'NOT'
@@ -139,7 +132,6 @@ class CodeBlock:
 
     @classmethod
     def new_subaction_block(cls, codeblock_type: str, action_name: str, args: tuple, tags: dict[str, str], sub_action: str|None, inverted: bool) -> "CodeBlock":
-        args = _convert_args(args)
         data = {'id': 'block', 'block': codeblock_type, 'action': action_name}
         if sub_action is not None:
             data['subAction'] = sub_action
@@ -183,11 +175,11 @@ class CodeBlock:
         """
         built_block = self.data.copy()
         
-        # add target if necessary ('Selection' is the default when 'target' is blank)
+        # Add target if necessary ('Selection' is the default when 'target' is blank)
         if self.type in TARGET_CODEBLOCKS and self.target != DEFAULT_TARGET:
             built_block['target'] = self.target.get_string_value()
         
-        # add items into args
+        # Add items into args
         final_args = [arg.format(slot) for slot, arg in enumerate(self.args) if arg.type in VARIABLE_TYPES]
         already_applied_tags: dict[str, dict] = {a['item']['data']['tag']: a for a in final_args if a['item']['id'] == 'bl_tag'}
         

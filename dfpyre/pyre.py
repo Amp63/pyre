@@ -219,7 +219,7 @@ def _assemble_template(starting_block: CodeBlock, codeblocks: list[CodeBlock], a
     """
     if author is None:
         author = 'pyre'
-    template_codeblocks = [starting_block] + list(flatten(codeblocks))  # flatten codeblocks list and insert starting block
+    template_codeblocks = [starting_block] + list(flatten(codeblocks))  # Flatten codeblocks list and insert starting block
     return DFTemplate(template_codeblocks, author)
 
 
@@ -247,7 +247,7 @@ def entity_event(event_name: ENTITY_EVENT_ACTION, codeblocks: list[CodeBlock]=[]
     return _assemble_template(starting_block, codeblocks, author)
 
 
-def function(function_name: str, *args, tags: dict[str, str]={}, codeblocks: list[CodeBlock]=[], author: str|None=None) -> DFTemplate:
+def function(function_name: str, *args: tuple[ArgValue], tags: dict[str, str]={}, codeblocks: list[CodeBlock]=[], author: str|None=None) -> DFTemplate:
     """
     Represents a Function codeblock.
 
@@ -261,7 +261,7 @@ def function(function_name: str, *args, tags: dict[str, str]={}, codeblocks: lis
     return _assemble_template(starting_block, codeblocks, author)
 
 
-def process(process_name: str, *args, tags: dict[str, str]={}, codeblocks: list[CodeBlock]=[], author: str|None=None) -> DFTemplate:
+def process(process_name: str, *args: tuple[ArgValue], tags: dict[str, str]={}, codeblocks: list[CodeBlock]=[], author: str|None=None) -> DFTemplate:
     """
     Represents a Process codeblock.
 
@@ -275,7 +275,7 @@ def process(process_name: str, *args, tags: dict[str, str]={}, codeblocks: list[
     return _assemble_template(starting_block, codeblocks, author)
 
 
-def call_function(function_name: str, *args) -> CodeBlock:
+def call_function(function_name: str, *args: tuple[ArgValue]) -> CodeBlock:
     """
     Represents a Call Function codeblock.
 
@@ -285,7 +285,7 @@ def call_function(function_name: str, *args) -> CodeBlock:
     return CodeBlock.new_data('call_func', function_name, args, {})
 
 
-def start_process(process_name: str, *args, tags: dict[str, str]={}) -> CodeBlock:
+def start_process(process_name: str, *args: tuple[ArgValue], tags: dict[str, str]={}) -> CodeBlock:
     """
     Represents a Call Function codeblock.
 
@@ -295,7 +295,7 @@ def start_process(process_name: str, *args, tags: dict[str, str]={}) -> CodeBloc
     return CodeBlock.new_data('start_process', process_name, args, tags)
 
 
-def player_action(action_name: PLAYER_ACTION_ACTION, *args, target: Target=DEFAULT_TARGET, tags: dict[str, str]={}) -> CodeBlock:
+def player_action(action_name: PLAYER_ACTION_ACTION, *args: tuple[ArgValue], target: Target=DEFAULT_TARGET, tags: dict[str, str]={}) -> CodeBlock:
     """
     Represents a Player Action codeblock.
 
@@ -307,7 +307,7 @@ def player_action(action_name: PLAYER_ACTION_ACTION, *args, target: Target=DEFAU
     return CodeBlock.new_action('player_action', action_name, args, tags, target=target)
 
 
-def entity_action(action_name: ENTITY_ACTION_ACTION, *args, target: Target=DEFAULT_TARGET, tags: dict[str, str]={}) -> CodeBlock:
+def entity_action(action_name: ENTITY_ACTION_ACTION, *args: tuple[ArgValue], target: Target=DEFAULT_TARGET, tags: dict[str, str]={}) -> CodeBlock:
     """
     Represents an Entity Action codeblock.
 
@@ -319,7 +319,7 @@ def entity_action(action_name: ENTITY_ACTION_ACTION, *args, target: Target=DEFAU
     return CodeBlock.new_action('entity_action', action_name, args, tags, target=target)
 
 
-def game_action(action_name: GAME_ACTION_ACTION, *args, tags: dict[str, str]={}) -> CodeBlock:
+def game_action(action_name: GAME_ACTION_ACTION, *args: tuple[ArgValue], tags: dict[str, str]={}) -> CodeBlock:
     """
     Represents a Game Action codeblock.
 
@@ -330,7 +330,7 @@ def game_action(action_name: GAME_ACTION_ACTION, *args, tags: dict[str, str]={})
     return CodeBlock.new_action('game_action', action_name, args, tags)
 
 
-def if_player(action_name: IF_PLAYER_ACTION, *args, target: Target=DEFAULT_TARGET, tags: dict[str, str]={}, inverted: bool=False, codeblocks: list[CodeBlock]=[]) -> list[CodeBlock]:
+def if_player(action_name: IF_PLAYER_ACTION, *args: tuple[ArgValue], target: Target=DEFAULT_TARGET, tags: dict[str, str]={}, inverted: bool=False, codeblocks: list[CodeBlock]=[]) -> list[CodeBlock]:
     """
     Represents an If Player codeblock.
 
@@ -348,7 +348,7 @@ def if_player(action_name: IF_PLAYER_ACTION, *args, target: Target=DEFAULT_TARGE
         CodeBlock.new_bracket('close', 'norm')
     ]
 
-def if_entity(action_name: IF_ENTITY_ACTION, *args, target: Target=DEFAULT_TARGET, tags: dict[str, str]={}, inverted: bool=False, codeblocks: list[CodeBlock]=[]) -> list[CodeBlock]:
+def if_entity(action_name: IF_ENTITY_ACTION, *args: tuple[ArgValue], target: Target=DEFAULT_TARGET, tags: dict[str, str]={}, inverted: bool=False, codeblocks: list[CodeBlock]=[]) -> list[CodeBlock]:
     """
     Represents an If Entity codeblock.
 
@@ -367,7 +367,7 @@ def if_entity(action_name: IF_ENTITY_ACTION, *args, target: Target=DEFAULT_TARGE
     ]
 
 
-def if_game(action_name: IF_GAME_ACTION, *args, tags: dict[str, str]={}, inverted: bool=False, codeblocks: list[CodeBlock]=[]) -> list[CodeBlock]:
+def if_game(action_name: IF_GAME_ACTION, *args: tuple[ArgValue], tags: dict[str, str]={}, inverted: bool=False, codeblocks: list[CodeBlock]=[]) -> list[CodeBlock]:
     """
     Represents an If Game codeblock.
 
@@ -385,7 +385,7 @@ def if_game(action_name: IF_GAME_ACTION, *args, tags: dict[str, str]={}, inverte
     ]
 
 
-def if_variable(action_name: IF_VAR_ACTION, *args, tags: dict[str, str]={}, inverted: bool=False, codeblocks: list[CodeBlock]=[]) -> list[CodeBlock]:
+def if_variable(action_name: IF_VAR_ACTION, *args: tuple[ArgValue], tags: dict[str, str]={}, inverted: bool=False, codeblocks: list[CodeBlock]=[]) -> list[CodeBlock]:
     """
     Represents an If Variable codeblock.
 
@@ -417,7 +417,7 @@ def else_(codeblocks: list[CodeBlock]=[]) -> list[CodeBlock]:
     ]
 
 
-def repeat(action_name: REPEAT_ACTION, *args, tags: dict[str, str]={}, sub_action: SUBACTION|None=None, inverted: bool=False, codeblocks: list[CodeBlock]=[]) -> CodeBlock:
+def repeat(action_name: REPEAT_ACTION, *args: tuple[ArgValue], tags: dict[str, str]={}, sub_action: SUBACTION|None=None, inverted: bool=False, codeblocks: list[CodeBlock]=[]) -> CodeBlock:
     """
     Represents a Repeat codeblock.
 
@@ -436,7 +436,7 @@ def repeat(action_name: REPEAT_ACTION, *args, tags: dict[str, str]={}, sub_actio
     ]
 
 
-def control(action_name: CONTROL_ACTION, *args, tags: dict[str, str]={}) -> CodeBlock:
+def control(action_name: CONTROL_ACTION, *args: tuple[ArgValue], tags: dict[str, str]={}) -> CodeBlock:
     """
     Represents a Control codeblock.
 
@@ -447,7 +447,7 @@ def control(action_name: CONTROL_ACTION, *args, tags: dict[str, str]={}) -> Code
     return CodeBlock.new_action('control', action_name, args, tags)
 
 
-def select_object(action_name: SELECT_OBJ_ACTION, *args, tags: dict[str, str]={}, sub_action: SUBACTION|None=None, inverted: bool=False) -> CodeBlock:
+def select_object(action_name: SELECT_OBJ_ACTION, *args: tuple[ArgValue], tags: dict[str, str]={}, sub_action: SUBACTION|None=None, inverted: bool=False) -> CodeBlock:
     """
     Represents a Select Object codeblock.
 
@@ -460,7 +460,7 @@ def select_object(action_name: SELECT_OBJ_ACTION, *args, tags: dict[str, str]={}
     return CodeBlock.new_subaction_block('select_obj', action_name, args, tags, sub_action, inverted) 
 
 
-def set_variable(action_name: SET_VAR_ACTION, *args, tags: dict[str, str]={}) -> CodeBlock:
+def set_variable(action_name: SET_VAR_ACTION, *args: tuple[ArgValue], tags: dict[str, str]={}) -> CodeBlock:
     """
     Represents a Set Variable codeblock.
 

@@ -2,9 +2,10 @@
 Class definitions for code items.
 """
 
+from abc import ABC, abstractmethod
 from enum import Enum
 import re
-from typing import Literal, Any
+from typing import Literal, Any, Union
 import websocket
 from mcitemlib.itemlib import Item as NbtItem, MCItemlibException
 from rapidnbt import DoubleTag, StringTag, CompoundTag
@@ -22,22 +23,15 @@ VAR_ITEM_TYPES = [
 __all__ = ['convert_literals', 'item_from_dict', 'VAR_ITEM_TYPES'] + VAR_ITEM_TYPES
 
 
+PARAMETER_TYPE_LOOKUP = ['txt', 'comp', 'num', 'loc', 'vec', 'snd', 'part', 'pot', 'item', 'any', 'var', 'list', 'dict']
+
 VAR_SHORTHAND_REGEX = r'^\$([gsli]) (.+)$'
 VAR_SCOPES = {'g': 'unsaved', 's': 'saved', 'l': 'local', 'i': 'line'}
 
 CODECLIENT_URL = 'ws://localhost:31375'
 
-
-def convert_literals(arg: Any):
-    if type(arg) in {int, float}:
-        return Number(arg)
-    elif isinstance(arg, str):
-        shorthand_match: re.Match = re.match(VAR_SHORTHAND_REGEX, arg)
-        if shorthand_match:
-            scope = VAR_SCOPES[shorthand_match.group(1)]
-            return Variable(shorthand_match.group(2), scope)
-        return String(arg)
-    return arg
+# Valid types that can be passed as args for a CodeBlock function
+ArgValue = Union["CodeItem", str, int, float]
 
 
 def _add_slot(d: dict, slot: int|None):
@@ -45,15 +39,41 @@ def _add_slot(d: dict, slot: int|None):
         d['slot'] = slot
 
 
-class String:
+class CodeItem(ABC):
+    type = '_codeitem'
+
+    def __init__(self, slot: int|None):
+        self.slot = slot
+
+    @abstractmethod
+    def format(self, slot: int|None) -> dict[str, dict[str, Any]]:
+        pass
+
+
+def convert_literals(arg: ArgValue) -> CodeItem:
+    if type(arg) in {int, float}:
+        return Number(arg)
+
+    elif isinstance(arg, str):
+        shorthand_match: re.Match = re.match(VAR_SHORTHAND_REGEX, arg)
+        if shorthand_match:
+            scope = VAR_SCOPES[shorthand_match.group(1)]
+            return Variable(shorthand_match.group(2), scope)
+        
+        return String(arg)
+    
+    return arg
+
+
+class String(CodeItem):
     """
     Represents a DiamondFire string object. (`txt`)
     """
     type = 'txt'
 
     def __init__(self, value: str, slot: int|None=None):
+        super().__init__(slot)
         self.value = value
-        self.slot = slot
     
     def format(self, slot: int|None):
         formatted_dict = {"item": {"id": self.type, "data": {"name": self.value}}}
@@ -66,17 +86,18 @@ class String:
 Str = String  # String alias
 
 
-class Text:
+class Text(CodeItem):
     """
     Represents a DiamondFire styled text object (`comp`)
     """
     type = 'comp'
 
     def __init__(self, value: str, slot: int|None=None):
+        super().__init__(slot)
+
         if is_ampersand_coded(value):
             value = ampersand_to_minimessage(value)
         self.value = value
-        self.slot = slot
     
     def format(self, slot: int|None):
       formatted_dict = {"item": {"id": self.type, "data": {"name": self.value}}}
@@ -87,15 +108,15 @@ class Text:
         return f'{self.__class__.__name__}("{self.value}")'
 
 
-class Number:
+class Number(CodeItem):
     """
     Represents a DiamondFire number object.
     """
     type = 'num'
 
     def __init__(self, num: int|float|str, slot: int|None=None):
+        super().__init__(slot)
         self.value = num
-        self.slot = slot
     
     def format(self, slot: int|None):
         formatted_dict = {"item": {"id": self.type, "data": {"name": str(self.value)}}}
@@ -108,15 +129,15 @@ class Number:
 Num = Number  # Number alias
 
 
-class Item(NbtItem):
+class Item(CodeItem, NbtItem):
     """
     Represents a Minecraft item.
     """
     type = 'item'
 
     def __init__(self, item_id: str, count: int=1, slot: int | None=None):
-        super().__init__(item_id, count)
-        self.slot = slot
+        NbtItem.__init__(self, item_id, count)
+        CodeItem.__init__(self, slot)
 
     def format(self, slot: int|None):
         formatted_dict = {"item": {"id": self.type, "data": {"item": self.get_snbt()}}}
@@ -163,12 +184,15 @@ class Item(NbtItem):
         except MCItemlibException:
             return None
         
-        if 'PublicBukkitValues' not in custom_data_tag:
+        if custom_data_tag.is_null():
             return None
         
         pbv_tag = custom_data_tag['PublicBukkitValues']
-        df_tag_value = pbv_tag.get(f'hypercube:{tag_name}')
-        if df_tag_value is None:
+        if pbv_tag.is_null():
+            return None
+        
+        df_tag_value = pbv_tag[f'hypercube:{tag_name}']
+        if df_tag_value.is_null():
             return None
         
         if isinstance(df_tag_value, DoubleTag):
@@ -179,6 +203,9 @@ class Item(NbtItem):
     def remove_tag(self, tag_name: str):
         """
         Remove a DiamondFire custom tag from this item.
+
+        Raises:
+            MCItemibException: If the tag does not exist
         """
         custom_data_tag = self.get_component('minecraft:custom_data')
         pbv_tag = custom_data_tag['PublicBukkitValues']
@@ -214,19 +241,19 @@ class Item(NbtItem):
             return 2
 
 
-class Location:
+class Location(CodeItem):
     """
     Represents a DiamondFire location object.
     """
     type = 'loc'
 
     def __init__(self, x: float=0, y: float=0, z: float=0, pitch: float=0, yaw: float=0, slot: int | None=None):
+        super().__init__(slot)
         self.x = float(x)
         self.y = float(y)
         self.z = float(z)
         self.pitch = float(pitch)
         self.yaw = float(yaw)
-        self.slot = slot
     
     def format(self, slot: int|None):
         formatted_dict =  {"item": {
@@ -251,20 +278,19 @@ class Location:
 Loc = Location  # Location alias
 
 
-class Variable:
+class Variable(CodeItem):
     """
     Represents a DiamondFire variable object.
     """
     type = 'var'
 
     def __init__(self, name: str, scope: Literal['unsaved', 'game', 'saved', 'local', 'line']='unsaved', slot: int | None=None):
+        super().__init__(slot)
         self.name = name
 
         if scope == 'game':
             scope = 'unsaved'
         self.scope = scope
-        
-        self.slot = slot
 
     def format(self, slot: int|None):
         formatted_dict = {"item": {"id": self.type,"data": {"name": self.name, "scope": self.scope}}}
@@ -277,20 +303,20 @@ class Variable:
 Var = Variable  # Variable alias
 
 
-class Sound:
+class Sound(CodeItem):
     """
     Represents a DiamondFire sound object.
     """
     type = 'snd'
 
     def __init__(self, name: SOUND_NAME, pitch: float=1.0, vol: float=2.0, slot: int | None=None):
+        super().__init__(slot)
         if name not in set(SOUND_NAME.__args__):
             warn(f'Sound name "{name}" not found.')
         
         self.name = name
         self.pitch = pitch
         self.vol = vol
-        self.slot = slot
 
     def format(self, slot: int|None):
         formatted_dict = {"item": {"id": self.type,"data": {"sound": self.name, "pitch": self.pitch, "vol": self.vol}}}
@@ -303,14 +329,14 @@ class Sound:
 Snd = Sound  # Sound alias
 
 
-class Particle:
+class Particle(CodeItem):
     """
     Represents a DiamondFire particle object.
     """
     type = 'part'
     def __init__(self, particle_data: dict, slot: int | None=None):
+        super().__init__(slot)
         self.particle_data = particle_data
-        self.slot = slot
     
     def format(self, slot: int|None):
         formatted_dict = {"item": {"id": self.type, "data": self.particle_data}}
@@ -321,20 +347,21 @@ class Particle:
         return f'{self.__class__.__name__}({self.particle_data})'
 
 
-class Potion:
+class Potion(CodeItem):
     """
     Represents a DiamondFire potion object.
     """
     type = 'pot'
 
     def __init__(self, name: POTION_NAME, dur: int=1000000, amp: int=0, slot: int | None=None):
+        super().__init__(slot)
+
         if name not in set(POTION_NAME.__args__):
             warn(f'Potion name "{name}" not found.')
         
         self.name = name
         self.dur = dur
         self.amp = amp
-        self.slot = slot
     
     def format(self, slot: int|None):
         formatted_dict = {"item": {"id": self.type,"data": {"pot": self.name, "dur": self.dur, "amp": self.amp}}}
@@ -347,19 +374,20 @@ class Potion:
 Pot = Potion  # Potion alias
 
 
-class GameValue:
+class GameValue(CodeItem):
     """
     Represents a DiamondFire game value object.
     """
     type = 'g_val'
 
     def __init__(self, name: GAME_VALUE_NAME, target: str='Default', slot: int | None=None):
+        super.__init__(slot)
+
         if name not in set(GAME_VALUE_NAME.__args__):
             warn(f'Game value name "{name}" not found.')
         
         self.name = name
         self.target = target
-        self.slot = slot
     
     def format(self, slot: int|None):
         formatted_dict = {"item": {"id": self.type, "data": {"type": self.name, "target": self.target}}}
@@ -370,17 +398,17 @@ class GameValue:
         return f'{self.__class__.__name__}({self.name}, target: {self.target})'
 
 
-class Vector:
+class Vector(CodeItem):
     """
     Represents a DiamondFire vector object.
     """
     type = 'vec'
 
     def __init__(self, x: float=0.0, y: float=0.0, z: float=0.0, slot: int | None=None):
+        super().__init__(slot)
         self.x = float(x)
         self.y = float(y)
         self.z = float(z)
-        self.slot = slot
     
     def format(self, slot: int|None):
         formatted_dict = {"item": {"id": self.type, "data": {"x": self.x, "y": self.y, "z": self.z}}}
@@ -392,9 +420,6 @@ class Vector:
 
 Vec = Vector  # Vector alias
 
-
-
-PARAMETER_TYPE_LOOKUP = ['txt', 'comp', 'num', 'loc', 'vec', 'snd', 'part', 'pot', 'item', 'any', 'var', 'list', 'dict']
 
 class ParameterType(Enum):
     STRING = 0
@@ -414,7 +439,7 @@ class ParameterType(Enum):
     def get_string_value(self) -> str:
         return PARAMETER_TYPE_LOOKUP[self.value]
 
-class Parameter:
+class Parameter(CodeItem):
     """
     Represents a DiamondFire parameter object.
     """
@@ -422,6 +447,7 @@ class Parameter:
 
     def __init__(self, name: str, param_type: ParameterType, plural: bool=False, optional: bool=False, 
                  description: str="", note: str="", default_value=None, slot: int | None=None):
+        super().__init__(slot)
         self.name = name
         self.param_type = param_type
         self.plural = plural
@@ -429,7 +455,6 @@ class Parameter:
         self.description = description
         self.note = note
         self.default_value = convert_literals(default_value)
-        self.slot = slot
     
     def format(self, slot: int):
         formatted_dict = {"item": {
@@ -462,15 +487,15 @@ class Parameter:
         return f'{self.__class__.__name__}({self.name}, type: {raw_type})'
 
 
-class _Tag:
+class _Tag(CodeItem):
     """
     Represents a CodeBlock action tag.
     """
     type = 'bl_tag'
 
     def __init__(self, tag_data: dict, slot: int | None=None):
+        super().__init__(slot)
         self.tag_data = tag_data
-        self.slot = slot
     
     def format(self, slot: int|None):
         formatted_dict = {"item": {"id": self.type, "data": self.tag_data}}

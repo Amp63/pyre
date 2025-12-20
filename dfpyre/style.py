@@ -1,6 +1,7 @@
 import re
 from mcitemlib.style import STYLE_CODE_REGEX, FORMAT_CODES, StyledString
 
+
 def is_ampersand_coded(s: str) -> bool:
     return bool(re.match(STYLE_CODE_REGEX, s))
 
