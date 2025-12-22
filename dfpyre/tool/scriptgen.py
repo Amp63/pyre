@@ -1,33 +1,35 @@
 import dataclasses
-from dfpyre.util import is_number
-from dfpyre.items import *
-from dfpyre.actiondump import get_default_tags
-from dfpyre.codeblock import CodeBlock, CONDITIONAL_CODEBLOCKS, TARGET_CODEBLOCKS, EVENT_CODEBLOCKS
+from dfpyre.util.util import is_number
+from dfpyre.core.items import *
+from dfpyre.core.actiondump import get_default_tags
+from dfpyre.core.codeblock import CodeBlock, CONDITIONAL_CODEBLOCKS, TARGET_CODEBLOCKS, EVENT_CODEBLOCKS
+from dfpyre.gen.action_class_data import get_method_name_and_aliases, to_valid_identifier
 
 
 IMPORT_STATEMENT = 'from dfpyre import *'
 
 CODEBLOCK_FUNCTION_LOOKUP = {
-    'event': 'player_event',
-    'entity_event': 'entity_event',
-    'func': 'function',
-    'process': 'process',
-    'call_func': 'call_function',
-    'start_process': 'start_process',
-    'player_action': 'player_action',
-    'game_action': 'game_action',
-    'entity_action': 'entity_action',
-    'if_player': 'if_player',
-    'if_var': 'if_variable',
-    'if_game': 'if_game',
-    'if_entity': 'if_entity',
-    'else': 'else_',
-    'repeat': 'repeat',
-    'control': 'control',
-    'select_obj': 'select_object',
-    'set_var': 'set_variable'
+    'event': 'PlayerEvent',
+    'entity_event': 'EntityEvent',
+    'func': 'Function',
+    'process': 'Process',
+    'call_func': 'CallFunction',
+    'start_process': 'StartProcess',
+    'player_action': 'PlayerAction',
+    'game_action': 'GameAction',
+    'entity_action': 'EntityAction',
+    'if_player': 'IfPlayer',
+    'if_var': 'IfVariable',
+    'if_game': 'IfGame',
+    'if_entity': 'IfEntity',
+    'else': 'Else',
+    'repeat': 'Repeat',
+    'control': 'Control',
+    'select_obj': 'SelectObject',
+    'set_var': 'SetVariable'
 }
 
+NO_ACTION_BLOCKS = {'func', 'process', 'call_func', 'start_process', 'else'}
 CONTAINER_CODEBLOCKS = {'event', 'entity_event', 'func', 'process', 'if_player', 'if_entity', 'if_game', 'if_var', 'else', 'repeat'}
 VAR_SCOPE_LOOKUP = {'unsaved': 'g', 'saved': 's', 'local': 'l', 'line': 'i'}
 
@@ -186,7 +188,15 @@ def generate_script(codeblocks: list[CodeBlock], flags: GeneratorFlags) -> str:
 
         # Get codeblock function and start its arguments with the action
         function_name = CODEBLOCK_FUNCTION_LOOKUP[codeblock.type]
-        function_args = [str_literal(codeblock.action_name)]
+        if codeblock.type in NO_ACTION_BLOCKS:
+            function_args = [str_literal(codeblock.action_name)]
+        else:
+            method_data = get_method_name_and_aliases(codeblock.type, codeblock.action_name)
+            if method_data is None:
+                raise PyreException(f'scriptgen: Failed to get method data of {codeblock.action_name}')
+
+            function_name += f'.{method_data[0]}'
+            function_args = []
 
         # Add variable assignment if necessary
         var_assignment_snippet = ''
@@ -203,14 +213,7 @@ def generate_script(codeblocks: list[CodeBlock], flags: GeneratorFlags) -> str:
         if codeblock_args:
             function_args.extend(codeblock_args)
         
-        # Add target if necessary
-        if function_name in TARGET_CODEBLOCKS and codeblock.target.name != 'SELECTION':
-            function_args.append(f'target=Target.{codeblock.target.name}')
-        
-        # Add sub-action for repeat and select object
         sub_action = codeblock.data.get('subAction')
-        if sub_action is not None:
-            function_args.append(f"sub_action='{sub_action}'")
         
         # Add tags
         if codeblock.tags:
@@ -223,9 +226,18 @@ def generate_script(codeblocks: list[CodeBlock], flags: GeneratorFlags) -> str:
             else:
                 default_tags = get_default_tags(codeblock.data.get('block'), codeblock.action_name)
             
-            written_tags = {t: o for t, o in codeblock.tags.items() if default_tags[t] != o}
-            if written_tags:
-                function_args.append(f'tags={str(written_tags)}')
+            for tag, option in codeblock.tags.items():
+                if default_tags[tag] != option:
+                    tag_param_name = to_valid_identifier(tag.lower())
+                    function_args.append(f"{tag_param_name}='{option}'")
+        
+        # Add sub-action for repeat and select object
+        if sub_action is not None:
+            function_args.append(f"sub_action='{sub_action}'")
+        
+        # Add target if necessary
+        if codeblock.type in TARGET_CODEBLOCKS and codeblock.target.name != 'SELECTION':
+            function_args.append(f'target=Target.{codeblock.target.name}')
         
         codeblock_attribute = codeblock.data.get('attribute')
         # Add inversion for NOT
@@ -241,7 +253,7 @@ def generate_script(codeblocks: list[CodeBlock], flags: GeneratorFlags) -> str:
             if codeblock.type == 'else':
                 line = f'{function_name}(['
             elif codeblock.type in EVENT_CODEBLOCKS and codeblock_attribute is None:
-                line = f'{var_assignment_snippet}{function_name}({", ".join(function_args)}, ['  # omit `codeblocks=` when we don't need it
+                line = f'{var_assignment_snippet}{function_name}(['  # omit `codeblocks=` when we don't need it
             else:
                 line = f'{var_assignment_snippet}{function_name}({", ".join(function_args)}, codeblocks=['
             add_script_line(flags, script_lines, indent_level, line, False)

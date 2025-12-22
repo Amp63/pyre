@@ -1,0 +1,5 @@
+def {method_name}({parameter_list}{tag_parameter_list}):
+    """
+{action_description}{parameter_docstrings}
+    """
+    return CodeBlock.new_action('{codeblock_type}', '{action_name}', ({parameter_names}), {{{tag_values}}})

@@ -1,0 +1,5 @@
+def {method_name}({parameter_list}{tag_parameter_list}codeblocks: list[CodeBlock]=[]):
+    """
+{action_description}{parameter_docstrings}:param list[CodeBlock] codeblocks: The list of codeblocks inside the brackets.
+    """
+    return add_brackets(CodeBlock.new_subaction_block('repeat', '{action_name}', ({parameter_names}), {{{tag_values}}}, None, False), codeblocks, 'repeat')

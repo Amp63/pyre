@@ -1,6 +1,6 @@
 [project]
 name = "dfpyre"
-version = "0.9.6"
+version = "0.10.0"
 description = "A package for creating and modifying code templates for the DiamondFire Minecraft server."
 authors = [
     {name = "Amp"}
@@ -12,7 +12,7 @@ keywords = ["diamondfire", "minecraft", "template", "item"]
 requires-python = ">=3.10"
 dependencies = [
     "mcitemlib>=0.5.2",
-    "rapidnbt>=1.3.3",
+    "rapidnbt>=1.3.5",
     "websocket-client>=1.9.0"
 ]
 

@@ -1,0 +1,6 @@
+def {method_name}(codeblocks: list[CodeBlock]=[], ls_cancel: bool=False, author: str|None=None):
+    """
+{action_description}:param list[CodeBlock] codeblocks: The list of codeblocks in this template.
+    :param str|None author: The author of this template.
+    """
+    return assemble_template(CodeBlock.new_event('{codeblock_type}', '{action_name}', ls_cancel), codeblocks, author)

@@ -9,9 +9,9 @@ from typing import Literal, Any, Union
 import websocket
 from mcitemlib.itemlib import Item as NbtItem, MCItemlibException
 from rapidnbt import DoubleTag, StringTag, CompoundTag
-from dfpyre.style import is_ampersand_coded, ampersand_to_minimessage
-from dfpyre.util import PyreException, warn, is_number, COL_SUCCESS, COL_ERROR, COL_RESET
-from dfpyre.action_literals import GAME_VALUE_NAME, SOUND_NAME, POTION_NAME
+from dfpyre.util.style import is_ampersand_coded, ampersand_to_minimessage
+from dfpyre.util.util import PyreException, warn, is_number, COL_SUCCESS, COL_ERROR, COL_RESET
+from dfpyre.gen.action_literals import GAME_VALUE_NAME, SOUND_NAME, POTION_NAME
 
 
 VAR_ITEM_TYPES = [
@@ -20,7 +20,7 @@ VAR_ITEM_TYPES = [
     'Vector', 'Vec', 'ParameterType', 'Parameter'
 ]
 
-__all__ = ['convert_literals', 'item_from_dict', 'CodeItem', 'VAR_ITEM_TYPES'] + VAR_ITEM_TYPES
+__all__ = ['convert_literals', 'item_from_dict', 'CodeItem', 'ArgValue', 'VAR_ITEM_TYPES'] + VAR_ITEM_TYPES
 
 
 PARAMETER_TYPE_LOOKUP = ['txt', 'comp', 'num', 'loc', 'vec', 'snd', 'part', 'pot', 'item', 'any', 'var', 'list', 'dict']
@@ -337,6 +337,7 @@ class Particle(CodeItem):
     Represents a DiamondFire particle object.
     """
     type = 'part'
+    
     def __init__(self, particle_data: dict, slot: int | None=None):
         super().__init__(slot)
         self.particle_data = particle_data
@@ -384,7 +385,7 @@ class GameValue(CodeItem):
     type = 'g_val'
 
     def __init__(self, name: GAME_VALUE_NAME, target: str='Default', slot: int | None=None):
-        super.__init__(slot)
+        super().__init__(slot)
 
         if name not in set(GAME_VALUE_NAME.__args__):
             warn(f'Game value name "{name}" not found.')

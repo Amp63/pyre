@@ -1,0 +1,7 @@
+def {method_name}({parameter_list}{tag_parameter_list}target: Target=DEFAULT_TARGET, inverted: bool=False, codeblocks: list[CodeBlock]=[]):
+    """
+{action_description}{parameter_docstrings}:param Target target: The target for the condition.
+    :param bool inverted: Whether the condition should be inverted.
+    :param list[CodeBlock] codeblocks: The list of codeblocks inside the brackets.
+    """
+    return add_brackets(CodeBlock.new_conditional('{codeblock_type}', '{action_name}', ({parameter_names}), {{{tag_values}}}, inverted, target), codeblocks)

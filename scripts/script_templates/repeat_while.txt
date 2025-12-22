@@ -1,0 +1,9 @@
+def {method_name}(*args: ArgValue, tags: dict[str, str]={{}}, sub_action: SUBACTION|None=None, inverted: bool=False, codeblocks: list[CodeBlock]=[]):
+    """
+{action_description}    :param tuple[ArgValue, ...] args: The argument items to include.
+    :param dict[str, str] tags: The tags to include.
+    :param str|None sub_action: The sub-action for the repeat action
+    :param bool inverted: Whether the sub-action condition should be inverted.
+    :param list[CodeBlock] codeblocks: The list of codeblocks inside the brackets.
+    """
+    return add_brackets(CodeBlock.new_subaction_block('repeat', 'While', args, tags, sub_action, inverted), codeblocks, 'repeat')

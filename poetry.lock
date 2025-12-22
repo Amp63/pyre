@@ -768,46 +768,47 @@ files = [
 
 [[package]]
 name = "rapidnbt"
-version = "1.3.3"
+version = "1.3.5"
 description = "Python bindings for High-Performance NBT library"
 optional = false
 python-versions = ">=3.8"
 groups = ["main"]
 files = [
-    {file = "rapidnbt-1.3.3-cp310-cp310-macosx_11_0_arm64.whl", hash = "sha256:d6f13a7ae25ad469a135187c11a2d34146dd5c0ba9dac6e6aaaa24246808d385"},
-    {file = "rapidnbt-1.3.3-cp310-cp310-manylinux_2_26_aarch64.manylinux_2_28_aarch64.whl", hash = "sha256:e05283fd32bc0d2538867cdb04d2d65e34ce5faef802e19d19859f2ebb115989"},
-    {file = "rapidnbt-1.3.3-cp310-cp310-manylinux_2_26_x86_64.manylinux_2_28_x86_64.whl", hash = "sha256:e6415f55f05d4d0861b41eb0534520c4912055ca3d6a2b362e497887f923958a"},
-    {file = "rapidnbt-1.3.3-cp310-cp310-win_amd64.whl", hash = "sha256:b2e4d465d4d792253bb8a2b561562269a27960204dbe3f6a297467262a0c5e82"},
-    {file = "rapidnbt-1.3.3-cp310-cp310-win_arm64.whl", hash = "sha256:ec377b54e3dbd0675306294aa17e5a16bb746e5ad7c904d426bf45ee0714173f"},
-    {file = "rapidnbt-1.3.3-cp311-cp311-macosx_11_0_arm64.whl", hash = "sha256:a19d7b1239335c9ecaa75b6fb4e5c8597af6ebfb4099c530d2f002e0ef348efd"},
-    {file = "rapidnbt-1.3.3-cp311-cp311-manylinux_2_26_aarch64.manylinux_2_28_aarch64.whl", hash = "sha256:0677e6e1652b08f50e3357ba4dcf88b2d061a586f24875d384b9cc423257bab0"},
-    {file = "rapidnbt-1.3.3-cp311-cp311-manylinux_2_26_x86_64.manylinux_2_28_x86_64.whl", hash = "sha256:5244994594205f2dd36fb6c71a713d5c8b0e2bde4a3088d0621b29071d51dc96"},
-    {file = "rapidnbt-1.3.3-cp311-cp311-win_amd64.whl", hash = "sha256:b4ee8ee19475b49cceb6d78c8a3d3ae55e245b1fe1c89a15b9d5017197ce7483"},
-    {file = "rapidnbt-1.3.3-cp311-cp311-win_arm64.whl", hash = "sha256:439ee4d70a68a7378f9e48677c198faacb2ddb0d5d4a59f3cdc23dd591827d31"},
-    {file = "rapidnbt-1.3.3-cp312-cp312-macosx_11_0_arm64.whl", hash = "sha256:96c71e27caaed6286b9f6e7c0abeca889959536309c2c4fbf460165eca6cc70d"},
-    {file = "rapidnbt-1.3.3-cp312-cp312-manylinux_2_26_aarch64.manylinux_2_28_aarch64.whl", hash = "sha256:e1e1e2b6a5012c477c89f8286c30d25cfdcf3152665a824e67aa9e96f9874c07"},
-    {file = "rapidnbt-1.3.3-cp312-cp312-manylinux_2_26_x86_64.manylinux_2_28_x86_64.whl", hash = "sha256:0b595ec2778fc752ead36d66721b349641938a5ba484e31844a8a4fba0468627"},
-    {file = "rapidnbt-1.3.3-cp312-cp312-win_amd64.whl", hash = "sha256:73f091f8ac5162fb6a54b45dfe33f3a0fc95a6ed8d85b74083701579b4cf63b5"},
-    {file = "rapidnbt-1.3.3-cp312-cp312-win_arm64.whl", hash = "sha256:6541ec435fd528740194f58e1773c7e9f05cf85720fdfca8edea2e01a39fcbd2"},
-    {file = "rapidnbt-1.3.3-cp313-cp313-macosx_11_0_arm64.whl", hash = "sha256:0f10d98058610a7bf9b06f805ac8280fba057a5edba06d30af8637b6b734dd1d"},
-    {file = "rapidnbt-1.3.3-cp313-cp313-manylinux_2_26_aarch64.manylinux_2_28_aarch64.whl", hash = "sha256:937eef91caf2440e556cf4f58eddb992a4351e59be31e2a266e7ad4119b0248a"},
-    {file = "rapidnbt-1.3.3-cp313-cp313-manylinux_2_26_x86_64.manylinux_2_28_x86_64.whl", hash = "sha256:ad9a022897e17566e7400bd6a22558f579919a3eae60264ea79b96c6821fa77f"},
-    {file = "rapidnbt-1.3.3-cp313-cp313-win_amd64.whl", hash = "sha256:b19d3679231cfc2ef4e77b7500f314f59ffe24234fa44634d6ce406ede45612f"},
-    {file = "rapidnbt-1.3.3-cp313-cp313-win_arm64.whl", hash = "sha256:23f13279dbb0d6075785bd8723cfb9d30e8548a3d8c887c25904c2ed00cf1917"},
-    {file = "rapidnbt-1.3.3-cp314-cp314-macosx_11_0_arm64.whl", hash = "sha256:be96d64f5297339244a686a746699f79364e156dfc41b4910c56a2903aeaa1d7"},
-    {file = "rapidnbt-1.3.3-cp314-cp314-manylinux_2_26_aarch64.manylinux_2_28_aarch64.whl", hash = "sha256:f00e0e536073c94d0f14ca7dcdace8bcf7f8993dc51ffb51d50e4d275cfd7a6a"},
-    {file = "rapidnbt-1.3.3-cp314-cp314-manylinux_2_26_x86_64.manylinux_2_28_x86_64.whl", hash = "sha256:767ef6296e2f59d861af6ac50dd1fdcc19a9b36fbec746a518869fd241404f4f"},
-    {file = "rapidnbt-1.3.3-cp314-cp314-win_amd64.whl", hash = "sha256:7bfdd595b0f5692d2e1bcbdfec7112d172de67b2f20a5525fd320db9a32b152b"},
-    {file = "rapidnbt-1.3.3-cp314-cp314-win_arm64.whl", hash = "sha256:bdecbfffb4038197809fdee7a6f7fef47e70c580131fb7da477222eae812fbfa"},
-    {file = "rapidnbt-1.3.3-cp38-cp38-macosx_11_0_arm64.whl", hash = "sha256:4ffd00c9a509092864165941e076b2c65cfe0f6bd1dac0c9b61d1c86fe899248"},
-    {file = "rapidnbt-1.3.3-cp38-cp38-manylinux_2_26_aarch64.manylinux_2_28_aarch64.whl", hash = "sha256:80133719af235e92bc2129ef6e13d54026a9e4e14de182509103609925a33826"},
-    {file = "rapidnbt-1.3.3-cp38-cp38-manylinux_2_26_x86_64.manylinux_2_28_x86_64.whl", hash = "sha256:c585bf2d9d3e6dc4c94feb8d27f9fd41410970573d95221ce2b1dc8126504e2f"},
-    {file = "rapidnbt-1.3.3-cp38-cp38-win_amd64.whl", hash = "sha256:d3d0d6463c553748840423925f362c253f3d957b475d4da9ecf953b313e0dd5a"},
-    {file = "rapidnbt-1.3.3-cp39-cp39-macosx_11_0_arm64.whl", hash = "sha256:0b9fb6aaf161965a7b315647ba769b33c7232e586d04bf166232345cc5897261"},
-    {file = "rapidnbt-1.3.3-cp39-cp39-manylinux_2_26_aarch64.manylinux_2_28_aarch64.whl", hash = "sha256:2438c97bbf1f37ec6d8f52a4cf54725d80a479a1737f7a2ad7b2834ce1cadb2f"},
-    {file = "rapidnbt-1.3.3-cp39-cp39-manylinux_2_26_x86_64.manylinux_2_28_x86_64.whl", hash = "sha256:a13705a6734f39c503476fa4c75cb0eee5670d06bb77d83866ebdf0a4df1000e"},
-    {file = "rapidnbt-1.3.3-cp39-cp39-win_amd64.whl", hash = "sha256:f6f080b78a66fec1a74c2aa20e3b1df0469c9770735b1419ea09b3b232b04756"},
-    {file = "rapidnbt-1.3.3-cp39-cp39-win_arm64.whl", hash = "sha256:8c86b65aef788de85095064306925146b641ae54c00303eb42db694d3eaffcd6"},
+    {file = "rapidnbt-1.3.5-cp310-cp310-macosx_11_0_arm64.whl", hash = "sha256:722623864357ac32c9810b9a6ef92269fc5e08c3072085ef4cfd832cd3b8a6af"},
+    {file = "rapidnbt-1.3.5-cp310-cp310-manylinux_2_26_aarch64.manylinux_2_28_aarch64.whl", hash = "sha256:3a38d215f49af6fb0fc2e1678aef54eaa2047b1699b9c3a6d933cd1909e93600"},
+    {file = "rapidnbt-1.3.5-cp310-cp310-manylinux_2_26_x86_64.manylinux_2_28_x86_64.whl", hash = "sha256:5f0532cf3d752ebd8f7d018c9e723d1c3adf1db3a33a9762db0e99027a9b22df"},
+    {file = "rapidnbt-1.3.5-cp310-cp310-win_amd64.whl", hash = "sha256:55e14e8aadb83afbeba573d972d3e252ece678c2257ac84cb847939b34af18c2"},
+    {file = "rapidnbt-1.3.5-cp310-cp310-win_arm64.whl", hash = "sha256:ee31e567844e6ef6fe6d5c04d228ad2e6298a5794d0db01f564c5e54bf42630a"},
+    {file = "rapidnbt-1.3.5-cp311-cp311-macosx_11_0_arm64.whl", hash = "sha256:9c8decbe0b37d84f023e297f7ef5fc9b4a7aa9b2c486ae490efd972fc1b71ced"},
+    {file = "rapidnbt-1.3.5-cp311-cp311-manylinux_2_26_aarch64.manylinux_2_28_aarch64.whl", hash = "sha256:c8868ff3e4a230b453fde7ef5bbca78a2cfd5fe1564407bac24340b44ec97578"},
+    {file = "rapidnbt-1.3.5-cp311-cp311-manylinux_2_26_x86_64.manylinux_2_28_x86_64.whl", hash = "sha256:16073d94ed6c91ea4ee1f69ad5248b33fc191337e7800127d51f3ee52ea5db80"},
+    {file = "rapidnbt-1.3.5-cp311-cp311-win_amd64.whl", hash = "sha256:00e95a8872bf4fcbfb434e11f0470e64dcc51bc18e1e08cede7c9808698dc5af"},
+    {file = "rapidnbt-1.3.5-cp311-cp311-win_arm64.whl", hash = "sha256:e01be60a6845eec4a8ccbe1ea2f18ea03776bcbfac13054c4334068723d8392d"},
+    {file = "rapidnbt-1.3.5-cp312-cp312-macosx_11_0_arm64.whl", hash = "sha256:f19e515dcdcc05028a6bbe848b3649739a716dd6647efd94bd573ca98ab19f91"},
+    {file = "rapidnbt-1.3.5-cp312-cp312-manylinux_2_26_aarch64.manylinux_2_28_aarch64.whl", hash = "sha256:7f82ff17285d35fa756be71225409e96abe78162091a44d68d5cf1f2720b0946"},
+    {file = "rapidnbt-1.3.5-cp312-cp312-manylinux_2_26_x86_64.manylinux_2_28_x86_64.whl", hash = "sha256:a6011d58413920ef14ced1ebd8eaabdd2b925bf93e07d230f1bc4cebd6de13cd"},
+    {file = "rapidnbt-1.3.5-cp312-cp312-win_amd64.whl", hash = "sha256:20e4ced22bf7c8d431c4970ac71ef16a5890d4312fe3c104eda555b163256ea4"},
+    {file = "rapidnbt-1.3.5-cp312-cp312-win_arm64.whl", hash = "sha256:c46a1360f7b175217121d82fad627506009e668325c908deb4b3978f64cc72af"},
+    {file = "rapidnbt-1.3.5-cp313-cp313-macosx_11_0_arm64.whl", hash = "sha256:5f1bda17d1f9350eb2e35c66d6393503ee1f433220beabd55a84472f23700dfa"},
+    {file = "rapidnbt-1.3.5-cp313-cp313-manylinux_2_26_aarch64.manylinux_2_28_aarch64.whl", hash = "sha256:43947f59d15a5965c0897dcd127cbdb1a1ffdc87fa234747d5a5852dcfa71fb4"},
+    {file = "rapidnbt-1.3.5-cp313-cp313-manylinux_2_26_x86_64.manylinux_2_28_x86_64.whl", hash = "sha256:a5fe3601134415e8e128c1e4bbc8434fcbcad02c1c3777034ddf635bdd26a4d6"},
+    {file = "rapidnbt-1.3.5-cp313-cp313-win_amd64.whl", hash = "sha256:44c2938ad118ab8a410dbc631b0c0a87f3b1eadce901582c033051493dc8fb65"},
+    {file = "rapidnbt-1.3.5-cp313-cp313-win_arm64.whl", hash = "sha256:b0f2e32627c0125872b95aec28ff51bf1e945660fd59abf33170d4c277dac7b2"},
+    {file = "rapidnbt-1.3.5-cp314-cp314-macosx_11_0_arm64.whl", hash = "sha256:87594ec7c61e3f810b69b1add9839e92ad4e5d376af16ea5d86c39b21db1e0de"},
+    {file = "rapidnbt-1.3.5-cp314-cp314-manylinux_2_26_aarch64.manylinux_2_28_aarch64.whl", hash = "sha256:6b3c1d14bb5e94ece88e57cd89018bf20e3ea7d39b87d6cc46bec3ae7f262f02"},
+    {file = "rapidnbt-1.3.5-cp314-cp314-manylinux_2_26_x86_64.manylinux_2_28_x86_64.whl", hash = "sha256:1696ad81d3f72869a9925dc25dd13bf50de8632ce26b25f97f9e6fd368bca4b9"},
+    {file = "rapidnbt-1.3.5-cp314-cp314-win_amd64.whl", hash = "sha256:37268f485bd5d660282c8e5490fe5ad4cbef50dadc3559133560285315b508ad"},
+    {file = "rapidnbt-1.3.5-cp314-cp314-win_arm64.whl", hash = "sha256:5de9f9df879fd24243c308f967b2271345286545174c5f906e41cd59deca79a7"},
+    {file = "rapidnbt-1.3.5-cp38-cp38-macosx_11_0_arm64.whl", hash = "sha256:438bc107dd54b63f906f807d14083a49e5c58eca8bcdd4c7a25d5900e5a38440"},
+    {file = "rapidnbt-1.3.5-cp38-cp38-manylinux_2_26_aarch64.manylinux_2_28_aarch64.whl", hash = "sha256:6fd33ed6b2c957983b174a399ffeab1ba078d8c1e4b156b9ae1018f2ef07c167"},
+    {file = "rapidnbt-1.3.5-cp38-cp38-manylinux_2_26_x86_64.manylinux_2_28_x86_64.whl", hash = "sha256:1cb9d7f2a2cbbb43457862cd1981fe91d207f93db719823b15cb32798e6b26fc"},
+    {file = "rapidnbt-1.3.5-cp38-cp38-win_amd64.whl", hash = "sha256:1d5d76b0694bf94561c3b25816620d4dd6edf9bf00c3de9e55ae3a6807085665"},
+    {file = "rapidnbt-1.3.5-cp39-cp39-macosx_11_0_arm64.whl", hash = "sha256:f2f2aa4c6d80a6b3c56923473433b097efcd8f8338b84a0b42a67d7419e5360d"},
+    {file = "rapidnbt-1.3.5-cp39-cp39-manylinux_2_26_aarch64.manylinux_2_28_aarch64.whl", hash = "sha256:7d0d8ae18e6b763ff0a242f4cd2f9557f484389ceed92611f585b802a9a3907a"},
+    {file = "rapidnbt-1.3.5-cp39-cp39-manylinux_2_26_x86_64.manylinux_2_28_x86_64.whl", hash = "sha256:afba754245e878bcaa87199084835f0bff970f34b70c6ad69f4d0ff5b9891075"},
+    {file = "rapidnbt-1.3.5-cp39-cp39-win_amd64.whl", hash = "sha256:d2beb5f75a4e519ddd990274aed37d60a9e8eee06d01d073e2db5827431f9737"},
+    {file = "rapidnbt-1.3.5-cp39-cp39-win_arm64.whl", hash = "sha256:9e0c8755a80e21b76f666ed32f9498b79347f338c669b455743a4ab2fe86e8cb"},
+    {file = "rapidnbt-1.3.5.tar.gz", hash = "sha256:d7538fd802c1fe60424219158907151e7b95ae4385f9b1a05a3e45fa1852ef64"},
 ]
 
 [[package]]
@@ -1079,4 +1080,4 @@ dev = ["pytest", "twine"]
 [metadata]
 lock-version = "2.1"
 python-versions = ">=3.10"
-content-hash = "0877185e76db6f8c8d7800ee09dfbb074e7769a631ef65533ceb0a4223c16bef"
+content-hash = "aa24b327ff4b65d508ca16df8123bfcd53ee7e45a9e9e409b2732509c9fee035"

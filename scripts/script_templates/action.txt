@@ -1,0 +1,5 @@
+def {method_name}({parameter_list}{tag_parameter_list}target: Target=DEFAULT_TARGET):
+    """
+{action_description}{parameter_docstrings}:param Target target: The target for the action.
+    """
+    return CodeBlock.new_action('{codeblock_type}', '{action_name}', ({parameter_names}), {{{tag_values}}}, target=target)

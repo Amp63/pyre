@@ -1,0 +1,6 @@
+def {method_name}({parameter_list}{tag_parameter_list}sub_action: SUBACTION|None=None, inverted: bool=False):
+    """
+{action_description}{parameter_docstrings}:param str|None sub_action: The sub-action to use. (Not relevant for all actions)
+    :param bool inverted: Whether the sub-action condition should be inverted.
+    """
+    return CodeBlock.new_subaction_block('select_obj', '{action_name}', ({parameter_names}), {{{tag_values}}}, sub_action, inverted) 

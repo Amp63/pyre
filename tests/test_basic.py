@@ -9,9 +9,9 @@ def test_basic():
     init_codeblocks = len(t.codeblocks)
     
     t.insert([
-        player_action('SendMessage', 'hi'),
-        if_variable('=', '$ix', 5, codeblocks=[
-            player_action('GiveItems', Item('diamond'))
+        PlayerAction.SendMessage('hi'),
+        IfVariable.Equals('$ix', 5, codeblocks=[
+            PlayerAction.GiveItems(Item('diamond'))
         ])
     ]).build()
     
@@ -25,35 +25,35 @@ def test_send():
 
 def test_scriptgen():
     t = DFTemplate.from_code(TEMPLATE_CODE)
-    t.generate_script()
+    assert t.generate_script()
 
 
 def test_all_codeblocks():
-    player_event('Join', [
-        player_action('SendMessage', 'test'),
-        entity_action('Heal', 20),
-        game_action('SetBlock', Item('stone'), Location(1.5, 2.5, 3.5)),
-        set_variable('=', '$i x', 5),
-        if_player('IsHolding', Item('diamond_pickaxe')),
-        if_entity('IsGrounded'),
-        if_game('BlockEquals', Location(1.5, 2.5, 3.5), Item('stone')),
-        if_variable('=', '$i x', 5),
-        repeat('Multiple', 10, codeblocks=[
-            select_object('AllPlayers'),
-            control('Wait', 1)
+    PlayerEvent.Join([
+        PlayerAction.SendMessage('test'),
+        EntityAction.Heal(20),
+        GameAction.SetBlock(Item('stone'), Location(1.5, 2.5, 3.5)),
+        SetVariable.Assign('$i x', 5),
+        IfPlayer.IsHolding(Item('diamond_pickaxe')),
+        IfEntity.IsGrounded(),
+        IfGame.BlockEquals(Location(1.5, 2.5, 3.5), Item('stone')),
+        IfVariable.Equals('$i x', 5),
+        Repeat.Multiple('$i j', 10, codeblocks=[
+            SelectObject.AllPlayers(),
+            Control.Wait(1)
         ]),
-        call_function('foo'),
-        start_process('bar')
+        CallFunction('foo'),
+        StartProcess('bar')
     ]).build()
 
-    entity_event('FallingBlockLand', [
-        player_action('SendMessage', 'landed', target=Target.ALL_PLAYERS)
+    EntityEvent.FallingBlockLand([
+        PlayerAction.SendMessage('landed', target=Target.ALL_PLAYERS)
     ]).build()
 
-    function('foo', codeblocks=[
-        player_action('SendMessage', 'called foo')
+    Function('foo', codeblocks=[
+        PlayerAction.SendMessage('called foo')
     ]).build()
 
-    process('bar', codeblocks=[
-        player_action('SendMessage', 'started bar')
+    Process('bar', codeblocks=[
+        PlayerAction.SendMessage('started bar')
     ]).build()

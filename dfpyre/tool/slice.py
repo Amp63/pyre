@@ -1,7 +1,7 @@
 from dataclasses import dataclass
 from collections import deque
-from dfpyre.codeblock import CodeBlock, CONDITIONAL_CODEBLOCKS, TEMPLATE_STARTERS
-from dfpyre.items import Variable, Parameter, ParameterType
+from dfpyre.core.codeblock import CodeBlock, CONDITIONAL_CODEBLOCKS, TEMPLATE_STARTERS
+from dfpyre.core.items import Variable, Parameter, ParameterType
 
 
 BRACKET_CODEBLOCKS = CONDITIONAL_CODEBLOCKS

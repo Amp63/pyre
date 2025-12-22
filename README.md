@@ -5,12 +5,11 @@ A tool for creating and modifying code templates for the DiamondFire Minecraft s
 PyPi Link: https://pypi.org/project/dfpyre/
 
 ## Features
-- All code block types
-- All code item types
+- All codeblock types and actions
+- All code items
 - Direct sending to DF via CodeClient
+- Fully documented and typed actions
 - Automatic type conversion (`int` to `Number`, `str` to `String`)
-- Auto completed action names (if your IDE supports type hints)
-- Warnings for unrecognized actions and tags
 - Shorthand format for variables
 - Convert existing templates into equivalent Python code
 
@@ -30,9 +29,9 @@ Basic Template Example:
 ```py
 from dfpyre import *
 
-player_event('Join', codeblocks=[
-    player_action('SendMessage', Text('%default has joined!'), target=Target.ALL_PLAYERS),
-    player_action('GiveItems', Item('diamond_sword'), Item('steak', 10))
+PlayerEvent.Join(codeblocks=[
+    PlayerAction.SendMessage(Text('%default has joined!'), target=Target.ALL_PLAYERS),
+    PlayerAction.GiveItems([Item('diamond_sword'), Item('steak', 10)])
 ]).build_and_send()
 ```
 

@@ -1,9 +1,9 @@
 from typing import Literal
 from enum import Enum
 from difflib import get_close_matches
-from dfpyre.util import warn
-from dfpyre.items import convert_literals
-from dfpyre.actiondump import CODEBLOCK_DATA
+from dfpyre.util.util import warn, flatten
+from dfpyre.core.items import convert_literals
+from dfpyre.core.actiondump import CODEBLOCK_DATA
 
 
 VARIABLE_TYPES = {'txt', 'comp', 'num', 'item', 'loc', 'var', 'snd', 'part', 'pot', 'g_val', 'vec', 'pn_el', 'bl_tag'}
@@ -49,11 +49,12 @@ def _check_applied_tags(tags: list[dict], applied_tags: dict[str, str], codebloc
     valid_tags = {}
     tags_formatted = {t['name']: t for t in tags}
     for name, option in applied_tags.items():
+        option_strings = [o['name'] for o in tags_formatted[name]['options']]
         if name not in tags_formatted:
             tag_names_joined = '\n'.join(map(lambda s: '    - '+s, tags_formatted.keys()))
             warn(f'Tag "{name}" does not exist for action "{codeblock_name}". Available tags:\n{tag_names_joined}')
-        elif option not in tags_formatted[name]['options']:
-            options_joined = '\n'.join(map(lambda s: '    - '+s, tags_formatted[name]['options']))
+        elif option not in option_strings:
+            options_joined = '\n'.join(map(lambda s: '    - '+s, option_strings))
             warn(f'Tag "{name}" does not have the option "{option}". Available tag options:\n{options_joined}')
         else:
             valid_tags[name] = option
@@ -102,7 +103,7 @@ class CodeBlock:
     def __init__(self, codeblock_type: str, action_name: str, args: tuple=(), target: Target=DEFAULT_TARGET, data: dict={}, tags: dict[str, str]={}):
         self.type = codeblock_type
         self.action_name = action_name
-        self.args = tuple(map(convert_literals, args))
+        self.args = [convert_literals(a) for a in flatten(args) if a is not None]
         self.target = target
         self.data = data
         self.tags = tags

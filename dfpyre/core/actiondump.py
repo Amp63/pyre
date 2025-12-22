@@ -1,10 +1,12 @@
 import os
 import json
+from pathlib import Path
 from typing import TypedDict, Literal
-from dfpyre.util import warn
+from dfpyre.util.util import warn
 
 
-ACTIONDUMP_PATH = os.path.join(os.path.dirname(__file__), 'data/actiondump_min.json')
+ACTIONDUMP_PATH = os.path.join(os.path.dirname(__file__), '../data/actiondump_min.json')
+DEPRECATED_ACTIONS_PATH = os.path.join(os.path.dirname(__file__), '../data/deprecated_actions.json')
 
 CODEBLOCK_TYPE_LOOKUP = {
     'PLAYER ACTION': 'player_action',
@@ -29,9 +31,15 @@ CODEBLOCK_TYPE_LOOKUP = {
 
 VariableType = Literal['VARIABLE', 'NUMBER', 'TEXT', 'COMPONENT', 'ANY_TYPE', 'DICT', 'LIST', 'LOCATION', 'NONE', 'SOUND', 'PARTICLE', 'VECTOR', 'POTION', 'ITEM']
 
+
+class TagOption(TypedDict):
+    name: str
+    description: str | None
+
+
 class ActionTag(TypedDict):
     name: str
-    options: list[str]
+    options: list[TagOption]
     default: str
     slot: int
 
@@ -40,13 +48,18 @@ class ActionArgument(TypedDict):
     type: VariableType
     plural: bool
     optional: bool
+    description: str | None
+    notes: str | None
 
 
 class ActionData(TypedDict):
     tags: list[ActionTag]
     required_rank = Literal['None', 'Noble', 'Emperor', 'Mythic', 'Overlord']
-    arguments: list[ActionArgument]
+    arguments: list[tuple[ActionArgument, ...]]
     return_values: list[VariableType]
+    description: str | None
+    deprecated: bool
+    deprecated_note: str | None
 
 
 class ActiondumpResult(TypedDict):
@@ -59,7 +72,15 @@ class ActiondumpResult(TypedDict):
 def get_action_tags(action_data: dict) -> list[ActionTag]:
     action_tags = []
     for tag_data in action_data['tags']:
-        options = [o['name'] for o in tag_data['options']]
+        options: list[TagOption] = []
+        for option in tag_data['options']:
+            option_desc = option['icon']['description']
+            if option_desc:
+                option_desc = ' '.join(option_desc)
+            else:
+                option_desc = None
+            options.append(TagOption(name=option['name'], description=option_desc))
+        
         converted_tag = ActionTag(
             name=tag_data['name'],
             options=options,
@@ -76,15 +97,42 @@ def get_action_args(action_data: dict) -> list[ActionArgument]:
         return []
     
     parsed_arguments: list[ActionArgument] = []
+    argument_union_list: list[ActionArgument] = []
+    add_to_union = False
     arguments = icon['arguments']
     for arg_data in arguments:
         if 'type' not in arg_data:
+            if arg_data.get('text') == 'OR':
+                add_to_union = True
             continue
-        parsed_arguments.append(ActionArgument(
+
+        if argument_union_list and not add_to_union:
+            parsed_arguments.append(tuple(argument_union_list))
+            argument_union_list = []
+        
+        arg_description = arg_data['description']
+        if arg_description:
+            arg_description = ' '.join(arg_description)
+        else:
+            arg_description = None
+        
+        arg_notes = arg_data['notes']
+        if arg_notes:
+            arg_notes = ' '.join(arg_notes[0])
+        else:
+            arg_notes = None
+
+        argument_union_list.append(ActionArgument(
             type=arg_data['type'],
             plural=arg_data['plural'],
-            optional=arg_data['optional']
+            optional=arg_data['optional'],
+            description=arg_description,
+            notes=arg_notes
         ))
+        add_to_union = False
+    
+    if argument_union_list:
+        parsed_arguments.append(tuple(argument_union_list))
     
     return parsed_arguments
 
@@ -106,40 +154,55 @@ def get_action_return_values(action_data: dict) -> list[VariableType]:
 
 def parse_actiondump() -> ActiondumpResult:
     codeblock_data = {n: {} for n in CODEBLOCK_TYPE_LOOKUP.values()}
-    codeblock_data['else'] = {'tags': []}
+    codeblock_data['else'] = dict()
 
     if not os.path.exists(ACTIONDUMP_PATH):
         warn('Actiondump not found -- Item tags and error checking will not work.')
         return ActiondumpResult(codeblock_data={}, game_values=[], sound_names=[], potion_names=[])
     
     with open(ACTIONDUMP_PATH, 'r', encoding='utf-8') as f:
-        actiondump = json.loads(f.read())
+        actiondump: dict = json.loads(f.read())
+    
+    with open(DEPRECATED_ACTIONS_PATH, 'r', encoding='utf-8') as f:
+        all_deprecated_actions: dict = json.loads(f.read())
     
     for action_data in actiondump['actions']:
         action_tags = get_action_tags(action_data)
-        if dep_note := action_data['icon']['deprecatedNote']:
-            parsed_action_data['deprecatedNote'] = ' '.join(dep_note)
         
         required_rank = action_data['icon']['requiredRank']
         
         action_arguments = get_action_args(action_data)
         action_return_values = get_action_return_values(action_data)
+
+        action_description = action_data['icon']['description']
+        if action_description:
+            action_description = ' '.join(action_description)
+        else:
+            action_description = None
+        
+        dep_note = action_data['icon']['deprecatedNote']
+        if dep_note:
+            dep_note = ' '.join(dep_note)
+        else:
+            dep_note = None
+        
+        codeblock_type = CODEBLOCK_TYPE_LOOKUP[action_data['codeblockName']]
+
+        deprecated_actions = all_deprecated_actions.get(codeblock_type) or {}
+        action_name = action_data['name']
+        deprecated = action_name in deprecated_actions
         
         parsed_action_data = ActionData(
             tags=action_tags,
             required_rank=required_rank,
             arguments=action_arguments,
-            return_values=action_return_values
+            return_values=action_return_values,
+            description=action_description,
+            deprecated=deprecated,
+            deprecated_note=dep_note
         )
-        codeblock_type = CODEBLOCK_TYPE_LOOKUP[action_data['codeblockName']]
-        codeblock_data[codeblock_type][action_data['name']] = parsed_action_data
-
-        if aliases := action_data['aliases']:
-            alias_data = parsed_action_data.copy()
-            alias_data['alias'] = action_data['name']
-            for alias in aliases:
-                codeblock_data[codeblock_type][alias] = alias_data
-
+        codeblock_data[codeblock_type][action_name] = parsed_action_data
+        
     game_values: dict[str, VariableType] = {}
     for game_value in actiondump['gameValues']:
         icon = game_value['icon']

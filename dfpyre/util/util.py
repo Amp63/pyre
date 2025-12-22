@@ -3,6 +3,7 @@ import gzip
 import re
 import warnings
 from functools import wraps
+from collections.abc import Iterable
 
 
 COL_WARN = '\x1b[33m'
@@ -51,12 +52,14 @@ def df_decode(encoded_string: str) -> str:
     return gzip.decompress(base64.b64decode(encoded_string.encode('utf-8'))).decode('utf-8')
 
 
-def flatten(nested_list: list):
+from collections.abc import Iterable
+
+def flatten(nested_iterable):
     """
-    Flattens a list.
+    Flattens a nested iterable.
     """
-    for item in nested_list:
-        if isinstance(item, list):
+    for item in nested_iterable:
+        if isinstance(item, Iterable) and not isinstance(item, (str, bytes)):
             yield from flatten(item)
         else:
             yield item
