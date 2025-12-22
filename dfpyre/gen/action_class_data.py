@@ -25,7 +25,7 @@ CONDITIONAL_TEMPLATE = load_template('conditional.txt')
 NOTARGET_CONDITIONAL_TEMPLATE = load_template('notarget_conditional.txt')
 REPEAT_TEMPLATE = load_template('repeat.txt')
 REPEAT_WHILE_TEMPLATE = load_template('repeat_while.txt')
-SELECT_OBJ_TEMPLATE = load_template('select_obj.txt')
+SELECT_OBJ_SUBACTION_TEMPLATE = load_template('select_obj_subaction.txt')
 
 
 # Method name replacements
@@ -74,8 +74,20 @@ CODEBLOCK_LOOKUP: dict[str, tuple[str, str, dict[str, list[str]]]] = {
     'if_entity': ('IfEntity', CONDITIONAL_TEMPLATE, {}),
     'repeat': ('Repeat', REPEAT_TEMPLATE, {}),
     'control': ('Control', NOTARGET_ACTION_TEMPLATE, {}),
-    'select_obj': ('SelectObject', SELECT_OBJ_TEMPLATE, SELECT_OBJ_REPLACEMENTS),
+    'select_obj': ('SelectObject', NOTARGET_ACTION_TEMPLATE, SELECT_OBJ_REPLACEMENTS),
     'set_var': ('SetVariable', NOTARGET_ACTION_TEMPLATE, SET_VAR_REPLACEMENTS)
+}
+
+
+TEMPLATE_OVERRIDES = {
+    'repeat': {
+        'While': REPEAT_WHILE_TEMPLATE
+    },
+    'select_obj': {
+        'PlayersCond': SELECT_OBJ_SUBACTION_TEMPLATE,
+        'EntitiesCond': SELECT_OBJ_SUBACTION_TEMPLATE,
+        'FilterCondition': SELECT_OBJ_SUBACTION_TEMPLATE
+    }
 }
 
 

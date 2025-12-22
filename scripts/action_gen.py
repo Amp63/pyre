@@ -6,7 +6,7 @@ from dataclasses import dataclass
 from dfpyre.core.actiondump import ACTIONDUMP, ActionArgument, ActionTag, TagOption
 from dfpyre.util.util import flatten
 from dfpyre.gen.action_class_data import (
-    INDENT, CODEBLOCK_LOOKUP, PARAM_NAME_REPLACEMENTS, PARAM_TYPE_LOOKUP, REPEAT_WHILE_TEMPLATE, OUTPUT_PATH, IMPORTS,
+    INDENT, CODEBLOCK_LOOKUP, PARAM_NAME_REPLACEMENTS, PARAM_TYPE_LOOKUP, TEMPLATE_OVERRIDES, OUTPUT_PATH, IMPORTS,
     get_method_name_and_aliases, to_valid_identifier
 )
 
@@ -137,10 +137,12 @@ def generate_actions():
             if method_data is None:
                 continue
             method_name, method_aliases = method_data
-            
-            if codeblock_type == 'repeat' and action_name == 'While':
-                # Special case template for Repeat: While
-                method_template = REPEAT_WHILE_TEMPLATE
+
+            template_overrides = TEMPLATE_OVERRIDES.get(codeblock_type)
+            if template_overrides:
+                override_template = template_overrides.get(action_name)
+                if override_template is not None:
+                    method_template = override_template
             
             action_description = action_data['description'] or ''
             if action_description:

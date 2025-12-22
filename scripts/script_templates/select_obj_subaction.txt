@@ -1,0 +1,8 @@
+def {method_name}(*args: ArgValue, tags: dict[str, str]={{}}, sub_action: SUBACTION|None=None, inverted: bool=False):
+    """
+{action_description}    :param tuple[ArgValue, ...] args: The argument items to include.
+    :param dict[str, str] tags: The tags to include.
+    :param str|None sub_action: The sub-action to use. (Not relevant for all actions)
+    :param bool inverted: Whether the sub-action condition should be inverted.
+    """
+    return CodeBlock.new_subaction_block('select_obj', '{action_name}', args, tags, sub_action, inverted) 
