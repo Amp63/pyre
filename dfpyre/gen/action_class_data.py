@@ -2,13 +2,14 @@
 Contains data and functions for Codeblock class generation.
 """
 
+import os
 import re
 import keyword
 from datetime import datetime, timezone
 
 
 OUTPUT_PATH = 'dfpyre/export/action_classes.py'
-TEMPLATES_PATH = 'scripts/script_templates'
+TEMPLATES_PATH = os.path.join(os.path.dirname(__file__), '../data/script_templates')
 
 INDENT = ' ' * 4
 
