@@ -35,7 +35,12 @@ class DFTemplate:
         self.author = author
     
 
-    def get_template_name(self):
+    def get_template_name(self) -> str:
+        """
+        Returns an auto-generated name for this template.
+        
+        :return: Template name
+        """
         first_block_data = self.codeblocks[0].data
         if 'data' in first_block_data:
             name = first_block_data['data']
@@ -108,6 +113,11 @@ class DFTemplate:
 
 
     def generate_template_item(self) -> Item:
+        """
+        Create an item from this template.
+
+        :return: Template item
+        """
         template_code = self.build()
 
         now = datetime.datetime.now()
@@ -208,14 +218,3 @@ class DFTemplate:
         """
         sliced_templates = slice_template(self.codeblocks, target_length, self.get_template_name())
         return [DFTemplate(t, self.author) for t in sliced_templates]
-
-
-def _assemble_template(starting_block: CodeBlock, codeblocks: list[CodeBlock], author: str|None) -> DFTemplate:
-    """
-    Create a DFTemplate object from a starting block and a list of codeblocks.
-    `codeblocks` can contain nested lists of CodeBlock objects, so it must be flattened.
-    """
-    if author is None:
-        author = 'pyre'
-    template_codeblocks = [starting_block] + list(flatten(codeblocks))  # Flatten codeblocks list and insert starting block
-    return DFTemplate(template_codeblocks, author)

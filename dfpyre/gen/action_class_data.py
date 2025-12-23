@@ -9,7 +9,7 @@ from datetime import datetime, timezone
 
 
 OUTPUT_PATH = 'dfpyre/export/action_classes.py'
-TEMPLATES_PATH = os.path.join(os.path.dirname(__file__), '../data/script_templates')
+TEMPLATES_PATH = os.path.join(os.path.dirname(__file__), '../data/method_templates')
 
 INDENT = ' ' * 4
 
