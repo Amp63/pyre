@@ -33,7 +33,7 @@ VariableType = Literal['VARIABLE', 'NUMBER', 'TEXT', 'COMPONENT', 'ANY_TYPE', 'D
 
 
 @dataclass
-class CodeblockData:
+class CodeblockDataEntry:
     name: str
     id: str
     description: str
@@ -64,7 +64,7 @@ class ActionArgument:
 
 
 @dataclass
-class ActionData:
+class ActionDataEntry:
     tags: list[ActionTag]
     required_rank: Literal['None', 'Noble', 'Emperor', 'Mythic', 'Overlord']
     arguments: list[tuple[ActionArgument, ...]]
@@ -76,8 +76,8 @@ class ActionData:
 
 @dataclass
 class ActiondumpResult:
-    codeblock_data: dict[str, CodeblockData]
-    action_data: dict[str, dict[str, ActionData]]
+    codeblock_data: dict[str, CodeblockDataEntry]
+    action_data: dict[str, dict[str, ActionDataEntry]]
     game_values: dict[str, VariableType]
     sound_names: list[str]
     potion_names: list[str]
@@ -166,12 +166,12 @@ def get_action_return_values(action_data: dict) -> list[VariableType]:
     return parsed_return_values
 
 
-def parse_codeblock_data(raw_codeblock_data: list[dict]) -> dict[str, CodeblockData]:
-    parsed_data: dict[str, CodeblockData] = {}
+def parse_codeblock_data(raw_codeblock_data: list[dict]) -> dict[str, CodeblockDataEntry]:
+    parsed_data: dict[str, CodeblockDataEntry] = {}
     for raw_data in raw_codeblock_data:
         identifier = raw_data['identifier']
         description = ' '.join(raw_data['item']['description'])
-        parsed_codeblock = CodeblockData(
+        parsed_codeblock = CodeblockDataEntry(
             name=raw_data['name'],
             id=identifier,
             description=description,
@@ -215,7 +215,7 @@ def parse_action_data(raw_action_data: list[dict]):
         action_name = action_data['name']
         is_deprecated = action_name in deprecated_actions
         
-        parsed_action_data = ActionData(
+        parsed_action_data = ActionDataEntry(
             tags=action_tags,
             required_rank=required_rank,
             arguments=action_arguments,
