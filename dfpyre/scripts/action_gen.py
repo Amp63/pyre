@@ -118,14 +118,14 @@ def generate_actions():
     generated_lines: list[str] = IMPORTS.copy()
     generated_lines += ['']
     
-    for codeblock_type, actions in ACTIONDUMP['action_data'].items():
+    for codeblock_type, actions in ACTIONDUMP.action_data.items():
         codeblock_data = CODEBLOCK_LOOKUP.get(codeblock_type)
         if codeblock_data is None:
             continue
             
         class_name, method_template = codeblock_data
 
-        class_docstring = ACTIONDUMP['codeblock_data'][codeblock_type]['description']
+        class_docstring = ACTIONDUMP.codeblock_data[codeblock_type].description
         class_def_lines = [
             f'class {class_name}:',
             f'{INDENT}"""',
@@ -136,7 +136,7 @@ def generate_actions():
         generated_lines += class_def_lines
 
         for action_name, action_data in actions.items():
-            if action_data['deprecated']:
+            if action_data.is_deprecated:
                 # Skip deprecated actions
                 continue
             
@@ -151,12 +151,12 @@ def generate_actions():
                 if override_template is not None:
                     method_template = override_template
             
-            action_description = action_data['description'] or ''
+            action_description = action_data.description or ''
             if action_description:
                 action_description = f'{INDENT}{action_description}\n\n'
             
             # Get tag data
-            tags = parse_tags(action_data['tags'])
+            tags = parse_tags(action_data.tags)
 
             tag_parameter_list = ', '.join(t.get_param_string() for t in tags)
             if tag_parameter_list:
@@ -165,7 +165,7 @@ def generate_actions():
             tag_values = ', '.join(f"'{t.name}': {t.get_varname()}" for t in tags)
 
             # Get parameter data
-            parameters = parse_parameters(action_data['arguments'])
+            parameters = parse_parameters(action_data.arguments)
 
             parameter_list = ', '.join(p.get_param_string() for p in parameters)
             if parameter_list:

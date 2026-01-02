@@ -3,7 +3,7 @@ from enum import Enum
 from difflib import get_close_matches
 from dfpyre.util.util import warn, flatten
 from dfpyre.core.items import convert_literals
-from dfpyre.core.actiondump import ACTION_DATA
+from dfpyre.core.actiondump import ACTION_DATA, ActionTag
 
 
 VARIABLE_TYPES = {'txt', 'comp', 'num', 'item', 'loc', 'var', 'snd', 'part', 'pot', 'g_val', 'vec', 'pn_el', 'bl_tag'}
@@ -41,17 +41,19 @@ def _warn_unrecognized_name(codeblock_type: str, codeblock_name: str):
         warn(f'Code block name "{codeblock_name}" not recognized. Try spell checking or retyping without spaces.')
 
 
-def _check_applied_tags(tags: list[dict], applied_tags: dict[str, str], codeblock_name: str) -> dict[str, str]:
+def _check_applied_tags(tags: list[ActionTag], applied_tags: dict[str, str], codeblock_name: str) -> dict[str, str]:
     if len(applied_tags) > 0 and len(tags) == 0:
         warn(f'Action "{codeblock_name}" does not have any tags, but still received {len(applied_tags)}.')
         return {}
     
     valid_tags = {}
-    tags_formatted = {t['name']: t for t in tags}
+    tags_lookup = {t.name: t for t in tags}
+
     for name, option in applied_tags.items():
-        option_strings = [o['name'] for o in tags_formatted[name]['options']]
-        if name not in tags_formatted:
-            tag_names_joined = '\n'.join(map(lambda s: '    - '+s, tags_formatted.keys()))
+        option_strings = [o.name for o in tags_lookup[name].options]
+
+        if name not in tags_lookup:
+            tag_names_joined = '\n'.join(map(lambda s: '    - '+s, tags_lookup.keys()))
             warn(f'Tag "{name}" does not exist for action "{codeblock_name}". Available tags:\n{tag_names_joined}')
         elif option not in option_strings:
             options_joined = '\n'.join(map(lambda s: '    - '+s, option_strings))
@@ -61,7 +63,7 @@ def _check_applied_tags(tags: list[dict], applied_tags: dict[str, str], codebloc
     return valid_tags
 
 
-def _reformat_codeblock_tags(tags: list[dict], codeblock_type: str, codeblock_action: str, applied_tags: dict[str, str]) -> list[dict]:
+def _reformat_codeblock_tags(tags: list[ActionTag], codeblock_type: str, codeblock_action: str, applied_tags: dict[str, str]) -> list[dict]:
     """
     Turns tag objects into DiamondFire formatted tag items.
     """
@@ -72,14 +74,15 @@ def _reformat_codeblock_tags(tags: list[dict], codeblock_type: str, codeblock_ac
                 'id': 'bl_tag',
                 'data': {'option': option, 'tag': name, 'action': codeblock_action, 'block': codeblock_type}
             },
-            'slot': tag_item['slot']
+            'slot': tag_item.slot
         }
     
     valid_applied_tags = _check_applied_tags(tags, applied_tags, codeblock_action)
     reformatted_tags = []
     for tag_item in tags:
-        tag_name = tag_item['name']
-        tag_option = tag_item['default']
+        tag_name = tag_item.name
+        tag_option = tag_item.default
+
         if tag_name in valid_applied_tags:
             tag_option = valid_applied_tags[tag_name]
 
@@ -93,9 +96,9 @@ def _get_codeblock_tags(codeblock_type: str, codeblock_name: str, applied_tags: 
     Get tags for the specified codeblock type and name.
     """
     action_data = ACTION_DATA[codeblock_type][codeblock_name]
-    if 'deprecatedNote' in action_data:
-        warn(f'Action "{codeblock_name}" is deprecated: {action_data["deprecatedNote"]}')
-    tags = action_data['tags']
+    if action_data.is_deprecated:
+        warn(f'Action "{codeblock_name}" is deprecated: {action_data.deprecated_note}')
+    tags = action_data.tags
     return _reformat_codeblock_tags(tags, codeblock_type, codeblock_name, applied_tags)
 
 
@@ -184,7 +187,7 @@ class CodeBlock:
         final_args = [arg.format(slot) for slot, arg in enumerate(self.args) if arg.type in VARIABLE_TYPES]
         already_applied_tags: dict[str, dict] = {a['item']['data']['tag']: a for a in final_args if a['item']['id'] == 'bl_tag'}
         
-        # check for unrecognized name, add tags
+        # Check for unrecognized name, add tags
         if self.type not in {'bracket', 'else'}:
             if self.action_name not in ACTION_DATA[self.type]:
                 _warn_unrecognized_name(self.type, self.action_name)
@@ -196,8 +199,9 @@ class CodeBlock:
                     tags[i] = already_applied_tag_data
             
             if len(final_args) + len(tags) > 27:
-                final_args = final_args[:(27-len(tags))]  # trim list if over 27 elements
-            final_args.extend(tags)  # add tags to end
+                final_args = final_args[:(27-len(tags))]  # Trim list if over 27 elements
+            
+            final_args.extend(tags)  # Add tags to end
 
         built_block['args'] = {'items': final_args}
         return built_block

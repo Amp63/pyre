@@ -1,6 +1,7 @@
 import os
 import json
-from typing import TypedDict, Literal
+from typing import Literal
+from dataclasses import dataclass
 from dfpyre.util.util import warn
 
 
@@ -31,26 +32,30 @@ CODEBLOCK_ID_LOOKUP = {
 VariableType = Literal['VARIABLE', 'NUMBER', 'TEXT', 'COMPONENT', 'ANY_TYPE', 'DICT', 'LIST', 'LOCATION', 'NONE', 'SOUND', 'PARTICLE', 'VECTOR', 'POTION', 'ITEM']
 
 
-class CodeblockData(TypedDict):
+@dataclass
+class CodeblockData:
     name: str
     id: str
     description: str
     examples: list[str]
 
 
-class TagOption(TypedDict):
+@dataclass
+class TagOption:
     name: str
     description: str | None
 
 
-class ActionTag(TypedDict):
+@dataclass
+class ActionTag:
     name: str
     options: list[TagOption]
     default: str
     slot: int
 
 
-class ActionArgument(TypedDict):
+@dataclass
+class ActionArgument:
     type: VariableType
     plural: bool
     optional: bool
@@ -58,17 +63,19 @@ class ActionArgument(TypedDict):
     notes: str | None
 
 
-class ActionData(TypedDict):
+@dataclass
+class ActionData:
     tags: list[ActionTag]
-    required_rank = Literal['None', 'Noble', 'Emperor', 'Mythic', 'Overlord']
+    required_rank: Literal['None', 'Noble', 'Emperor', 'Mythic', 'Overlord']
     arguments: list[tuple[ActionArgument, ...]]
     return_values: list[VariableType]
     description: str | None
-    deprecated: bool
+    is_deprecated: bool
     deprecated_note: str | None
 
 
-class ActiondumpResult(TypedDict):
+@dataclass
+class ActiondumpResult:
     codeblock_data: dict[str, CodeblockData]
     action_data: dict[str, dict[str, ActionData]]
     game_values: dict[str, VariableType]
@@ -214,7 +221,7 @@ def parse_action_data(raw_action_data: list[dict]):
             arguments=action_arguments,
             return_values=action_return_values,
             description=action_description,
-            deprecated=is_deprecated,
+            is_deprecated=is_deprecated,
             deprecated_note=dep_note
         )
         all_action_data[codeblock_type][action_name] = parsed_action_data
@@ -255,6 +262,10 @@ def parse_actiondump() -> ActiondumpResult:
     )
 
 
+ACTIONDUMP = parse_actiondump()
+ACTION_DATA = ACTIONDUMP.action_data
+
+
 def get_default_tags(codeblock_type: str|None, codeblock_action: str|None) -> dict[str, str]:
     if not codeblock_type or not codeblock_action:
         return {}
@@ -263,9 +274,4 @@ def get_default_tags(codeblock_type: str|None, codeblock_action: str|None) -> di
     if codeblock_action not in ACTION_DATA[codeblock_type]:
         return {}
     
-    return {t['name']: t['default'] for t in ACTION_DATA[codeblock_type][codeblock_action]['tags']}
-
-
-ACTIONDUMP = parse_actiondump()
-
-ACTION_DATA = ACTIONDUMP['action_data']
+    return {t.name: t.default for t in ACTION_DATA[codeblock_type][codeblock_action].tags}
