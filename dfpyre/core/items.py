@@ -58,7 +58,7 @@ def convert_literals(arg: ArgValue) -> CodeItem:
         return Number(arg)
 
     elif isinstance(arg, str):
-        shorthand_match: re.Match = re.match(VAR_SHORTHAND_REGEX, arg)
+        shorthand_match = re.match(VAR_SHORTHAND_REGEX, arg)
         if shorthand_match:
             scope = VAR_SCOPE_LOOKUP[shorthand_match.group(1)]
             return Variable(shorthand_match.group(2), scope)

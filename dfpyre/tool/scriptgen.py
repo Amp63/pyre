@@ -186,7 +186,7 @@ def generate_script(codeblocks: list[CodeBlock], flags: GeneratorFlags) -> str:
                 add_script_line(flags, script_lines, indent_level, '])')
             continue
 
-        # Get codeblock function and start its arguments with the action
+        # Get codeblock function and set the action method
         function_name = CODEBLOCK_FUNCTION_LOOKUP[codeblock.type]
         if codeblock.type in NO_ACTION_BLOCKS:
             function_args = [str_literal(codeblock.action_name)]
@@ -255,7 +255,8 @@ def generate_script(codeblocks: list[CodeBlock], flags: GeneratorFlags) -> str:
             elif codeblock.type in EVENT_CODEBLOCKS and codeblock_attribute is None:
                 line = f'{var_assignment_snippet}{function_name}(['  # omit `codeblocks=` when we don't need it
             else:
-                line = f'{var_assignment_snippet}{function_name}({", ".join(function_args)}, codeblocks=['
+                joined_args = ', '.join(function_args) + ', ' if function_args else ''
+                line = f'{var_assignment_snippet}{function_name}({joined_args}codeblocks=['
             add_script_line(flags, script_lines, indent_level, line, False)
             indent_level += 1
         else:

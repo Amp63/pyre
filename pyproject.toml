@@ -1,6 +1,6 @@
 [project]
 name = "dfpyre"
-version = "0.10.2"
+version = "0.10.3"
 description = "A package for creating and modifying code templates for the DiamondFire Minecraft server."
 authors = [
     {name = "Amp"}
