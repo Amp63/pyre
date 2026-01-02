@@ -3,7 +3,7 @@ from enum import Enum
 from difflib import get_close_matches
 from dfpyre.util.util import warn, flatten
 from dfpyre.core.items import convert_literals
-from dfpyre.core.actiondump import CODEBLOCK_DATA
+from dfpyre.core.actiondump import ACTION_DATA
 
 
 VARIABLE_TYPES = {'txt', 'comp', 'num', 'item', 'loc', 'var', 'snd', 'part', 'pot', 'g_val', 'vec', 'pn_el', 'bl_tag'}
@@ -34,7 +34,7 @@ DEFAULT_TARGET = Target.SELECTION
 
 
 def _warn_unrecognized_name(codeblock_type: str, codeblock_name: str):
-    close = get_close_matches(codeblock_name, CODEBLOCK_DATA[codeblock_type].keys())
+    close = get_close_matches(codeblock_name, ACTION_DATA[codeblock_type].keys())
     if close:
         warn(f'Code block name "{codeblock_name}" not recognized. Did you mean "{close[0]}"?')
     else:
@@ -92,7 +92,7 @@ def _get_codeblock_tags(codeblock_type: str, codeblock_name: str, applied_tags: 
     """
     Get tags for the specified codeblock type and name.
     """
-    action_data = CODEBLOCK_DATA[codeblock_type][codeblock_name]
+    action_data = ACTION_DATA[codeblock_type][codeblock_name]
     if 'deprecatedNote' in action_data:
         warn(f'Action "{codeblock_name}" is deprecated: {action_data["deprecatedNote"]}')
     tags = action_data['tags']
@@ -186,7 +186,7 @@ class CodeBlock:
         
         # check for unrecognized name, add tags
         if self.type not in {'bracket', 'else'}:
-            if self.action_name not in CODEBLOCK_DATA[self.type]:
+            if self.action_name not in ACTION_DATA[self.type]:
                 _warn_unrecognized_name(self.type, self.action_name)
             
             tags = _get_codeblock_tags(self.type, self.action_name, self.tags)

@@ -6,7 +6,7 @@ from dataclasses import dataclass
 from dfpyre.core.actiondump import ACTIONDUMP, ActionArgument, ActionTag, TagOption
 from dfpyre.util.util import flatten
 from dfpyre.gen.action_class_data import (
-    INDENT, CODEBLOCK_LOOKUP, PARAM_NAME_REPLACEMENTS, PARAM_TYPE_LOOKUP, TEMPLATE_OVERRIDES, OUTPUT_PATH, IMPORTS,
+    INDENT, CODEBLOCK_LOOKUP, PARAM_NAME_REPLACEMENTS, PARAM_TYPE_LOOKUP, TEMPLATE_OVERRIDES, OUTPUT_PATH, IMPORTS, CLASS_ALIASES,
     get_method_name_and_aliases, to_valid_identifier
 )
 
@@ -42,7 +42,7 @@ def parse_parameters(action_arguments: list[tuple[ActionArgument, ...]]) -> list
     parameter_list: list[ParameterData] = []
     prev_optional_exists = False
 
-    for i, arg_union in enumerate(action_arguments):
+    for arg_union in action_arguments:
         if len(arg_union) == 1:
             param_name = arg_union[0]['type'].lower()
             if param_name in PARAM_NAME_REPLACEMENTS:
@@ -118,15 +118,22 @@ def generate_actions():
     generated_lines: list[str] = IMPORTS.copy()
     generated_lines += ['']
     
-    for codeblock_type, actions in ACTIONDUMP['codeblock_data'].items():
+    for codeblock_type, actions in ACTIONDUMP['action_data'].items():
         codeblock_data = CODEBLOCK_LOOKUP.get(codeblock_type)
         if codeblock_data is None:
             continue
             
-        class_name, method_template, _ = codeblock_data
+        class_name, method_template = codeblock_data
 
-        class_def = f'class {class_name}:'
-        generated_lines.append(class_def)
+        class_docstring = ACTIONDUMP['codeblock_data'][codeblock_type]['description']
+        class_def_lines = [
+            f'class {class_name}:',
+            f'{INDENT}"""',
+            f'{INDENT}{class_docstring}',
+            f'{INDENT}"""',
+            ''
+        ]
+        generated_lines += class_def_lines
 
         for action_name, action_data in actions.items():
             if action_data['deprecated']:
@@ -199,6 +206,11 @@ def generate_actions():
             method_lines = [INDENT + l for l in method_lines]
             method_lines += ['']
             generated_lines += method_lines
+        
+        class_aliases = CLASS_ALIASES.get(codeblock_type) or []
+        for alias in class_aliases:
+            alias_def = f'{alias} = {class_name}'
+            generated_lines.append(alias_def)
 
     
     with open(OUTPUT_PATH, 'w') as f:

@@ -7,7 +7,7 @@ from dfpyre.util.util import warn
 ACTIONDUMP_PATH = os.path.join(os.path.dirname(__file__), '../data/actiondump_min.json')
 DEPRECATED_ACTIONS_PATH = os.path.join(os.path.dirname(__file__), '../data/deprecated_actions.json')
 
-CODEBLOCK_TYPE_LOOKUP = {
+CODEBLOCK_ID_LOOKUP = {
     'PLAYER ACTION': 'player_action',
     'ENTITY ACTION': 'entity_action',
     'GAME ACTION': 'game_action',
@@ -29,6 +29,13 @@ CODEBLOCK_TYPE_LOOKUP = {
 
 
 VariableType = Literal['VARIABLE', 'NUMBER', 'TEXT', 'COMPONENT', 'ANY_TYPE', 'DICT', 'LIST', 'LOCATION', 'NONE', 'SOUND', 'PARTICLE', 'VECTOR', 'POTION', 'ITEM']
+
+
+class CodeblockData(TypedDict):
+    name: str
+    id: str
+    description: str
+    examples: list[str]
 
 
 class TagOption(TypedDict):
@@ -62,7 +69,8 @@ class ActionData(TypedDict):
 
 
 class ActiondumpResult(TypedDict):
-    codeblock_data: dict[str, dict[str, ActionData]]
+    codeblock_data: dict[str, CodeblockData]
+    action_data: dict[str, dict[str, ActionData]]
     game_values: dict[str, VariableType]
     sound_names: list[str]
     potion_names: list[str]
@@ -151,21 +159,30 @@ def get_action_return_values(action_data: dict) -> list[VariableType]:
     return parsed_return_values
 
 
-def parse_actiondump() -> ActiondumpResult:
-    codeblock_data = {n: {} for n in CODEBLOCK_TYPE_LOOKUP.values()}
-    codeblock_data['else'] = dict()
+def parse_codeblock_data(raw_codeblock_data: list[dict]) -> dict[str, CodeblockData]:
+    parsed_data: dict[str, CodeblockData] = {}
+    for raw_data in raw_codeblock_data:
+        identifier = raw_data['identifier']
+        description = ' '.join(raw_data['item']['description'])
+        parsed_codeblock = CodeblockData(
+            name=raw_data['name'],
+            id=identifier,
+            description=description,
+            examples=raw_data['item']['example']
+        )
+        parsed_data[identifier] = parsed_codeblock
+    
+    return parsed_data
 
-    if not os.path.exists(ACTIONDUMP_PATH):
-        warn('Actiondump not found -- Item tags and error checking will not work.')
-        return ActiondumpResult(codeblock_data={}, game_values=[], sound_names=[], potion_names=[])
-    
-    with open(ACTIONDUMP_PATH, 'r', encoding='utf-8') as f:
-        actiondump: dict = json.loads(f.read())
-    
+
+def parse_action_data(raw_action_data: list[dict]):
+    all_action_data = {n: {} for n in CODEBLOCK_ID_LOOKUP.values()}
+    all_action_data['else'] = dict()
+
     with open(DEPRECATED_ACTIONS_PATH, 'r', encoding='utf-8') as f:
         all_deprecated_actions: dict = json.loads(f.read())
-    
-    for action_data in actiondump['actions']:
+
+    for action_data in raw_action_data:
         action_tags = get_action_tags(action_data)
         
         required_rank = action_data['icon']['requiredRank']
@@ -185,11 +202,11 @@ def parse_actiondump() -> ActiondumpResult:
         else:
             dep_note = None
         
-        codeblock_type = CODEBLOCK_TYPE_LOOKUP[action_data['codeblockName']]
+        codeblock_type = CODEBLOCK_ID_LOOKUP[action_data['codeblockName']]
 
         deprecated_actions = all_deprecated_actions.get(codeblock_type) or {}
         action_name = action_data['name']
-        deprecated = action_name in deprecated_actions
+        is_deprecated = action_name in deprecated_actions
         
         parsed_action_data = ActionData(
             tags=action_tags,
@@ -197,10 +214,24 @@ def parse_actiondump() -> ActiondumpResult:
             arguments=action_arguments,
             return_values=action_return_values,
             description=action_description,
-            deprecated=deprecated,
+            deprecated=is_deprecated,
             deprecated_note=dep_note
         )
-        codeblock_data[codeblock_type][action_name] = parsed_action_data
+        all_action_data[codeblock_type][action_name] = parsed_action_data
+    
+    return all_action_data
+
+
+def parse_actiondump() -> ActiondumpResult:
+    if not os.path.isfile(ACTIONDUMP_PATH):
+        warn('Actiondump not found -- Item tags and error checking will not work.')
+        return ActiondumpResult(codeblock_data={}, action_data={}, game_values=[], sound_names=[], potion_names=[])
+    
+    with open(ACTIONDUMP_PATH, 'r', encoding='utf-8') as f:
+        actiondump: dict = json.loads(f.read())
+
+    codeblock_data = parse_codeblock_data(actiondump['codeblocks'])
+    all_action_data = parse_action_data(actiondump['actions'])
         
     game_values: dict[str, VariableType] = {}
     for game_value in actiondump['gameValues']:
@@ -217,6 +248,7 @@ def parse_actiondump() -> ActiondumpResult:
     
     return ActiondumpResult(
         codeblock_data=codeblock_data,
+        action_data=all_action_data,
         game_values=game_values,
         sound_names=sound_names,
         potion_names=potion_names
@@ -226,14 +258,14 @@ def parse_actiondump() -> ActiondumpResult:
 def get_default_tags(codeblock_type: str|None, codeblock_action: str|None) -> dict[str, str]:
     if not codeblock_type or not codeblock_action:
         return {}
-    if codeblock_type not in CODEBLOCK_DATA:
+    if codeblock_type not in ACTION_DATA:
         return {}
-    if codeblock_action not in CODEBLOCK_DATA[codeblock_type]:
+    if codeblock_action not in ACTION_DATA[codeblock_type]:
         return {}
     
-    return {t['name']: t['default'] for t in CODEBLOCK_DATA[codeblock_type][codeblock_action]['tags']}
+    return {t['name']: t['default'] for t in ACTION_DATA[codeblock_type][codeblock_action]['tags']}
 
 
 ACTIONDUMP = parse_actiondump()
 
-CODEBLOCK_DATA = ACTIONDUMP['codeblock_data']
+ACTION_DATA = ACTIONDUMP['action_data']
