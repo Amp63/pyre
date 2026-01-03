@@ -44,16 +44,16 @@ def parse_parameters(action_arguments: list[tuple[ActionArgument, ...]]) -> list
 
     for arg_union in action_arguments:
         if len(arg_union) == 1:
-            param_name = arg_union[0]['type'].lower()
+            param_name = arg_union[0].type.lower()
             if param_name in PARAM_NAME_REPLACEMENTS:
                 param_name = PARAM_NAME_REPLACEMENTS[param_name]
         else:
             param_name = f'arg'
 
-        is_optional = arg_union[0]['optional']
-        has_none = 'NONE' in (arg['type'] for arg in arg_union)
+        is_optional = arg_union[0].optional
+        has_none = 'NONE' in (arg.type for arg in arg_union)
         
-        param_types_list = list(flatten(PARAM_TYPE_LOOKUP[arg['type']] for arg in arg_union))
+        param_types_list = list(flatten(PARAM_TYPE_LOOKUP[arg.type] for arg in arg_union))
         if is_optional:
             param_types_list.append('None')
             prev_optional_exists = True
@@ -65,13 +65,13 @@ def parse_parameters(action_arguments: list[tuple[ActionArgument, ...]]) -> list
         param_types_dedup = list(dict.fromkeys(param_types_list))
         param_types = ' | '.join(param_types_dedup)
 
-        if arg_union[0]['plural']:
+        if arg_union[0].plural:
             param_name += 's'
             plural_param_types = ' | '.join(t for t in param_types_dedup if t != 'None')  # Doesn't make sense to have a list of None
             param_types = f'list[{plural_param_types}] | {param_types}'
 
-        param_description = ' OR '.join(arg['description'] for arg in arg_union if arg['description'])
-        param_notes = ' OR '.join(arg['notes'] for arg in arg_union if arg['notes'])
+        param_description = ' OR '.join(arg.description for arg in arg_union if arg.description)
+        param_notes = ' OR '.join(arg.notes for arg in arg_union if arg.notes)
 
         param = ParameterData(param_name, param_types, param_description, param_notes, is_optional, has_none)
         parameter_list.append(param)
@@ -98,20 +98,20 @@ class TagData:
         return to_valid_identifier(self.name.lower())
 
     def get_param_string(self) -> str:
-        options_list = ', '.join(f'"{o["name"]}"' for o in self.options)
+        options_list = ', '.join(f'"{o.name}"' for o in self.options)
         tag_type = f'Literal[{options_list}]'
         return f'{self.get_varname()}: {tag_type}="{self.default}"'
 
     def get_docstring(self) -> str:
         docstring_lines = [f':param str {self.get_varname()}: {self.name}']
-        docstring_lines += [f'{INDENT*2}- {o['name']}: {o['description']}' for o in self.options if o['description']]
+        docstring_lines += [f'{INDENT*2}- {o.name}: {o.description}' for o in self.options if o.description]
         if len(docstring_lines) > 1:
             docstring_lines.insert(1, '')
         return '\n'.join(docstring_lines)
 
 
 def parse_tags(action_tags: list[ActionTag]) -> list[TagData]:
-    return [TagData(t['name'], t['options'], t['default']) for t in action_tags]
+    return [TagData(t.name, t.options, t.default) for t in action_tags]
 
 
 def generate_actions():

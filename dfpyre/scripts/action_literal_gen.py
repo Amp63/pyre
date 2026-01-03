@@ -19,7 +19,7 @@ def generate_action_literals():
         if len(actions) == 1:
             continue
 
-        filtered_actions = [a for a, d in actions.items() if not d['deprecated']]  # Omit deprecated actions
+        filtered_actions = [a for a, d in actions.items() if not d.is_deprecated]  # Omit deprecated actions
         if not filtered_actions:
             continue
         action_list = str(filtered_actions)
