@@ -3,7 +3,7 @@ from dfpyre.util.util import is_number
 from dfpyre.core.items import *
 from dfpyre.core.actiondump import get_default_tags
 from dfpyre.core.codeblock import CodeBlock, CONDITIONAL_CODEBLOCKS, TARGET_CODEBLOCKS, EVENT_CODEBLOCKS
-from dfpyre.gen.action_class_data import get_method_name_and_aliases, to_valid_identifier
+from dfpyre.gen.action_gen_data import get_method_name_and_aliases, to_valid_identifier
 
 
 IMPORT_STATEMENT = 'from dfpyre import *'
@@ -32,6 +32,21 @@ CODEBLOCK_FUNCTION_LOOKUP = {
 NO_ACTION_BLOCKS = {'func', 'process', 'call_func', 'start_process', 'else'}
 CONTAINER_CODEBLOCKS = {'event', 'entity_event', 'func', 'process', 'if_player', 'if_entity', 'if_game', 'if_var', 'else', 'repeat'}
 VAR_SCOPE_LOOKUP = {'unsaved': 'g', 'saved': 's', 'local': 'l', 'line': 'i'}
+
+PARTICLE_PARAM_LOOKUP = {
+    'particle': 'particle_name',
+    'amount': 'amount',
+    'horizontal': 'horizontal_spread',
+    'vertical': 'vertical_spread',
+    'size': 'size',
+    'sizeVariation': 'size_variation',
+    'motionVariation': 'motion_variation',
+    'colorVariation': 'color_variation',
+    'duration': 'duration',
+    'opacity': 'opacity',
+    'roll': 'roll',
+    'material': 'material'
+}
 
 
 @dataclasses.dataclass
@@ -63,6 +78,42 @@ def escape(s: str) -> str:
 
 def str_literal(s: str) -> str:
     return "'" + escape(s) + "'"
+
+
+def particle_to_string(class_name: str, particle_item: Particle, slot_argument: str):
+    argument_list: list[str] = []
+
+    def convert_color(color_int: int):
+        r = (color_int >> 16) & 0xFF
+        g = (color_int >> 8) & 0xFF
+        b = color_int & 0xFF
+        return (r, g, b)
+
+    cluster: dict = particle_item.particle_data.get('cluster') or {}
+    for key, value in cluster.items():
+        param_name = PARTICLE_PARAM_LOOKUP.get(key)
+        if param_name is not None:
+            argument_list.append(f'{value}')
+
+    sub_data: dict = particle_item.particle_data.get('data') or {}
+    for key, value in sub_data.items():
+        param_name = PARTICLE_PARAM_LOOKUP.get(key)
+        if param_name is not None:
+            argument_list.append(f'{param_name}={value}')
+        elif key == 'motion':
+            motion_tuple = (sub_data['x'], sub_data['y'], sub_data['z'])
+            argument_list.append(f'motion={motion_tuple}')
+        elif key == 'rgb':
+            color_tuple = convert_color(value)
+            argument_list.append(f'color={color_tuple}')
+        elif key == 'fade_rgb':
+            color_tuple = convert_color(value)
+            argument_list.append(f'fade_color={color_tuple}')
+
+    particle_name = particle_item.particle_data['particle']
+
+    argument_list_joined = ', '.join(argument_list)
+    return f'{class_name}.{particle_name}({argument_list_joined}{slot_argument})'
 
 
 def argument_item_to_string(flags: GeneratorFlags, arg_item: CodeItem) -> str: 
@@ -110,7 +161,7 @@ def argument_item_to_string(flags: GeneratorFlags, arg_item: CodeItem) -> str:
         return f"{class_name}({str_literal(arg_item.name)}, {arg_item.pitch}, {arg_item.vol}{slot_argument})"
     
     if isinstance(arg_item, Particle):
-        return f'{class_name}({arg_item.particle_data})'
+        return particle_to_string(class_name, arg_item, slot_argument)
     
     if isinstance(arg_item, Potion):
         return f"{class_name}({str_literal(arg_item.name)}, {arg_item.dur}, {arg_item.amp}{slot_argument})"

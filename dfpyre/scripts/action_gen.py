@@ -5,8 +5,9 @@ Generates Codeblock classes with static methods for each action.
 from dataclasses import dataclass
 from dfpyre.core.actiondump import ACTIONDUMP, ActionArgument, ActionTag, TagOption
 from dfpyre.util.util import flatten
-from dfpyre.gen.action_class_data import (
-    INDENT, CODEBLOCK_LOOKUP, PARAM_NAME_REPLACEMENTS, PARAM_TYPE_LOOKUP, TEMPLATE_OVERRIDES, OUTPUT_PATH, IMPORTS, CLASS_ALIASES,
+from dfpyre.gen.gen_data import INDENT
+from dfpyre.gen.action_gen_data import (
+    CODEBLOCK_LOOKUP, PARAM_NAME_REPLACEMENTS, PARAM_TYPE_LOOKUP, TEMPLATE_OVERRIDES, OUTPUT_PATH, IMPORTS, CLASS_ALIASES,
     get_method_name_and_aliases, to_valid_identifier
 )
 

@@ -2,15 +2,16 @@
 Class definitions for code items.
 """
 
-from abc import ABC, abstractmethod
 from enum import Enum
 import re
-from typing import Literal, Any, Union
+from typing import Literal, Union
 import websocket
 from mcitemlib.itemlib import Item as NbtItem, MCItemlibException
 from rapidnbt import DoubleTag, StringTag, CompoundTag
 from dfpyre.util.style import is_ampersand_coded, ampersand_to_minimessage
 from dfpyre.util.util import PyreException, warn, is_number, COL_SUCCESS, COL_ERROR, COL_RESET
+from dfpyre.util.codeitem import CodeItem, add_slot
+from dfpyre.export.particle_item import Particle
 from dfpyre.gen.action_literals import GAME_VALUE_NAME, SOUND_NAME, POTION_NAME
 
 
@@ -32,25 +33,6 @@ CODECLIENT_URL = 'ws://localhost:31375'
 
 # Valid types that can be passed as args for a CodeBlock function
 ArgValue = Union["CodeItem", str, int, float]
-
-
-def _add_slot(d: dict, slot: int|None):
-    if slot is not None:
-        d['slot'] = slot
-
-
-class CodeItem(ABC):
-    type = '_codeitem'
-
-    def __init__(self, slot: int|None):
-        self.slot = slot
-
-    @abstractmethod
-    def format(self, slot: int|None) -> dict[str, dict[str, Any]]:
-        """
-        Returns a dictionary containing this code item's data formatted
-        for a DF template JSON.
-        """
 
 
 def convert_literals(arg: ArgValue) -> CodeItem:
@@ -80,7 +62,7 @@ class String(CodeItem):
     
     def format(self, slot: int|None):
         formatted_dict = {"item": {"id": self.type, "data": {"name": self.value}}}
-        _add_slot(formatted_dict, self.slot or slot)
+        add_slot(formatted_dict, self.slot or slot)
         return formatted_dict
     
     def __repr__(self) -> str:
@@ -104,7 +86,7 @@ class Text(CodeItem):
     
     def format(self, slot: int|None):
       formatted_dict = {"item": {"id": self.type, "data": {"name": self.value}}}
-      _add_slot(formatted_dict, self.slot or slot)
+      add_slot(formatted_dict, self.slot or slot)
       return formatted_dict
 
     def __repr__(self) -> str:
@@ -123,7 +105,7 @@ class Number(CodeItem):
     
     def format(self, slot: int|None):
         formatted_dict = {"item": {"id": self.type, "data": {"name": str(self.value)}}}
-        _add_slot(formatted_dict, self.slot or slot)
+        add_slot(formatted_dict, self.slot or slot)
         return formatted_dict
 
     def __repr__(self) -> str:
@@ -144,7 +126,7 @@ class Item(CodeItem, NbtItem):
 
     def format(self, slot: int|None):
         formatted_dict = {"item": {"id": self.type, "data": {"item": self.get_snbt()}}}
-        _add_slot(formatted_dict, self.slot or slot)
+        add_slot(formatted_dict, self.slot or slot)
         return formatted_dict
 
     def __repr__(self) -> str:
@@ -272,7 +254,7 @@ class Location(CodeItem):
                 }
             }
         }}
-        _add_slot(formatted_dict, self.slot or slot)
+        add_slot(formatted_dict, self.slot or slot)
         return formatted_dict
 
     def __repr__(self) -> str:
@@ -297,7 +279,7 @@ class Variable(CodeItem):
 
     def format(self, slot: int|None):
         formatted_dict = {"item": {"id": self.type,"data": {"name": self.name, "scope": self.scope}}}
-        _add_slot(formatted_dict, self.slot or slot)
+        add_slot(formatted_dict, self.slot or slot)
         return formatted_dict
 
     def __repr__(self) -> str:
@@ -323,32 +305,13 @@ class Sound(CodeItem):
 
     def format(self, slot: int|None):
         formatted_dict = {"item": {"id": self.type,"data": {"sound": self.name, "pitch": self.pitch, "vol": self.vol}}}
-        _add_slot(formatted_dict, self.slot or slot)
+        add_slot(formatted_dict, self.slot or slot)
         return formatted_dict
 
     def __repr__(self) -> str:
         return f'{self.__class__.__name__}(pitch: {self.pitch}, volume: {self.vol})'
 
 Snd = Sound  # Sound alias
-
-
-class Particle(CodeItem):
-    """
-    Represents a DiamondFire particle object.
-    """
-    type = 'part'
-    
-    def __init__(self, particle_data: dict, slot: int | None=None):
-        super().__init__(slot)
-        self.particle_data = particle_data
-    
-    def format(self, slot: int|None):
-        formatted_dict = {"item": {"id": self.type, "data": self.particle_data}}
-        _add_slot(formatted_dict, self.slot or slot)
-        return formatted_dict
-
-    def __repr__(self) -> str:
-        return f'{self.__class__.__name__}({self.particle_data})'
 
 
 class Potion(CodeItem):
@@ -369,7 +332,7 @@ class Potion(CodeItem):
     
     def format(self, slot: int|None):
         formatted_dict = {"item": {"id": self.type,"data": {"pot": self.name, "dur": self.dur, "amp": self.amp}}}
-        _add_slot(formatted_dict, self.slot or slot)
+        add_slot(formatted_dict, self.slot or slot)
         return formatted_dict
 
     def __repr__(self) -> str:
@@ -395,7 +358,7 @@ class GameValue(CodeItem):
     
     def format(self, slot: int|None):
         formatted_dict = {"item": {"id": self.type, "data": {"type": self.name, "target": self.target}}}
-        _add_slot(formatted_dict, self.slot or slot)
+        add_slot(formatted_dict, self.slot or slot)
         return formatted_dict
 
     def __repr__(self) -> str:
@@ -416,7 +379,7 @@ class Vector(CodeItem):
     
     def format(self, slot: int|None):
         formatted_dict = {"item": {"id": self.type, "data": {"x": self.x, "y": self.y, "z": self.z}}}
-        _add_slot(formatted_dict, self.slot or slot)
+        add_slot(formatted_dict, self.slot or slot)
         return formatted_dict
 
     def __repr__(self) -> str:
@@ -470,7 +433,7 @@ class Parameter(CodeItem):
                 "optional": self.optional,
             }}
         }
-        _add_slot(formatted_dict, self.slot or slot)
+        add_slot(formatted_dict, self.slot or slot)
 
         if self.description:
             formatted_dict['item']['data']['description'] = self.description
@@ -503,7 +466,7 @@ class _Tag(CodeItem):
     
     def format(self, slot: int|None):
         formatted_dict = {"item": {"id": self.type, "data": self.tag_data}}
-        _add_slot(formatted_dict, self.slot or slot)
+        add_slot(formatted_dict, self.slot or slot)
         return formatted_dict
 
     def __repr__(self) -> str:
@@ -546,7 +509,7 @@ def item_from_dict(item_dict: dict, preserve_item_slots: bool):
         return Sound(item_data['sound'], item_data['pitch'], item_data['vol'], item_slot)
     
     elif item_id == 'part':
-        return Particle(item_data, item_slot)
+        return Particle.from_data(item_data, item_slot)
     
     elif item_id == 'pot':
         return Potion(item_data['pot'], item_data['dur'], item_data['amp'], item_slot)

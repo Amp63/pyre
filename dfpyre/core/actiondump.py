@@ -75,16 +75,30 @@ class ActionDataEntry:
 
 
 @dataclass
+class ParticleEntry:
+    id: str
+    name: str
+    category: str
+    fields: list[str]
+    additional_info: str | None
+    icon_material: str
+    icon_color: tuple[int, int, int] | None = None
+    icon_head_data: str | None = None
+
+
+@dataclass
 class ActiondumpResult:
     codeblock_data: dict[str, CodeblockDataEntry]
     action_data: dict[str, dict[str, ActionDataEntry]]
+    particle_data: list[ParticleEntry]
     game_values: dict[str, VariableType]
     sound_names: list[str]
     potion_names: list[str]
 
 
-def get_action_tags(action_data: dict) -> list[ActionTag]:
-    action_tags = []
+def parse_action_tags(action_data: dict):
+    action_tags: list[ActionTag] = []
+
     for tag_data in action_data['tags']:
         options: list[TagOption] = []
         for option in tag_data['options']:
@@ -102,10 +116,11 @@ def get_action_tags(action_data: dict) -> list[ActionTag]:
             slot=tag_data['slot']
         )
         action_tags.append(converted_tag)
+    
     return action_tags
 
 
-def get_action_args(action_data: dict) -> list[ActionArgument]:
+def parse_action_args(action_data: dict) -> list[ActionArgument]:
     icon = action_data['icon']
     if 'arguments' not in icon:
         return []
@@ -190,11 +205,11 @@ def parse_action_data(raw_action_data: list[dict]):
         all_deprecated_actions: dict = json.loads(f.read())
 
     for action_data in raw_action_data:
-        action_tags = get_action_tags(action_data)
+        action_tags = parse_action_tags(action_data)
         
         required_rank = action_data['icon']['requiredRank']
         
-        action_arguments = get_action_args(action_data)
+        action_arguments = parse_action_args(action_data)
         action_return_values = get_action_return_values(action_data)
 
         action_description = action_data['icon']['description']
@@ -229,6 +244,43 @@ def parse_action_data(raw_action_data: list[dict]):
     return all_action_data
 
 
+def parse_particle_data(raw_particle_data: list[dict]):
+    particle_entries: list[ParticleEntry] = []
+
+    for par_data in raw_particle_data:
+        category = par_data['category']
+        if category is None:
+            continue  # Probably deprecated, skip
+
+        icon: dict = par_data['icon']
+
+        additional_info = icon['additionalInfo']
+        if additional_info:
+            additional_info = ' '.join(additional_info[0])
+        else:
+            additional_info = None
+        
+        icon_color: dict | None = icon.get('color')
+        if icon_color is not None:
+            icon_color = tuple(icon_color.values())
+        
+        icon_head_data: str | None = icon.get('head')
+
+        par_entry = ParticleEntry(
+            par_data['particle'],
+            icon['name'],
+            category,
+            par_data['fields'],
+            additional_info,
+            icon['material'],
+            icon_color,
+            icon_head_data
+        )
+        particle_entries.append(par_entry)
+    
+    return particle_entries
+
+
 def parse_actiondump() -> ActiondumpResult:
     if not os.path.isfile(ACTIONDUMP_PATH):
         warn('Actiondump not found -- Item tags and error checking will not work.')
@@ -239,6 +291,7 @@ def parse_actiondump() -> ActiondumpResult:
 
     codeblock_data = parse_codeblock_data(actiondump['codeblocks'])
     all_action_data = parse_action_data(actiondump['actions'])
+    particle_data = parse_particle_data(actiondump['particles'])
         
     game_values: dict[str, VariableType] = {}
     for game_value in actiondump['gameValues']:
@@ -256,6 +309,7 @@ def parse_actiondump() -> ActiondumpResult:
     return ActiondumpResult(
         codeblock_data=codeblock_data,
         action_data=all_action_data,
+        particle_data=particle_data,
         game_values=game_values,
         sound_names=sound_names,
         potion_names=potion_names

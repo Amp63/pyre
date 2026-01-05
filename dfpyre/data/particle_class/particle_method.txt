@@ -1,0 +1,8 @@
+    @staticmethod
+    def {method_name}(amount: int=1, horizontal_spread: float=0.0, vertical_spread: float=0.0{parameter_list}):
+        """
+        :param int amount: The number of particles to create.
+        :param float horizontal_spread: The horizontal spread for the effect.
+        :param float vertical_spread: The vertical spread for the effect.{parameter_docstrings}
+        """
+        return {class_name}('{particle_name}', amount, horizontal_spread, vertical_spread{argument_list})

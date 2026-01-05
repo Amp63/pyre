@@ -2,31 +2,23 @@
 Contains data and functions for Codeblock class generation.
 """
 
-import os
 import re
 import keyword
 from datetime import datetime, timezone
+from dfpyre.gen.gen_data import load_data_file
 
 
 OUTPUT_PATH = 'dfpyre/export/action_classes.py'
-TEMPLATES_PATH = os.path.join(os.path.dirname(__file__), '../data/method_templates')
-
-INDENT = ' ' * 4
-
-def load_template(file_name: str):
-    path = TEMPLATES_PATH + '/' + file_name
-    with open(path, 'r') as f:
-        return f.read()
 
 
-EVENT_TEMPLATE = load_template('event.txt')
-ACTION_TEMPLATE = load_template('action.txt')
-NOTARGET_ACTION_TEMPLATE = load_template('notarget_action.txt')
-CONDITIONAL_TEMPLATE = load_template('conditional.txt')
-NOTARGET_CONDITIONAL_TEMPLATE = load_template('notarget_conditional.txt')
-REPEAT_TEMPLATE = load_template('repeat.txt')
-REPEAT_WHILE_TEMPLATE = load_template('repeat_while.txt')
-SELECT_OBJ_SUBACTION_TEMPLATE = load_template('select_obj_subaction.txt')
+EVENT_TEMPLATE = load_data_file('method_templates/event.txt')
+ACTION_TEMPLATE = load_data_file('method_templates/action.txt')
+NOTARGET_ACTION_TEMPLATE = load_data_file('method_templates/notarget_action.txt')
+CONDITIONAL_TEMPLATE = load_data_file('method_templates/conditional.txt')
+NOTARGET_CONDITIONAL_TEMPLATE = load_data_file('method_templates/notarget_conditional.txt')
+REPEAT_TEMPLATE = load_data_file('method_templates/repeat.txt')
+REPEAT_WHILE_TEMPLATE = load_data_file('method_templates/repeat_while.txt')
+SELECT_OBJ_SUBACTION_TEMPLATE = load_data_file('method_templates/select_obj_subaction.txt')
 
 
 CODEBLOCK_LOOKUP: dict[str, tuple[str, str]] = {
