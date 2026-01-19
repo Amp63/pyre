@@ -55,10 +55,10 @@ class Particle(CodeItem):
             sub_data['colorVariation'] = color_variation
         
         if fade_color is not None:
-            sub_data['fade_rgb'] = _parse_color_value(fade_color)
+            sub_data['rgb_fade'] = _parse_color_value(fade_color)
         
         if duration is not None:
-            sub_data['duration'] = duration
+            sub_data['time'] = duration
         
         if opacity is not None:
             sub_data['opacity'] = opacity
