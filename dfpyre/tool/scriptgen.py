@@ -42,7 +42,7 @@ PARTICLE_PARAM_LOOKUP = {
     'sizeVariation': 'size_variation',
     'motionVariation': 'motion_variation',
     'colorVariation': 'color_variation',
-    'duration': 'duration',
+    'time': 'duration',
     'opacity': 'opacity',
     'roll': 'roll',
     'material': 'material'
@@ -106,7 +106,7 @@ def particle_to_string(class_name: str, particle_item: Particle, slot_argument: 
         elif key == 'rgb':
             color_tuple = convert_color(value)
             argument_list.append(f'color={color_tuple}')
-        elif key == 'fade_rgb':
+        elif key == 'rgb_fade':
             color_tuple = convert_color(value)
             argument_list.append(f'fade_color={color_tuple}')
 
