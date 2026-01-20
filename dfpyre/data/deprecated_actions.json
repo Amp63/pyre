@@ -1,5 +1,9 @@
 {
     "player_action": {
+        "RngTeleport": [],
+        "RemoveBossBar": [],
+        "SetInvName": [],
+        "SetAbsorption": [],
         "NoKeepInv": ["SetInventoryKept"],
         "BossBar": ["SetBossBar"],
         "NoNatRegen": [],
@@ -37,6 +41,9 @@
         "WeatherClear": ["SetPlayerWeather"]
     },
     "entity_action": {
+        "SetSheepSheared": [],
+        "SetName": [],
+        "SetNameVisible": [],
         "DisableGlowing": ["SetGlowing"],
         "SetItemOwner": [],
         "NoGravity": ["FallingAttribute"],
@@ -100,6 +107,16 @@
         "PFX Line": []
     },
     "set_var": {
+        "SetItemEnchants": [],
+        "GetSignText": [],
+        "SetItemName": [],
+        "GetItemLore": [],
+        "RoundNumber": [],
+        "GetItemName": [],
+        "SetItemLore": [],
+        "GetItemEnchants": [],
+        "SetDirection": [],
+        "GetBookText": [],
         "ParseX": ["GetCoord"],
         "ParseY": ["GetCoord"],
         "ParseZ": ["GetCoord"],
@@ -131,6 +148,8 @@
         "SetCoords": ["SetAllCoords"]
     },
     "if_player": {
+        "IsRiding": [],
+        "StandingOn": [],
         "IsHoldingOff": ["IsHolding"],
         "HasAllItems": ["HasItem"],
         "BlockEquals": [],
@@ -141,9 +160,12 @@
         "IsHoldingMain": ["IsHolding"]
     },
     "if_entity": {
+        "IsRiding": [],
+        "StandingOn": [],
         "EStandingOn": ["StandingOn"]
     },
     "if_var": {
+        "InRange": [],
         "TextMatches": ["StringMatches"],
         "EqIgnoreCase": ["StringMatches"],
         "IsNear": ["LocIsNear"],
@@ -168,5 +190,14 @@
     "event": {
         "FallDamage": ["PlayerTakeDmg"],
         "LoopEvent": []
+    },
+    "control": {
+        "ReturnNTimes": []
+    },
+    "repeat": {
+        "Range": []
+    },
+    "if_game": {
+        "SignHasTxt": []
     }
 }
