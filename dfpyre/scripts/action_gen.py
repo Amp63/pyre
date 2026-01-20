@@ -146,11 +146,12 @@ def generate_actions():
                 continue
             method_name, method_aliases = method_data
 
+            current_method_template = method_template
             template_overrides = TEMPLATE_OVERRIDES.get(codeblock_type)
             if template_overrides:
                 override_template = template_overrides.get(action_name)
                 if override_template is not None:
-                    method_template = override_template
+                    current_method_template = override_template
             
             action_description = action_data.description or ''
             if action_description:
@@ -186,7 +187,7 @@ def generate_actions():
                 # Fix indentation
                 parameter_docstrings += INDENT
 
-            method_code = method_template.format(
+            method_code = current_method_template.format(
                 method_name = method_name,
                 parameter_list = parameter_list,
                 parameter_names = parameter_names,
@@ -214,7 +215,7 @@ def generate_actions():
             generated_lines.append(alias_def)
 
     
-    with open(OUTPUT_PATH, 'w') as f:
+    with open(OUTPUT_PATH, 'w', encoding='utf-8') as f:
         f.write('\n'.join(generated_lines) + '\n')
         
 
