@@ -18,5 +18,6 @@ FIELD_PARAMETER_LOOKUP = {
     'Duration': [('duration', 'int', '5', 'The duration of the effect in ticks.')],
     'Fade Color': [('fade_color', 'tuple[int, int, int] | str', '(255, 255, 255)', 'The color that each particle will fade to.')],
     'Roll': [('roll', 'float', '0.0', 'The rotational roll of each particle in radians.')],
-    'Material': [('material', 'str', 'None', 'The block material to apply to each particle.')]
+    'Material': [('material', 'str', 'None', 'The block material to apply to each particle.')],
+    'Power': [('power', 'float', '1.0', 'The power to apply to each particle.')]
 }

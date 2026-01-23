@@ -7,8 +7,8 @@ from dfpyre.core.actiondump import ACTION_DATA, ActionTag
 
 
 VARIABLE_TYPES = {'txt', 'comp', 'num', 'item', 'loc', 'var', 'snd', 'part', 'pot', 'g_val', 'vec', 'pn_el', 'bl_tag'}
-TEMPLATE_STARTERS = {'event', 'entity_event', 'func', 'process'}
-EVENT_CODEBLOCKS = {'event', 'entity_event'}
+TEMPLATE_STARTERS = {'event', 'entity_event', 'func', 'process', 'game_event'}
+EVENT_CODEBLOCKS = {'event', 'entity_event', 'game_event'}
 CONDITIONAL_CODEBLOCKS = {'if_player', 'if_var', 'if_game', 'if_entity'}
 TARGET_CODEBLOCKS = {'player_action', 'entity_action', 'if_player', 'if_entity'}
 TARGETS = ['Selection', 'Default', 'Killer', 'Damager', 'Shooter', 'Victim', 'AllPlayers', 'Projectile', 'AllEntities', 'AllMobs', 'LastEntity']

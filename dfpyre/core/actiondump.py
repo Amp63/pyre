@@ -26,6 +26,7 @@ CODEBLOCK_ID_LOOKUP = {
     'CALL FUNCTION': 'call_func',
     'PROCESS': 'process',
     'START PROCESS': 'start_process',
+    'GAME EVENT': 'game_event'
 }
 
 
@@ -207,9 +208,10 @@ def parse_action_data(raw_action_data: list[dict]):
     for action_data in raw_action_data:
         action_tags = parse_action_tags(action_data)
         
+        action_name = action_data['name']
         icon = action_data['icon']
 
-        if icon['name'] == '':
+        if not action_tags and icon['name'] == '' and action_name != 'dynamic':
             continue  # Empty action, skip
         
         required_rank = icon['requiredRank']
@@ -232,7 +234,6 @@ def parse_action_data(raw_action_data: list[dict]):
         codeblock_type = CODEBLOCK_ID_LOOKUP[action_data['codeblockName']]
 
         deprecated_actions = all_deprecated_actions.get(codeblock_type) or {}
-        action_name = action_data['name']
         is_deprecated = action_name in deprecated_actions
         
         parsed_action_data = ActionDataEntry(

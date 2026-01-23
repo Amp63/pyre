@@ -26,11 +26,12 @@ CODEBLOCK_FUNCTION_LOOKUP = {
     'repeat': 'Repeat',
     'control': 'Control',
     'select_obj': 'SelectObject',
-    'set_var': 'SetVariable'
+    'set_var': 'SetVariable',
+    'game_event': 'GameEvent'
 }
 
 NO_ACTION_BLOCKS = {'func', 'process', 'call_func', 'start_process', 'else'}
-CONTAINER_CODEBLOCKS = {'event', 'entity_event', 'func', 'process', 'if_player', 'if_entity', 'if_game', 'if_var', 'else', 'repeat'}
+CONTAINER_CODEBLOCKS = {'event', 'entity_event', 'func', 'process', 'if_player', 'if_entity', 'if_game', 'if_var', 'else', 'repeat', 'game_event'}
 VAR_SCOPE_LOOKUP = {'unsaved': 'g', 'saved': 's', 'local': 'l', 'line': 'i'}
 
 PARTICLE_PARAM_LOOKUP = {

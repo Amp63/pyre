@@ -130,7 +130,10 @@
         "Round": ["RoundNumber"],
         "ParsePitch": ["GetCoord"],
         "SetModelData": ["SetModelDataNums", "SetModelDataStrs"],
-        "SetCoords": ["SetAllCoords"]
+        "SetCoords": ["SetAllCoords"],
+        "PerlinNoise": ["Noise"],
+        "VoronoiNoise": ["Noise"],
+        "WorleyNoise": ["Noise"]
     },
     "if_player": {
         "IsHoldingOff": ["IsHolding"],

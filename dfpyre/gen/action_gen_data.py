@@ -34,7 +34,8 @@ CODEBLOCK_LOOKUP: dict[str, tuple[str, str]] = {
     'repeat': ('Repeat', REPEAT_TEMPLATE),
     'control': ('Control', NOTARGET_ACTION_TEMPLATE),
     'select_obj': ('SelectObject', NOTARGET_ACTION_TEMPLATE),
-    'set_var': ('SetVariable', NOTARGET_ACTION_TEMPLATE)
+    'set_var': ('SetVariable', NOTARGET_ACTION_TEMPLATE),
+    'game_event': ('GameEvent', EVENT_TEMPLATE)
 }
 
 
@@ -90,7 +91,8 @@ CLASS_ALIASES = {
     'if_game': ['IG'],
     'if_entity': ['IE'],
     'select_obj': ['SO'],
-    'set_var': ['SV']
+    'set_var': ['SV'],
+    'game_event': ['GE']
 }
 
 

@@ -50,6 +50,10 @@ def test_all_codeblocks():
         PlayerAction.SendMessage('landed', target=Target.ALL_PLAYERS)
     ]).build()
 
+    GameEvent.PlotStartup([
+        PlayerAction.SendMessage('Plot has started up.')
+    ]).build()
+
     Function('foo', codeblocks=[
         PlayerAction.SendMessage('called foo')
     ]).build()
