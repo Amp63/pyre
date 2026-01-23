@@ -207,18 +207,23 @@ def parse_action_data(raw_action_data: list[dict]):
     for action_data in raw_action_data:
         action_tags = parse_action_tags(action_data)
         
-        required_rank = action_data['icon']['requiredRank']
+        icon = action_data['icon']
+
+        if icon['name'] == '':
+            continue  # Empty action, skip
+        
+        required_rank = icon['requiredRank']
         
         action_arguments = parse_action_args(action_data)
         action_return_values = get_action_return_values(action_data)
 
-        action_description = action_data['icon']['description']
+        action_description = icon['description']
         if action_description:
             action_description = ' '.join(action_description)
         else:
             action_description = None
         
-        dep_note = action_data['icon']['deprecatedNote']
+        dep_note = icon['deprecatedNote']
         if dep_note:
             dep_note = ' '.join(dep_note)
         else:
