@@ -37,8 +37,8 @@ def Function(function_name: str, *parameters: ArgValue, is_hidden: Literal["True
     Represents a Function codeblock.
 
     :param str event_name: The name of the function.
-    :param tuple args: The argument items to include.
-    :param dict[str, str] tags: The tags to include.
+    :param tuple[ArgValue, ...] parameters: The parameters to include.
+    :param Literal["True", "False"] is_hidden: Whether the function should be hidden in the function menu.
     :param list[CodeBlock] codeblocks: The list of codeblocks in this template.
     :param str|None author: The author of this template.
     """
@@ -51,8 +51,8 @@ def Process(process_name: str, *parameters: ArgValue, is_hidden: Literal["True",
     Represents a Process codeblock.
 
     :param str event_name: The name of the process.
-    :param tuple args: The argument items to include.
-    :param dict[str, str] tags: The tags to include.
+    :param tuple[ArgValue, ...] parameters: The parameters to include.
+    :param Literal["True", "False"] is_hidden: Whether the function should be hidden in the process menu.
     :param list[CodeBlock] codeblocks: The list of codeblocks in this template.
     :param str|None author: The author of this template.
     """
