@@ -2,6 +2,7 @@
     "player_action": {
         "NoKeepInv": ["SetInventoryKept"],
         "BossBar": ["SetBossBar"],
+        " RemoveBossBar ": ["RemoveBossBar"],
         "NoNatRegen": [],
         "SendAnimation": ["AttackAnimation", "HurtAnimation", "WakeUpAnimation"],
         "GetTargetEntity": [],
