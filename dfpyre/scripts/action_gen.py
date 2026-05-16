@@ -6,11 +6,11 @@ from dataclasses import dataclass
 import re
 from num2words import num2words
 from dfpyre.core.actiondump import ACTIONDUMP, ActionArgument, ActionTag, TagOption
-from dfpyre.util.util import flatten
+from dfpyre.util.util import flatten, to_valid_identifier_noparen
 from dfpyre.gen.gen_data import INDENT
 from dfpyre.gen.action_gen_data import (
     CODEBLOCK_LOOKUP, PARAM_NAME_REPLACEMENTS, PARAM_TYPE_LOOKUP, TEMPLATE_OVERRIDES, OUTPUT_PATH, IMPORTS, CLASS_ALIASES,
-    get_method_name_and_aliases, to_valid_identifier
+    get_method_name_and_aliases
 )
 
 
@@ -23,35 +23,54 @@ class ParameterData:
     is_optional: bool
     has_none: bool
 
-    def get_param_name(self) -> str:
+    def get_varname(self) -> str:
         if self.description == 'Variable to set':
-            return 'variable'
+            return 'result'
         
-        if ' OR ' in self.description and 'None' in self.types:
-            # Only take the first part if it's an "or none" parameter
-            valid_name = to_valid_identifier(self.description.partition(' OR ')[0]).lower()
+        if ' OR ' in self.description:
+            # Only take the first part if it has multiple types
+            varname = to_valid_identifier_noparen(self.description.partition(' OR ')[0]).lower()
         else:
-            valid_name = to_valid_identifier(self.description).lower()
+            varname = to_valid_identifier_noparen(self.description).lower()
 
-        if valid_name == 'target':
-            valid_name = f'{valid_name}_{self.name}'
+        if varname == 'target':
+            varname = f'{varname}_{self.name}'
         
-        if re.match(r'^_\d+_.*$', valid_name):
+        # Simplify some names
+        if m := re.match(r'^_(\d+)_(.*)$', varname):
             # Make names starting with numbers more readable
-            num_str, _, remainder = valid_name[1:].partition('_')
-            readable_num: str = num2words(int(num_str))
-            valid_name = f'{readable_num}_{remainder}'
+            readable_num: str = num2words(int(m.group(1)))
+            varname = readable_num + '_' + m.group(2)
+        
+        if m := re.match(r'^(.+)_to_get.*$', varname):
+            # Replace "___ to get ___" with simpler name
+            varname = m.group(1)
+        
+        if m := re.match(r'^gets_the_current_(.+)_each_iteration$', varname):
+            # Make this name shorter
+            varname = m.group(1) + '_var'
+        
+        if m := re.match(r'^(.+)_of_(.+)_to_.+$', varname):
+            # Replace "___ of ___ to ___" with simpler name
+            varname = m.group(2) + '_' + m.group(1)
+        
+        if m := re.match(r'^(.+)_in_ticks$', varname):
+            # Replace "___ in ticks" with simpler name
+            varname = m.group(1)
+        
+        if len(varname) > 20:
+            print(varname)
 
-        return valid_name
+        return varname
 
     def get_param_string(self) -> str:
-        param_str = f'{self.get_param_name()}: {self.types}'
+        param_str = f'{self.get_varname()}: {self.types}'
         if self.has_none or self.is_optional:
             param_str += '=None'
         return param_str
 
     def get_docstring(self) -> str:
-        docstring = f':param {self.types} {self.get_param_name()}: {self.description}'
+        docstring = f':param {self.types} {self.get_varname()}: {self.description}'
         if self.is_optional:
             docstring += ' (optional)'
         if self.notes:
@@ -119,7 +138,7 @@ class TagData:
     default: str
 
     def get_varname(self, param_names: set[str]) -> str:
-        valid_name = to_valid_identifier(self.name.lower())
+        valid_name = to_valid_identifier_noparen(self.name.lower())
         if valid_name in param_names:
             valid_name += '_tag'
         return valid_name
@@ -194,7 +213,7 @@ def generate_actions():
             if parameter_list:
                 parameter_list += ', '
             
-            parameter_names = ', '.join(p.get_param_name() for p in parameters)
+            parameter_names = ', '.join(p.get_varname() for p in parameters)
             if parameter_names:
                 parameter_names += ','
             
@@ -202,7 +221,7 @@ def generate_actions():
             # Get tag data
             tags = parse_tags(action_data.tags)
 
-            param_name_set = set(p.get_param_name() for p in parameters)
+            param_name_set = set(p.get_varname() for p in parameters)
             tag_parameter_list = ', '.join(t.get_param_string(param_name_set) for t in tags)
             if tag_parameter_list:
                 tag_parameter_list = f'{tag_parameter_list}, '

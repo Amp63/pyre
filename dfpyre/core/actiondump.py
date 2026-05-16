@@ -1,5 +1,6 @@
 import os
 import json
+import re
 from typing import Literal
 from dataclasses import dataclass
 from dfpyre.util.util import warn
@@ -247,6 +248,17 @@ def parse_action_data(raw_action_data: list[dict]):
             deprecated_note=dep_note
         )
         all_action_data[codeblock_type][action_name] = parsed_action_data
+    
+    # Remove actions without trailing whitespace because they contain bad data
+    # This may have to be removed/replaced in the future, but for now the actiondump is a mess :shrug:
+    for codeblock_type, actions in list(all_action_data.items()):
+        action_name_set = set(actions.keys())
+        for action_name, action_data in list(actions.items()):
+            action_data: ActionDataEntry
+            if action_data.is_deprecated:
+                continue
+            if re.match(r'^ \w+ $', action_name) and action_name.strip() in action_name_set:
+                del all_action_data[codeblock_type][action_name.strip()]
     
     return all_action_data
 

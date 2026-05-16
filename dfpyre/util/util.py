@@ -87,3 +87,11 @@ def to_valid_identifier(s: str):
         s += "_"
     
     return s
+
+
+def to_valid_identifier_noparen(s: str):
+    """
+    Converts a string into a valid Python identifier, omitting anything in parentesis.
+    """
+    s = re.sub(r'\(.*\)', '', s)  # Remove anything in parenthesis
+    return to_valid_identifier(s)
