@@ -7,6 +7,7 @@ from dfpyre.util.util import warn
 
 ACTIONDUMP_PATH = os.path.join(os.path.dirname(__file__), '../data/actiondump_min.json')
 DEPRECATED_ACTIONS_PATH = os.path.join(os.path.dirname(__file__), '../data/deprecated_actions.json')
+SUBACTIONS_PATH = os.path.join(os.path.dirname(__file__), '../data/subactions.json')
 
 CODEBLOCK_ID_LOOKUP = {
     'PLAYER ACTION': 'player_action',
@@ -324,6 +325,9 @@ def parse_actiondump() -> ActiondumpResult:
 
 ACTIONDUMP = parse_actiondump()
 ACTION_DATA = ACTIONDUMP.action_data
+
+with open(SUBACTIONS_PATH, 'r', encoding='utf-8') as f:
+    SUBACTION_LOOKUP = json.loads(f.read())
 
 
 def get_default_tags(codeblock_type: str|None, codeblock_action: str|None) -> dict[str, str]:

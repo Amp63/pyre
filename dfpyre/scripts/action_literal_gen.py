@@ -4,7 +4,7 @@ This allows action names to be autocompleted if the user's IDE supports it.
 """
 
 from datetime import datetime, timezone
-from dfpyre.core.actiondump import ACTIONDUMP
+from dfpyre.core.actiondump import ACTIONDUMP, SUBACTION_LOOKUP
 
 
 OUTPUT_PATH = 'dfpyre/gen/action_literals.py'
@@ -31,7 +31,7 @@ def generate_action_literals():
         f'GAME_VALUE_NAME = Literal{str(game_value_names)}',
         f'SOUND_NAME = Literal{str(ACTIONDUMP.sound_names)}',
         f'POTION_NAME = Literal{str(ACTIONDUMP.potion_names)}',
-        'SUBACTION = IF_PLAYER_ACTION | IF_ENTITY_ACTION | IF_GAME_ACTION | IF_VAR_ACTION'
+        f'SUBACTION = Literal{list(SUBACTION_LOOKUP.keys())}'
     ]
     
     with open(OUTPUT_PATH, 'w') as f:

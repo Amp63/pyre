@@ -3,7 +3,7 @@ from enum import Enum
 from difflib import get_close_matches
 from dfpyre.util.util import warn, flatten
 from dfpyre.core.items import convert_literals
-from dfpyre.core.actiondump import ACTION_DATA, ActionTag
+from dfpyre.core.actiondump import ACTION_DATA, ActionTag, SUBACTION_LOOKUP
 
 
 VARIABLE_TYPES = {'txt', 'comp', 'num', 'item', 'loc', 'var', 'snd', 'part', 'pot', 'g_val', 'vec', 'pn_el', 'bl_tag'}
@@ -192,7 +192,17 @@ class CodeBlock:
             if self.action_name not in ACTION_DATA[self.type]:
                 _warn_unrecognized_name(self.type, self.action_name)
             
-            tags = _get_codeblock_tags(self.type, self.action_name, self.tags)
+            # Get tags
+            subaction = self.data.get('subAction')
+            if subaction is not None:
+                if subaction in SUBACTION_LOOKUP:
+                    subaction_block_type, subaction_action = SUBACTION_LOOKUP[subaction]
+                    tags = _get_codeblock_tags(subaction_block_type, subaction_action, self.tags)
+                else:
+                    tags = {}
+            else:
+                tags = _get_codeblock_tags(self.type, self.action_name, self.tags)
+            
             for i, tag_data in enumerate(tags):
                 already_applied_tag_data = already_applied_tags.get(tag_data['item']['data']['tag'])
                 if already_applied_tag_data is not None:
