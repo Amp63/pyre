@@ -1,9 +1,9 @@
 import dataclasses
-from dfpyre.util.util import is_number
+from dfpyre.util.util import is_number, to_valid_identifier
 from dfpyre.core.items import *
 from dfpyre.core.actiondump import get_default_tags
 from dfpyre.core.codeblock import CodeBlock, CONDITIONAL_CODEBLOCKS, TARGET_CODEBLOCKS, EVENT_CODEBLOCKS
-from dfpyre.gen.action_gen_data import get_method_name_and_aliases, to_valid_identifier
+from dfpyre.gen.action_gen_data import get_method_name_and_aliases
 
 
 IMPORT_STATEMENT = 'from dfpyre import *'
