@@ -4,6 +4,7 @@ import re
 import warnings
 from functools import wraps
 from collections.abc import Iterable
+import keyword
 
 
 COL_WARN = '\x1b[33m'
@@ -52,8 +53,6 @@ def df_decode(encoded_string: str) -> str:
     return gzip.decompress(base64.b64decode(encoded_string.encode('utf-8'))).decode('utf-8')
 
 
-from collections.abc import Iterable
-
 def flatten(nested_iterable):
     """
     Flattens a nested iterable.
@@ -63,3 +62,28 @@ def flatten(nested_iterable):
             yield from flatten(item)
         else:
             yield item
+
+
+def to_valid_identifier(s: str):
+    """
+    Converts a string into a valid Python identifier.
+    """
+    if not s:
+        return "_"
+    
+    s = re.sub(r'\s+', '_', s)   # Replace whitespace
+    s = re.sub(r'[^\w]', '', s)  # Replace invalid characters
+    s = re.sub(r'_+', '_', s)    # Condense spans of underscores
+    
+    s = s.strip("_")
+
+    if s[0].isdigit():
+        s = "_" + s
+    
+    if not s:
+        return "_"
+    
+    if keyword.iskeyword(s):
+        s += "_"
+    
+    return s

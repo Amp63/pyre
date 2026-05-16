@@ -6,6 +6,7 @@ import re
 import keyword
 from datetime import datetime, timezone
 from dfpyre.gen.gen_data import load_data_file
+from dfpyre.util.util import to_valid_identifier
 
 
 OUTPUT_PATH = 'dfpyre/export/action_classes.py'
@@ -150,28 +151,6 @@ IMPORTS = [
     'from dfpyre.gen.action_literals import SUBACTION',
     f"__all__ = {EXPORTED_NAMES}"
 ]
-
-
-def to_valid_identifier(s):
-    if not s:
-        return "_"
-    
-    result = s.replace(" ", "_").replace("-", "_")
-    result = re.sub(r'[^\w]', '_', result)
-    result = re.sub(r'_+', '_', result)
-    
-    if result[0].isdigit():
-        result = "_" + result
-    
-    result = result.strip("_")
-    
-    if not result:
-        return "_"
-    
-    if keyword.iskeyword(result):
-        result += "_"
-    
-    return result
 
 
 def get_method_name_and_aliases(codeblock_type: str, action_name: str) -> tuple[str, list[str]] | None:

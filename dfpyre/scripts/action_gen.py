@@ -3,6 +3,8 @@ Generates Codeblock classes with static methods for each action.
 """
 
 from dataclasses import dataclass
+import re
+from num2words import num2words
 from dfpyre.core.actiondump import ACTIONDUMP, ActionArgument, ActionTag, TagOption
 from dfpyre.util.util import flatten
 from dfpyre.gen.gen_data import INDENT
@@ -21,14 +23,35 @@ class ParameterData:
     is_optional: bool
     has_none: bool
 
+    def get_param_name(self) -> str:
+        if self.description == 'Variable to set':
+            return 'variable'
+        
+        if ' OR ' in self.description and 'None' in self.types:
+            # Only take the first part if it's an "or none" parameter
+            valid_name = to_valid_identifier(self.description.partition(' OR ')[0]).lower()
+        else:
+            valid_name = to_valid_identifier(self.description).lower()
+
+        if valid_name == 'target':
+            valid_name = f'{valid_name}_{self.name}'
+        
+        if re.match(r'^_\d+_.*$', valid_name):
+            # Make names starting with numbers more readable
+            num_str, _, remainder = valid_name[1:].partition('_')
+            readable_num: str = num2words(int(num_str))
+            valid_name = f'{readable_num}_{remainder}'
+
+        return valid_name
+
     def get_param_string(self) -> str:
-        param_str = f'{self.name}: {self.types}'
+        param_str = f'{self.get_param_name()}: {self.types}'
         if self.has_none or self.is_optional:
             param_str += '=None'
         return param_str
 
     def get_docstring(self) -> str:
-        docstring = f':param {self.types} {self.name}: {self.description}'
+        docstring = f':param {self.types} {self.get_param_name()}: {self.description}'
         if self.is_optional:
             docstring += ' (optional)'
         if self.notes:
@@ -95,16 +118,20 @@ class TagData:
     options: list[TagOption]
     default: str
 
-    def get_varname(self) -> str:
-        return to_valid_identifier(self.name.lower())
+    def get_varname(self, param_names: set[str]) -> str:
+        valid_name = to_valid_identifier(self.name.lower())
+        if valid_name in param_names:
+            valid_name += '_tag'
+        return valid_name
 
-    def get_param_string(self) -> str:
+    # Pass `param_names` here to prevent name conflicts with existing parameters
+    def get_param_string(self, param_names: set[str]) -> str:
         options_list = ', '.join(f'"{o.name}"' for o in self.options)
         tag_type = f'Literal[{options_list}]'
-        return f'{self.get_varname()}: {tag_type}="{self.default}"'
+        return f'{self.get_varname(param_names)}: {tag_type}="{self.default}"'
 
-    def get_docstring(self) -> str:
-        docstring_lines = [f':param str {self.get_varname()}: {self.name}']
+    def get_docstring(self, param_names: set[str]) -> str:
+        docstring_lines = [f':param str {self.get_varname(param_names)}: {self.name}']
         docstring_lines += [f'{INDENT*2}- {o.name}: {o.description}' for o in self.options if o.description]
         if len(docstring_lines) > 1:
             docstring_lines.insert(1, '')
@@ -141,11 +168,13 @@ def generate_actions():
                 # Skip deprecated actions
                 continue
             
+            # Get method name
             method_data = get_method_name_and_aliases(codeblock_type, action_name)
             if method_data is None:
                 continue
             method_name, method_aliases = method_data
 
+            # Choose method template to use
             current_method_template = method_template
             template_overrides = TEMPLATE_OVERRIDES.get(codeblock_type)
             if template_overrides:
@@ -153,19 +182,11 @@ def generate_actions():
                 if override_template is not None:
                     current_method_template = override_template
             
+            # Get description
             action_description = action_data.description or ''
             if action_description:
                 action_description = f'{INDENT}{action_description}\n\n'
             
-            # Get tag data
-            tags = parse_tags(action_data.tags)
-
-            tag_parameter_list = ', '.join(t.get_param_string() for t in tags)
-            if tag_parameter_list:
-                tag_parameter_list = f'{tag_parameter_list}, '
-            
-            tag_values = ', '.join(f"'{t.name}': {t.get_varname()}" for t in tags)
-
             # Get parameter data
             parameters = parse_parameters(action_data.arguments)
 
@@ -173,11 +194,23 @@ def generate_actions():
             if parameter_list:
                 parameter_list += ', '
             
-            parameter_names = ', '.join(p.name for p in parameters)
+            parameter_names = ', '.join(p.get_param_name() for p in parameters)
             if parameter_names:
                 parameter_names += ','
+            
+            
+            # Get tag data
+            tags = parse_tags(action_data.tags)
 
-            docstring_list = [p.get_docstring() for p in parameters] + [t.get_docstring() for t in tags]
+            param_name_set = set(p.get_param_name() for p in parameters)
+            tag_parameter_list = ', '.join(t.get_param_string(param_name_set) for t in tags)
+            if tag_parameter_list:
+                tag_parameter_list = f'{tag_parameter_list}, '
+            
+            tag_values = ', '.join(f"'{t.name}': {t.get_varname(param_name_set)}" for t in tags)
+
+            # Create docstrings
+            docstring_list = [p.get_docstring() for p in parameters] + [t.get_docstring(param_name_set) for t in tags]
             parameter_docstrings = '\n'.join(INDENT + s for s in docstring_list)
 
             if parameter_docstrings:
@@ -187,6 +220,7 @@ def generate_actions():
                 # Fix indentation
                 parameter_docstrings += INDENT
 
+            # Assemble the method
             method_code = current_method_template.format(
                 method_name = method_name,
                 parameter_list = parameter_list,
@@ -202,6 +236,7 @@ def generate_actions():
             method_lines = [f'@staticmethod']
             method_lines += method_code.split('\n')
 
+            # Add aliases
             for alias in method_aliases:
                 method_lines += [f'{alias} = {method_name}']
             
@@ -209,6 +244,7 @@ def generate_actions():
             method_lines += ['']
             generated_lines += method_lines
         
+        # Add class aliases (e.g. "PE", "EE", etc.)
         class_aliases = CLASS_ALIASES.get(codeblock_type) or []
         for alias in class_aliases:
             alias_def = f'{alias} = {class_name}'
