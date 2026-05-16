@@ -57,9 +57,6 @@ class ParameterData:
         if m := re.match(r'^(.+)_in_ticks$', varname):
             # Replace "___ in ticks" with simpler name
             varname = m.group(1)
-        
-        if len(varname) > 20:
-            print(varname)
 
         return varname
 
