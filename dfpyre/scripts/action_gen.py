@@ -14,6 +14,25 @@ from dfpyre.gen.action_gen_data import (
 )
 
 
+def remove_unbalanced_parens(s: str) -> str:
+    chars = list(s)
+    stack = []
+    remove = set()
+
+    for i, ch in enumerate(chars):
+        if ch == '(':
+            stack.append(i)
+        elif ch == ')':
+            if stack:
+                stack.pop()
+            else:
+                remove.add(i)
+
+    remove.update(stack)
+
+    return ''.join(ch for i, ch in enumerate(chars) if i not in remove)
+
+
 @dataclass
 class ParameterData:
     name: str
@@ -110,7 +129,7 @@ def parse_parameters(action_arguments: list[tuple[ActionArgument, ...]]) -> list
             plural_param_types = ' | '.join(t for t in param_types_dedup if t != 'None')  # Doesn't make sense to have a list of None
             param_types = f'list[{plural_param_types}] | {param_types}'
 
-        param_description = ' OR '.join(arg.description for arg in arg_union if arg.description)
+        param_description = ' OR '.join(remove_unbalanced_parens(arg.description) for arg in arg_union if arg.description)
         param_notes = ' OR '.join(arg.notes for arg in arg_union if arg.notes)
 
         param = ParameterData(param_name, param_types, param_description, param_notes, is_optional, has_none)
