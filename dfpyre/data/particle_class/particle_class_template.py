@@ -28,6 +28,8 @@ class Particle(CodeItem):
             opacity: int=None,
             roll: float=None,
             material: str=None,
+            power: float=None,
+            water_blocks: int=None, burst_impulse: float=None,
             slot: int | None=None
         ):
         super().__init__(slot)
@@ -68,6 +70,15 @@ class Particle(CodeItem):
         
         if material is not None:
             sub_data['material'] = material
+
+        if power is not None:
+            sub_data['power'] = power
+
+        if water_blocks is not None:
+            sub_data['waterBlocks'] = water_blocks
+
+        if burst_impulse is not None:
+            sub_data['burstImpulse'] = burst_impulse
         
         self.particle_data = {
             'particle': particle_name,

@@ -19,5 +19,7 @@ FIELD_PARAMETER_LOOKUP = {
     'Fade Color': [('fade_color', 'tuple[int, int, int] | str', '(255, 255, 255)', 'The color that each particle will fade to.')],
     'Roll': [('roll', 'float', '0.0', 'The rotational roll of each particle in radians.')],
     'Material': [('material', 'str', 'None', 'The block material to apply to each particle.')],
-    'Power': [('power', 'float', '1.0', 'The power to apply to each particle.')]
+    'Power': [('power', 'float', '1.0', 'The power to apply to each particle.')],
+    'Water Blocks': [('water_blocks', 'int', '2', 'The number of water blocks in the geyser water column.')],
+    'Burst Impulse': [('burst_impulse', 'float', '1.5', 'The force of the geyser burst.')],
 }
